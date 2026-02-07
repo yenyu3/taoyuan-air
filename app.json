@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Taoyuan Air Monitoring",
+    "slug": "taoyuan-air-monitoring",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F4F2E9"
+      }
+    }
+  }
+}

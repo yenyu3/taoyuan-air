@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   gaugeSection: {
     alignItems: 'center',
     paddingVertical: 20,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   gaugeContainer: {
     position: 'relative',

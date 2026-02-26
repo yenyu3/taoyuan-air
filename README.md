@@ -7,6 +7,7 @@
 ### 📋 環境需求
 
 - **Node.js 18+**
+- **Docker Desktop** (用於資料庫)
 - **npm** 或 **yarn**
 - **手機** (iOS 或 Android) 或 **模擬器**
 
@@ -18,6 +19,21 @@
 - [Google Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
 
 ### 💻 安裝與運行
+
+#### 1. 啟動資料庫服務
+
+```bash
+# 啟動 PostgreSQL + PostGIS + Redis
+docker-compose up -d
+
+# 檢查服務狀態
+docker-compose ps
+
+# 檢查資料庫（可選）
+scripts\check_db.bat
+```
+
+#### 2. 啟動前端應用
 
 ```bash
 # 進入前端目錄
@@ -107,29 +123,39 @@ npm run web      # 網頁版 (開發測試用)
 
 ```json
 {
-  "框架": "React Native + Expo",
+  "前端": "React Native + Expo",
   "語言": "TypeScript",
   "導航": "React Navigation (Bottom Tabs)",
   "狀態管理": "Zustand",
   "地圖": "react-native-maps",
   "UI 組件": "expo-blur, expo-linear-gradient",
-  "圖表": "@react-native-community/slider"
+  "資料庫": "PostgreSQL 15 + PostGIS 3.3",
+  "快取": "Redis 7",
+  "容器化": "Docker + Docker Compose"
 }
 ```
+
+### 資料庫架構
+
+- **PostgreSQL 15** - 主要資料庫
+- **PostGIS 3.3** - 空間資料擴充功能
+- **Redis 7** - 快取層
+- **Docker Volume** - 資料持久化
+
+#### 已建立的資料表
+
+- `stations` - 測站資料（6 個桃園測站）
+- `realtime_air_quality` - 即時空品資料（分區表）
+- `weather_observations` - 氣象觀測資料
+- `grid_cells` - 3km 網格定義
+- `grid_realtime_data` - 網格即時數據
+- `spatial_features` - 空間特徵（工業區、POI）
+- `vertical_profiles` - 垂直剖面資料（光達）
 
 ### 專案結構
 
 ```
 taoyuan-air/
-├── docs/                          # 📚 所有專案文檔
-│   ├── GET_STARTED.md            # ⭐ 開始指南（從這裡開始）
-│   ├── DEVELOPMENT_ROADMAP.md    # 開發路線圖與任務清單
-│   ├── PROJECT_PLAN.md           # 計畫書
-│   ├── DATA_SOURCES.md           # 資料來源與 API
-│   ├── API_DATABASE_DESIGN.md    # API 與資料庫設計
-│   ├── EVALUATION_RECOMMENDATIONS.md  # 評估與建議
-│   └── VISUALIZATION_TOOLS.md    # 視覺化工具參考
-│
 ├── frontend/                      # React Native 前端
 │   ├── src/
 │   │   ├── api/                  # API 呼叫
@@ -142,20 +168,60 @@ taoyuan-air/
 │   ├── package.json
 │   └── tsconfig.json
 │
+├── database/                      # 資料庫腳本
+│   ├── init.sql                  # 初始化腳本
+│   └── test_data.sql             # 測試資料
+│
+├── scripts/                       # 管理腳本
+│   ├── backup_db.bat             # 資料庫備份
+│   ├── restore_db.bat            # 資料庫還原
+│   └── check_db.bat              # 資料庫檢查
+│
+├── docker-compose.yml             # Docker 服務配置
+├── .env.example                   # 環境變數範本
 ├── .expo/                         # Expo 配置
 ├── .github/                       # GitHub 配置
 ├── .gitignore
 └── README.md                      # 本檔案
 ```
 
-## 📚 文檔
+## 🗄️ 資料庫管理
 
-詳細的開發文檔請參考 `docs/` 資料夾：
+### 連線資訊
 
-- **GET_STARTED.md** - 開發入門指南
-- **DEVELOPMENT_ROADMAP.md** - 開發路線圖
-- **PROJECT_PLAN.md** - 專案計畫書
-- **DATA_SOURCES.md** - 資料來源說明
-- **API_DATABASE_DESIGN.md** - API 與資料庫設計
+```bash
+Host: localhost
+Port: 5432
+Database: taoyuan_air
+User: taoyuan_user
+Password: (見 .env 檔案)
+```
+
+### 管理指令
+
+```bash
+# 備份資料庫
+scripts\backup_db.bat
+
+# 還原資料庫
+scripts\restore_db.bat [備份檔案路徑]
+
+# 檢查資料庫狀態
+scripts\check_db.bat
+
+# 停止服務
+docker-compose down
+
+# 停止並刪除資料（危險！）
+docker-compose down -v
+```
+
+### 測試資料
+
+系統已預載 6 個桃園市測站的測試資料：
+- 桃園站、大園站、觀音站
+- 平鎮站、龍潭站、中壢站
+
+每個測站包含空品和氣象測試數據。
 
 ---

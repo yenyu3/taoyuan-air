@@ -36,19 +36,21 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# Data files (keep structure, ignore large data files)
-data/raw/**/*
-data/processed/**/*
-data/exports/**/*
+# Data files - ignore all data, keep folder structure only
+# raw
+data/raw/**
+!data/raw/**/
 !data/raw/**/.gitkeep
-!data/processed/.gitkeep
-!data/exports/.gitkeep
-!data/README.md
 
-# CWA stations - keep folder structure, ignore files inside
-data/raw/cwa-stations/*
-!data/raw/cwa-stations/
-!data/raw/cwa-stations/*/
+# processed
+data/processed/**
+!data/processed/**/
+!data/processed/.gitkeep
+
+# exports
+data/exports/**
+!data/exports/**/
+!data/exports/.gitkeep
 
 # Database
 *.sql.backup

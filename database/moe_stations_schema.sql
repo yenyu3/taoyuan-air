@@ -1,71 +1,72 @@
 ﻿-- MOE 測站資料庫完整架構
+-- 分支: feat/database-moe-stations
 -- 專門用於儲存環境部空氣品質測站的歷史和即時資料
--- 建立日期: 2024
+-- 建立日期: 2026
 -- 資料範圍: 2019-2026年
 
 -- 0. 啟用必要的 PostgreSQL 擴充功能
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
+- ─────────────────────────────────────────────────────────────────────────────
 -- 1. 建立 MOE 測站基本資料表
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS moe_stations (
-    station_id VARCHAR(20) PRIMARY KEY,
+    station_id   VARCHAR(20) PRIMARY KEY,
     station_name VARCHAR(100) NOT NULL,
-    county VARCHAR(50) NOT NULL,
-    location GEOMETRY(Point, 4326),
-    latitude DECIMAL(10, 8),
-    longitude DECIMAL(11, 8),
-    address TEXT,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    county       VARCHAR(50) NOT NULL DEFAULT '桃園市',
+    location     GEOMETRY(Point, 4326),
+    latitude     DECIMAL(10, 8),
+    longitude    DECIMAL(11, 8),
+    address      TEXT,
+    is_active    BOOLEAN DEFAULT true,
+    created_at   TIMESTAMP DEFAULT NOW(),
+    updated_at   TIMESTAMP DEFAULT NOW()
 );
 
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 2. 建立 MOE 污染物種類表
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS moe_pollutants (
-    pollutant_id VARCHAR(10) PRIMARY KEY,
-    pollutant_name VARCHAR(50) NOT NULL,
+    pollutant_id       VARCHAR(10) PRIMARY KEY,
+    pollutant_name     VARCHAR(50) NOT NULL,
     pollutant_eng_name VARCHAR(50) NOT NULL,
-    unit VARCHAR(20) NOT NULL,
-    aggregation_type VARCHAR(20) NOT NULL DEFAULT '1hr_mean',
-    description TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
+    unit               VARCHAR(20) NOT NULL,
+    aggregation_type   VARCHAR(20) NOT NULL DEFAULT '1hr_mean',
+    description        TEXT,
+    created_at         TIMESTAMP DEFAULT NOW()
 );
 
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 3. 建立 MOE 空氣品質小時值資料表（分區表）
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS moe_hourly_data (
-    id BIGSERIAL,
-    station_id VARCHAR(20) NOT NULL,
-    monitor_date TIMESTAMP NOT NULL,
-    pollutant_id VARCHAR(10) NOT NULL,
-    pollutant_name VARCHAR(50) NOT NULL,
-    pollutant_eng_name VARCHAR(50) NOT NULL,
-    unit VARCHAR(20) NOT NULL,
-    concentration VARCHAR(20),
-    concentration_numeric DECIMAL(10, 4),
-    data_quality VARCHAR(10) DEFAULT 'good',
-    period_start TIMESTAMP,
-    period_end TIMESTAMP,
-    source VARCHAR(20) DEFAULT 'history',
-    created_at TIMESTAMP DEFAULT NOW(),
+    id                     BIGSERIAL,
+    station_id             VARCHAR(20) NOT NULL,
+    monitor_date           TIMESTAMP NOT NULL,
+    pollutant_id           VARCHAR(10) NOT NULL,
+    pollutant_name         VARCHAR(50) NOT NULL,
+    pollutant_eng_name     VARCHAR(50) NOT NULL,
+    unit                   VARCHAR(20) NOT NULL,
+    concentration          VARCHAR(20),
+    concentration_numeric  DECIMAL(10, 4),
+    data_quality           VARCHAR(10) DEFAULT 'good',
+    period_start           TIMESTAMP,
+    period_end             TIMESTAMP,
+    source                 VARCHAR(20) DEFAULT 'history',
+    created_at             TIMESTAMP DEFAULT NOW(),
     PRIMARY KEY (id, monitor_date),
     FOREIGN KEY (station_id) REFERENCES moe_stations(station_id),
     FOREIGN KEY (pollutant_id) REFERENCES moe_pollutants(pollutant_id),
     UNIQUE (station_id, monitor_date, pollutant_id)
 ) PARTITION BY RANGE (monitor_date);
 
--- 3-1. 舊版資料庫升級：補齊 V2 欄位（重複執行安全）
-ALTER TABLE IF EXISTS moe_hourly_data
-    ADD COLUMN IF NOT EXISTS period_start TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS period_end TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS source VARCHAR(20) DEFAULT 'history';
 
-UPDATE moe_hourly_data
-SET source = 'history'
-WHERE source IS NULL;
-
--- 4. 建立完整分區表（2019-2026年，按月份）
-
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 4. 建立分區表（2019-03～2026-030，按月份）
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 2019年分區
 CREATE TABLE IF NOT EXISTS moe_hourly_data_2019_01 PARTITION OF moe_hourly_data FOR VALUES FROM ('2019-01-01') TO ('2019-02-01');
 CREATE TABLE IF NOT EXISTS moe_hourly_data_2019_02 PARTITION OF moe_hourly_data FOR VALUES FROM ('2019-02-01') TO ('2019-03-01');
@@ -184,6 +185,8 @@ CREATE INDEX IF NOT EXISTS idx_moe_hourly_date ON moe_hourly_data(monitor_date);
 CREATE INDEX IF NOT EXISTS idx_moe_hourly_pollutant ON moe_hourly_data(pollutant_eng_name);
 CREATE INDEX IF NOT EXISTS idx_moe_hourly_station_date ON moe_hourly_data(station_id, monitor_date);
 CREATE INDEX IF NOT EXISTS idx_moe_hourly_quality ON moe_hourly_data(data_quality);
+-- 空間索引（支援 ST_DWithin、ST_Distance 等空間查詢）
+CREATE INDEX IF NOT EXISTS idx_moe_stations_location ON moe_stations USING GIST(location);
 
 -- 6. 建立彙總視圖
 CREATE OR REPLACE VIEW moe_latest_data AS

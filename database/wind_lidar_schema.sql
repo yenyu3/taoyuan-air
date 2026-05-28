@@ -5,6 +5,8 @@
 -- 資料範圍: 2026-03-27 至 2026-04-15，共 20 天
 -- 量測間隔: 每 10 分鐘，760 高度層（9.1m～984.6m）
 -- 資料流程: txt → 直接匯入 DB（資料量過大，不產生 JSON 中間層）
+-- 時區說明: 原始 txt 為 UTC，統一以 TIMESTAMPTZ 存入 DB（UTC）
+--           查詢時透過 AT TIME ZONE 'Asia/Taipei' 轉換為台灣時間
 
 -- 0. 啟用必要擴充功能
 CREATE EXTENSION IF NOT EXISTS postgis;
@@ -16,35 +18,24 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology;
 CREATE TABLE IF NOT EXISTS wind_lidar_stations (
     station_id  VARCHAR(20)           PRIMARY KEY,
     county      VARCHAR(50)           NOT NULL DEFAULT '桃園市',
-    location    GEOMETRY(Point, 4326),
     latitude    DECIMAL(10, 8),
     longitude   DECIMAL(11, 8),
     altitude_m  DECIMAL(7, 1),                    -- 儀器架設地面高度（公尺）
-    address     TEXT,
     is_active   BOOLEAN               DEFAULT true,
-    created_at  TIMESTAMP             DEFAULT NOW(),
-    updated_at  TIMESTAMP             DEFAULT NOW()
+    created_at  TIMESTAMPTZ           DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ           DEFAULT NOW()
 );
 
--- 插入 TMA_328 儀器資料（架設於華亞工業區）
+-- 插入 TMA_328 儀器資料
 INSERT INTO wind_lidar_stations
-    (station_id, county, latitude, longitude, altitude_m, address)
+    (station_id, county, latitude, longitude, altitude_m)
 VALUES
-    ('TMA_328', '桃園市', 25.0505, 121.3713, 0.0, '桃園市龜山區華亞工業區')
+    ('TMA_328', '桃園市', 25.0528, 121.1179, 36)
 ON CONFLICT (station_id) DO UPDATE SET
     latitude   = EXCLUDED.latitude,
     longitude  = EXCLUDED.longitude,
     altitude_m = EXCLUDED.altitude_m,
     updated_at = NOW();
-
--- 空間索引
-CREATE INDEX IF NOT EXISTS idx_wl_stations_location
-    ON wind_lidar_stations USING GIST(location);
-
--- 更新 PostGIS location 欄位
-UPDATE wind_lidar_stations
-SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
-WHERE location IS NULL AND latitude IS NOT NULL AND longitude IS NOT NULL;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 2. 量測參數種類表
@@ -56,19 +47,19 @@ CREATE TABLE IF NOT EXISTS wind_lidar_parameters (
     unit           VARCHAR(20)  NOT NULL,
     data_type      VARCHAR(10)  NOT NULL DEFAULT 'float',  -- 'float' 或 'integer'
     description    TEXT,
-    created_at     TIMESTAMP    DEFAULT NOW()
+    created_at     TIMESTAMPTZ  DEFAULT NOW()
 );
 
 INSERT INTO wind_lidar_parameters
     (parameter_id, parameter_name, parameter_eng, unit, data_type, description)
 VALUES
-    ('hsp',       '水平風速', 'Hsp',       'm/s', 'float',   'Hsp=0 表示訊號不足，整列無效'),
-    ('vsp',       '垂直風速', 'Vsp',       'm/s', 'float',   '正值向上，負值向下'),
-    ('wdir',      '風向',     'Wdir',      '度',  'float',   '範圍 [0, 360)，0/360 為正北，順時針'),
-    ('turb',      '紊流強度', 'Turb',      '',    'float',   '紊流強度指標'),
-    ('min_int',   '最小強度', 'Min int.',  '',    'float',   '量測區間最小後向散射強度'),
-    ('mean_int',  '平均強度', 'Mean int.', '',    'float',   '量測區間平均後向散射強度'),
-    ('n_samples', '樣本數',   'n',         '',    'integer', '區間內有效光脈衝樣本數（1～401）')
+    ('Hsp',      '水平風速',     'horizontal speed', 'm/s', 'float',   'Hsp=0 表示訊號不足，整列無效'),
+    ('Vsp',      '垂直風速',     'vertical speed',   'm/s', 'float',   '正值向上，負值向下'),
+    ('Wdir',     '風向',         'wind direction',   '°',  'float',   '範圍 [0, 360)，0/360 為正北，順時針'),
+    ('Turb',     '亂流強度',     'turbulence',       '',   'float',   '亂流強度指標'),
+    ('Min_int.', '最小訊號強度', 'minimum intensity','',   'float',   '量測區間最小後向散射強度'),
+    ('Mean_int.','平均訊號強度', 'mean intensity',   '',   'float',   '量測區間平均後向散射強度'),
+    ('n',        '樣本數',       'number of samples','',   'integer', '該時間與高度層之統計筆數')
 ON CONFLICT (parameter_id) DO UPDATE SET
     parameter_name = EXCLUDED.parameter_name,
     unit           = EXCLUDED.unit,
@@ -80,16 +71,16 @@ ON CONFLICT (parameter_id) DO UPDATE SET
 CREATE TABLE IF NOT EXISTS wind_lidar_data (
     id           BIGSERIAL,
     station_id   VARCHAR(20)    NOT NULL,
-    measure_time TIMESTAMP      NOT NULL,           -- 分區鍵，10分鐘均值的區間終點
+    measure_time TIMESTAMPTZ    NOT NULL,           -- 分區鍵，10分鐘均值的區間終點（UTC）
     height_m     NUMERIC(7, 1)  NOT NULL,           -- 量測高度（公尺）
     parameter_id VARCHAR(10)    NOT NULL,
     value        NUMERIC(10, 3),                    -- 量測數值（無效值為 NULL）
     raw_value    VARCHAR(30),                       -- 原始字串值
     data_quality VARCHAR(10)    DEFAULT 'good',     -- 'good' 或 'invalid'
-    period_start TIMESTAMP,                         -- measure_time - 10 分鐘
-    period_end   TIMESTAMP,                         -- 等同 measure_time
+    period_start TIMESTAMPTZ,                       -- measure_time - 10 分鐘（UTC）
+    period_end   TIMESTAMPTZ,                       -- 等同 measure_time（UTC）
     source       VARCHAR(20)    DEFAULT 'history',
-    created_at   TIMESTAMP      DEFAULT NOW(),
+    created_at   TIMESTAMPTZ    DEFAULT NOW(),
     PRIMARY KEY (id, measure_time),
     FOREIGN KEY (station_id)   REFERENCES wind_lidar_stations(station_id),
     FOREIGN KEY (parameter_id) REFERENCES wind_lidar_parameters(parameter_id),
@@ -139,19 +130,23 @@ CREATE INDEX IF NOT EXISTS idx_wl_station_time_height
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 6. 彙總視圖（最近 1 小時，pivot 回寬表格式）
+--    修正：
+--      - 'Mean_int. ' 後面多餘空格已移除
+--      - 別名含點號需用雙引號包覆
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE VIEW wind_lidar_latest AS
 SELECT
     s.station_id,
     d.measure_time,
+    d.measure_time AT TIME ZONE 'Asia/Taipei' AS measure_time_tw,
     d.height_m,
-    MAX(CASE WHEN d.parameter_id = 'hsp'      THEN d.value END) AS hsp,
-    MAX(CASE WHEN d.parameter_id = 'vsp'      THEN d.value END) AS vsp,
-    MAX(CASE WHEN d.parameter_id = 'wdir'     THEN d.value END) AS wdir,
-    MAX(CASE WHEN d.parameter_id = 'turb'     THEN d.value END) AS turb,
-    MAX(CASE WHEN d.parameter_id = 'min_int'  THEN d.value END) AS min_int,
-    MAX(CASE WHEN d.parameter_id = 'mean_int' THEN d.value END) AS mean_int,
-    MAX(CASE WHEN d.parameter_id = 'n_samples'THEN d.value END) AS n_samples
+    MAX(CASE WHEN d.parameter_id = 'Hsp'      THEN d.value END) AS "Hsp",
+    MAX(CASE WHEN d.parameter_id = 'Vsp'      THEN d.value END) AS "Vsp",
+    MAX(CASE WHEN d.parameter_id = 'Wdir'     THEN d.value END) AS "Wdir",
+    MAX(CASE WHEN d.parameter_id = 'Turb'     THEN d.value END) AS "Turb",
+    MAX(CASE WHEN d.parameter_id = 'Min_int.' THEN d.value END) AS "Min_int.",
+    MAX(CASE WHEN d.parameter_id = 'Mean_int.'THEN d.value END) AS "Mean_int.",
+    MAX(CASE WHEN d.parameter_id = 'n'        THEN d.value END) AS "n_samples"
 FROM wind_lidar_stations s
 JOIN wind_lidar_data d ON s.station_id = d.station_id
 WHERE d.measure_time >= (SELECT MAX(measure_time) FROM wind_lidar_data) - INTERVAL '1 hour'
@@ -174,7 +169,7 @@ BEGIN
     RETURN QUERY
     SELECT
         s.station_id,
-        COUNT(d.station_id)                                         AS total_records,
+        COUNT(d.station_id)                                        AS total_records,
         COUNT(CASE WHEN d.data_quality = 'good'    THEN 1 END)     AS valid_records,
         COUNT(CASE WHEN d.data_quality = 'invalid' THEN 1 END)     AS invalid_records,
         ROUND(
@@ -197,5 +192,5 @@ $$ LANGUAGE plpgsql;
 COMMENT ON TABLE wind_lidar_stations   IS 'WindLidar 風光達儀器基本資料';
 COMMENT ON TABLE wind_lidar_parameters IS 'WindLidar 量測參數種類（7 項）';
 COMMENT ON TABLE wind_lidar_data       IS 'WindLidar 量測資料（分區表，按天，2026-03-27 至 2026-04-15）';
-COMMENT ON VIEW  wind_lidar_latest     IS '最近 1 小時 WindLidar 量測資料（寬表格式）';
+COMMENT ON VIEW  wind_lidar_latest     IS '最近 1 小時 WindLidar 量測資料（寬表格式，measure_time_tw 為台灣時間）';
 COMMENT ON FUNCTION check_wind_lidar_quality() IS '檢查 WindLidar 資料品質統計';

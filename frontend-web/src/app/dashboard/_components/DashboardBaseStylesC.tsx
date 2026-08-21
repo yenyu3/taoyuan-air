@@ -374,15 +374,52 @@ export function DashboardBaseStylesC() {
         overflow-wrap: anywhere;
       }
 
-      .insight-chip {
-        flex: 0 0 auto;
-        border: 1px solid ${C.blueBorder};
+      .ai-insight-meta {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .ai-action-row,
+      .ai-source-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .ai-action-chip,
+      .ai-source-chip {
+        max-width: 100%;
         border-radius: 999px;
-        padding: 5px 11px;
-        background: rgba(49, 94, 143, 0.14);
-        color: ${C.blue};
-        font-size: 13px;
+        padding: 4px 8px;
+        font-size: 10px;
+        line-height: 1.35;
         font-weight: 800;
+        text-decoration: none;
+        overflow-wrap: anywhere;
+      }
+
+      .ai-action-chip {
+        border: 1px solid rgba(49, 94, 143, 0.22);
+        background: rgba(49, 94, 143, 0.08);
+        color: ${C.blue};
+      }
+
+      .ai-source-chip {
+        border: 1px solid rgba(80, 103, 128, 0.18);
+        background: rgba(255, 255, 255, 0.58);
+        color: ${C.muted};
+      }
+
+      .ai-disclaimer {
+        margin: 0;
+        color: ${C.hint};
+        font-size: 10px;
+        line-height: 1.45;
+        font-weight: 700;
       }
 
       .trend-section {

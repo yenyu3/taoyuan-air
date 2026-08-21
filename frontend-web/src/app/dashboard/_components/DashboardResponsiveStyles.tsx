@@ -157,10 +157,6 @@ export function DashboardResponsiveStyles() {
           margin-bottom: 10px;
         }
 
-        .insight-chip {
-          margin-left: 48px;
-        }
-
         .aqi-block {
           padding-top: 0;
         }

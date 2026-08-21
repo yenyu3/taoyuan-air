@@ -15,6 +15,9 @@ import {
   findNearestDistrict,
 } from '@shared/constants/districts';
 import TaoyuanSVGMap from '@/components/map/TaoyuanSVGMap';
+import { fetchAIInsight, type AIInsightResponse, type AIMetricSnapshot, type AIUserProfileContext } from '@/lib/ai-api';
+import { useAIAssistantStore } from '@/store/aiAssistantStore';
+import { useAuth } from '@/lib/auth-context';
 import {
   AQIGauge,
   DISTRICT_EXTENDED,
@@ -40,6 +43,9 @@ export default function DashboardPage() {
   const [currentWeather, setCurrentWeather] = useState<CurrentWeatherData>(MOCK_CURRENT_WEATHER);
   const [forecast, setForecast] = useState<ForecastDay[]>(generateMockForecast());
   const [past1hrRain, setPast1hrRain] = useState('0.0');
+  const [aiInsight, setAIInsight] = useState<AIInsightResponse | null>(null);
+  const setAIDashboardContext = useAIAssistantStore((state) => state.setDashboardContext);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!navigator.geolocation) return; // 不支援定位，維持預設中壢區
@@ -109,6 +115,55 @@ export default function DashboardPage() {
   const pm10 = live?.pm10 ?? ext.pm10;
   const activity = getActivityInfo(aqi);
   const ActivityIcon = activity.icon;
+  const aiMetrics = useMemo<AIMetricSnapshot>(() => ({
+    aqi,
+    pm25,
+    pm10,
+    o3,
+    no2,
+    so2,
+    co,
+    temperature: Number(currentWeather.temperature) || null,
+    humidity: Number(currentWeather.humidity) || null,
+    past1hrRain,
+  }), [aqi, pm25, pm10, o3, no2, so2, co, currentWeather.temperature, currentWeather.humidity, past1hrRain]);
+  const aiUserProfile = useMemo<AIUserProfileContext | undefined>(() => {
+    if (!user) return undefined;
+    const sensitiveGroups = [
+      user.has_respiratory ? 'respiratory' : null,
+      user.has_elderly ? 'elderly' : null,
+      user.has_child ? 'child' : null,
+    ].filter(Boolean) as string[];
+
+    return {
+      mainDistrict: user.default_district,
+      sensitivity: user.sensitivity,
+      sensitiveGroups,
+      hasRespiratory: user.has_respiratory,
+      hasElderly: user.has_elderly,
+      hasChild: user.has_child,
+    };
+  }, [user]);
+
+  useEffect(() => {
+    setAIDashboardContext(district, aiMetrics, aiUserProfile);
+
+    let cancelled = false;
+    fetchAIInsight(district, aiMetrics, aiUserProfile)
+      .then((response) => {
+        if (!cancelled) setAIInsight(response);
+      })
+      .catch(() => {
+        if (!cancelled) setAIInsight(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [district, aiMetrics, aiUserProfile, setAIDashboardContext]);
+
+  const aiActivityAdvice = aiInsight?.activityAdvice;
+  const aiTrendInsight = aiInsight?.trendInsight;
 
   const pollutants = [
     { name: <>NO<sub className="text-xs">2</sub></>, sub: '二氧化氮', value: no2, unit: 'ppb' },
@@ -212,7 +267,7 @@ export default function DashboardPage() {
                   <span className="advice-icon" style={{ backgroundColor: `${activity.color}28` }}>
                     <ActivityIcon size={18} color={activity.color} />
                   </span>
-                  <p>{activity.advice}</p>
+                  <p>{aiActivityAdvice?.summary ?? activity.advice}</p>
                 </div>
               </div>
 
@@ -223,10 +278,9 @@ export default function DashboardPage() {
                     <TrendingDown size={16} />
                   </span>
                   <p className="insight-copy">
-                    <strong>PM<sub className="text-xs">2.5</sub> 濃度預計下降</strong>
-                    <span>未來 3 小時因海風輻合影響</span>
+                    <strong>{aiTrendInsight?.headline ?? <>PM<sub className="text-xs">2.5</sub> 趨勢分析</>}</strong>
+                    <span>{aiTrendInsight?.summary ?? '以目前即時數值做保守解讀，接入更多歷史資料後可提供完整趨勢歸因。'}</span>
                   </p>
-                  <span className="insight-chip">-12%</span>
                 </div>
               </div>
             </div>

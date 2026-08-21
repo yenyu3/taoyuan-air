@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { TopNav } from "@/components/navigation/TopNav";
+import { ChatFab } from "@/components/ai/ChatFab";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 
-const LOGO_URL = "https://res.cloudinary.com/da3bvump4/image/upload/v1787303369/5f7a91ad-47c8-40e5-9981-cd41395dcb99_vrclgp.png";
 const APP_ICON_URL = "/icon.png?v=1787303369";
 
 export const metadata: Metadata = {
@@ -28,6 +28,7 @@ export default function RootLayout({
         <AuthProvider>
           <TopNav />
           <main style={{ paddingTop: 80 }}>{children}</main>
+          <ChatFab />
         </AuthProvider>
       </body>
     </html>

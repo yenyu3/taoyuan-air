@@ -319,7 +319,7 @@ export default function AlertsPage() {
                 <div style={{ ...card, padding: 18, display: 'flex', alignItems: 'center', gap: 16 }}>
                   <div style={{
                     width: 42, height: 42, borderRadius: 12, flexShrink: 0,
-                    backgroundColor: C.accentAlpha, border: `1px solid ${C.accentBorder}`,
+                    backgroundColor: C.accentAlpha,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <ShieldAlert size={18} color={C.accent} strokeWidth={2} />
@@ -341,7 +341,7 @@ export default function AlertsPage() {
               <div style={{ ...card, padding: 18, display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{
                   width: 42, height: 42, borderRadius: 12, flexShrink: 0,
-                  backgroundColor: C.primaryAlpha, border: `1px solid ${C.primaryBorder}`,
+                  backgroundColor: C.primaryAlpha,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <Lightbulb size={18} color={C.primary} strokeWidth={2} />

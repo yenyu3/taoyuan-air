@@ -8,6 +8,7 @@ interface AuthContextValue {
   user: UserProfile | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  devLogin: () => Promise<{ ok: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -71,8 +72,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const devLogin = useCallback(async () => {
+    const res = await authApi.devLogin();
+    if (res.ok) {
+      await refreshUser();
+      return { ok: true };
+    }
+    const data = await res.json().catch(() => ({}));
+    return { ok: false, error: data.detail ?? 'Dev login failed' };
+  }, [refreshUser]);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, devLogin, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

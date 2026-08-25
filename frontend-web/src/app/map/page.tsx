@@ -5,481 +5,20 @@ import dynamic from 'next/dynamic';
 import { useStore } from '@shared/store';
 import { getExamPoints, getGrid, setScenario, getTEDSPoints } from '@shared/api/index';
 import { palette } from '@shared/constants/theme';
-import { DISTRICT_COORDINATES, DISTRICTS, calculateDistance, findNearestDistrict } from '@shared/constants/districts';
-import { ExamPoint, GridCell, Pollutant, TEDSPoint } from '@shared/types';
+import { DISTRICTS } from '@shared/constants/districts';
+import { ExamPoint, GridCell, TEDSPoint } from '@shared/types';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { CardAQIGauge, CardPollutantArc, getAQIBadgeBg, getAQIColor, getPollutantColor, pollutantMeta } from './_lib/airQuality';
+import { generateDemoExamPoints, generateDemoTEDSPoints } from './_lib/demoData';
+import { formatTime, getGridLocationName, getNearestGridToDistrict, normalizeSearchText, withDistrict, type SearchResult } from './_lib/search';
+import { SENSITIVE_GROUPS } from './_data/sensitiveGroups';
+import { IconCompass, IconHumidity, IconTemp, IconWind, SecLabel } from './_components/MapWidgets';
+import { MapLoadingOverlay } from './_components/MapLoadingOverlay';
 
 const LeafletMap = dynamic(() => import('@/components/map/LeafletMap'), { ssr: false });
 const TGOSMap = dynamic(() => import('@/components/map/TGOSMap'), { ssr: false });
 
 // ── Pollutant metadata ───────────────────────────────────────────
-const pollutantMeta: Record<Pollutant, {
-  short: React.ReactNode; label: string; unit: string; description: string;
-  range: [string, string, string, string]; arcMax: number; arcStandard: number;
-}> = {
-  PM25: {
-    short: <>PM<sub className="text-xs">2.5</sub></>, label: '細懸浮微粒', unit: 'µg/m³',
-    description: '極細小的懸浮顆粒，容易被吸入肺部深處，來源包括車輛廢氣與工業排放。',
-    range: ['0', '15', '35', '54+'], arcMax: 100, arcStandard: 15.4,
-  },
-  O3: {
-    short: <>O<sub className="text-xs">3</sub></>, label: '臭氧', unit: 'ppb',
-    description: '陽光照射下產生的氣體，午後濃度較高，對眼睛和呼吸道有刺激性。',
-    range: ['0', '55', '125', '165+'], arcMax: 200, arcStandard: 54,
-  },
-  NOX: {
-    short: <>NO<sub className="text-xs">x</sub></>, label: '氮氧化物', unit: 'ppb',
-    description: '主要來自交通與燃燒排放，是城市空氣污染的重要指標。',
-    range: ['0', '30', '80', '150+'], arcMax: 200, arcStandard: 30,
-  },
-  VOCs: {
-    short: 'VOCs', label: '揮發性有機物', unit: 'ppb',
-    description: '來自工業、油漆、溶劑等，也是臭氧生成的重要前驅物。',
-    range: ['0', '100', '250', '500+'], arcMax: 600, arcStandard: 100,
-  },
-};
-
-// ── AQI color / status (standard scale) ─────────────────────────
-const getAQIColor = (aqi: number) => {
-  if (aqi <= 50)  return '#76c476';
-  if (aqi <= 100) return '#edbb05';
-  if (aqi <= 150) return '#ff9800';
-  if (aqi <= 200) return '#f44336';
-  return '#9c27b0';
-};
-const getAQIStatus = (aqi: number) => {
-  if (aqi <= 50)  return '良好';
-  if (aqi <= 100) return '普通';
-  if (aqi <= 150) return '敏感族群注意';
-  if (aqi <= 200) return '對所有人不健康';
-  return '非常不健康';
-};
-const getAQIBadgeBg = (aqi: number) => {
-  if (aqi <= 50)  return { bg: 'rgba(118,196,118,0.14)', color: '#2F6B3D' };
-  if (aqi <= 100) return { bg: 'rgba(237,187,5,0.14)',   color: '#7A5A00' };
-  if (aqi <= 150) return { bg: 'rgba(255,152,0,0.14)',   color: '#8B4E00' };
-  if (aqi <= 200) return { bg: 'rgba(244,67,54,0.12)',   color: '#9F1239' };
-  return              { bg: 'rgba(156,39,176,0.12)',   color: '#6B21A8' };
-};
-
-const getPollutantColor = (value: number, standard: number) => {
-  const r = value / standard;
-  if (r <= 1)   return '#76c476';
-  if (r <= 2)   return '#edbb05';
-  if (r <= 3.5) return '#ff9800';
-  return '#f44336';
-};
-
-// ── Circle AQI Gauge (adapted from Dashboard AQIGauge) ──────────
-const G = { SIZE: 118, STROKE: 8 } as const;
-const G_R    = (G.SIZE - G.STROKE) / 2;        // 55
-const G_CIRC = 2 * Math.PI * G_R;              // ~345.6
-const G_CTR  = G.SIZE / 2;                     // 59
-
-function CardAQIGauge({ aqi }: { aqi: number }) {
-  const color  = getAQIColor(aqi);
-  const pct    = Math.min(Math.max(aqi / 200, 0), 1);
-  const offset = G_CIRC * (1 - pct);
-  return (
-    <div style={{ position: 'relative', width: G.SIZE, height: G.SIZE, display: 'grid', placeItems: 'center', margin: '0 auto' }}>
-      <svg width={G.SIZE} height={G.SIZE} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
-        <defs>
-          <linearGradient id="map-aqi-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={`${color}99`} />
-            <stop offset="100%" stopColor={color} />
-          </linearGradient>
-        </defs>
-        <circle cx={G_CTR} cy={G_CTR} r={G_R} stroke={color} strokeOpacity={0.2} strokeWidth={G.STROKE} fill="none" />
-        <circle
-          key={`aqi-ring-${aqi}`}
-          cx={G_CTR} cy={G_CTR} r={G_R}
-          stroke="url(#map-aqi-grad)" strokeWidth={G.STROKE} fill="none"
-          strokeDasharray={G_CIRC} strokeDashoffset={G_CIRC}
-          strokeLinecap="round"
-          transform={`rotate(-90, ${G_CTR}, ${G_CTR})`}
-        >
-          <animate attributeName="stroke-dashoffset" from={G_CIRC} to={offset} dur="1s" fill="freeze" calcMode="linear" />
-        </circle>
-      </svg>
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: G.SIZE - 38, height: G.SIZE - 38, borderRadius: '50%', background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(255,255,255,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(58,30,45,0.08)' }}>
-        <span style={{ fontSize: 8, color: '#b0a0b8', letterSpacing: '1.5px', fontFamily: 'monospace' }}>AQI</span>
-        <strong style={{ fontSize: 26, lineHeight: 1.1, fontWeight: 900, color }}>{aqi}</strong>
-        <span style={{ marginTop: 3, padding: '1px 6px', borderRadius: 999, background: `${color}22`, border: `1px solid ${color}44`, fontSize: 8, fontWeight: 800, color }}>{getAQIStatus(aqi)}</span>
-      </div>
-    </div>
-  );
-}
-
-// ── Half-arc pollutant gauge (adapted from Dashboard GaugeArc) ───
-const ARC_R   = 42;
-const ARC_CX  = 52;
-const ARC_CY  = 54;
-const ARC_LEN = Math.PI * ARC_R;
-
-function polarToXY(angleDeg: number) {
-  const rad = (Math.PI * (180 - angleDeg)) / 180;
-  return { x: ARC_CX + ARC_R * Math.cos(rad), y: ARC_CY - ARC_R * Math.sin(rad) };
-}
-
-function CardPollutantArc({ value, max, standard, color, unit, label }: {
-  value: number; max: number; standard: number; color: string; unit: string; label: string;
-}) {
-  const dashOffset    = ARC_LEN * (1 - Math.min(value / max, 1));
-  const markerAngle   = Math.min(standard / max, 1) * 180;
-  const rad           = (Math.PI * (180 - markerAngle)) / 180;
-  const mp            = polarToXY(markerAngle);
-  const lx            = ARC_CX + (ARC_R + 13) * Math.cos(rad);
-  const ly            = ARC_CY - (ARC_R + 13) * Math.sin(rad);
-  return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 12, fontWeight: 800, color: palette.textMain, lineHeight: 1.2 }}>{label}</div>
-      <svg
-        key={`arc-${value}-${unit}`}
-        width={160} height={76}
-        viewBox="-8 0 120 65"
-        style={{ display: 'block', margin: '0 auto', overflow: 'visible' }}
-        aria-hidden="true"
-      >
-        <path d={`M 10 54 A ${ARC_R} ${ARC_R} 0 0 1 94 54`} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth={6} strokeLinecap="round" />
-        <path
-          d={`M 10 54 A ${ARC_R} ${ARC_R} 0 0 1 94 54`}
-          fill="none" stroke={color} strokeWidth={6} strokeLinecap="round"
-          strokeDasharray={ARC_LEN} strokeDashoffset={ARC_LEN}
-        >
-          <animate attributeName="stroke-dashoffset" from={ARC_LEN} to={dashOffset} dur="0.8s" fill="freeze" calcMode="linear" />
-        </path>
-        <line x1={mp.x} y1={mp.y} x2={lx} y2={ly} stroke="rgba(0,0,0,0.25)" strokeWidth={1.5} strokeLinecap="round" />
-        <text x={lx} y={ly - 2} fontSize={8} fill="#aaa" textAnchor="middle">{standard}</text>
-        <text x={ARC_CX} y={48} fontSize={19} fontWeight={700} fill={color} textAnchor="middle">{Math.round(value)}</text>
-        <text x={ARC_CX} y={59} fontSize={8} fill="#aaa" textAnchor="middle">{unit}</text>
-      </svg>
-    </div>
-  );
-}
-
-// ── Sensitive group icons ────────────────────────────────────────
-const SENSITIVE_GROUPS = [
-  {
-    key: '兒童',
-    label: '兒童',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="6" r="4"/>
-        <path d="M8 12h8l1.5 8H6.5z"/>
-      </svg>
-    ),
-  },
-  {
-    key: '老人',
-    label: '老人',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="10.5" cy="5" r="3"/>
-        <path d="M8 9h5l-0.5 7H8.5z"/>
-        <path d="M10 16v5M8 21h4"/>
-        <line x1="14.5" y1="9.5" x2="18" y2="21"/>
-      </svg>
-    ),
-  },
-  {
-    key: '孕婦',
-    label: '孕婦',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="5" r="3.2"/>
-        <path d="M9.5 9.5c-1.5 2-1.5 4.5 0 6.5s2.5 3 2.5 3 1-1 2.5-3 1.5-4.5 0-6.5"/>
-        <path d="M12 19v3"/>
-      </svg>
-    ),
-  },
-  {
-    key: '心肺',
-    label: '心肺疾病',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-        <polyline points="8 12 10 10 12 14 14 11 16 12"/>
-      </svg>
-    ),
-  },
-  {
-    key: '氣喘',
-    label: '氣喘患者',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 4v5"/>
-        <path d="M8.5 9C5 10 4 13 4 15s2 4.5 5 4.5h1.5V9"/>
-        <path d="M15.5 9C19 10 20 13 20 15s-2 4.5-5 4.5H13.5V9"/>
-      </svg>
-    ),
-  },
-] as const;
-
-// ── Helpers ──────────────────────────────────────────────────────
-const formatTime = (iso?: string) => {
-  if (!iso) return '尚無資料';
-  return new Intl.DateTimeFormat('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
-};
-
-type GridWithDistrict = GridCell & { district?: string; village?: string };
-type SearchResult = {
-  key: string;
-  label: string;
-  detail: string;
-  grid: GridWithDistrict;
-};
-
-type VillageCenter = {
-  district: string;
-  village: string;
-  latitude: number;
-  longitude: number;
-};
-
-const TAOYUAN_VILLAGE_CENTERS: VillageCenter[] = [
-  { district: '桃園區', village: '中正里', latitude: 24.9937, longitude: 121.3010 },
-  { district: '桃園區', village: '武陵里', latitude: 24.9896, longitude: 121.3136 },
-  { district: '桃園區', village: '龍鳳里', latitude: 24.9807, longitude: 121.2817 },
-  { district: '桃園區', village: '中路里', latitude: 24.9975, longitude: 121.2900 },
-  { district: '桃園區', village: '大林里', latitude: 24.9848, longitude: 121.3227 },
-  { district: '桃園區', village: '會稽里', latitude: 25.0060, longitude: 121.3195 },
-  { district: '中壢區', village: '石頭里', latitude: 24.9539, longitude: 121.2248 },
-  { district: '中壢區', village: '中原里', latitude: 24.9575, longitude: 121.2418 },
-  { district: '中壢區', village: '內壢里', latitude: 24.9726, longitude: 121.2589 },
-  { district: '中壢區', village: '青埔里', latitude: 25.0137, longitude: 121.2140 },
-  { district: '中壢區', village: '龍岡里', latitude: 24.9342, longitude: 121.2323 },
-  { district: '中壢區', village: '過嶺里', latitude: 24.9636, longitude: 121.1754 },
-  { district: '平鎮區', village: '北勢里', latitude: 24.9450, longitude: 121.2188 },
-  { district: '平鎮區', village: '東勢里', latitude: 24.9166, longitude: 121.2485 },
-  { district: '平鎮區', village: '宋屋里', latitude: 24.9446, longitude: 121.2060 },
-  { district: '平鎮區', village: '山峰里', latitude: 24.8974, longitude: 121.2130 },
-  { district: '八德區', village: '大成里', latitude: 24.9287, longitude: 121.2833 },
-  { district: '八德區', village: '大湳里', latitude: 24.9581, longitude: 121.3016 },
-  { district: '八德區', village: '瑞豐里', latitude: 24.9308, longitude: 121.3001 },
-  { district: '八德區', village: '興仁里', latitude: 24.9214, longitude: 121.2848 },
-  { district: '龜山區', village: '龜山里', latitude: 24.9925, longitude: 121.3375 },
-  { district: '龜山區', village: '大湖里', latitude: 25.0535, longitude: 121.3611 },
-  { district: '龜山區', village: '文化里', latitude: 25.0567, longitude: 121.3689 },
-  { district: '龜山區', village: '山頂里', latitude: 24.9878, longitude: 121.3280 },
-  { district: '蘆竹區', village: '南崁里', latitude: 25.0475, longitude: 121.2926 },
-  { district: '蘆竹區', village: '坑口里', latitude: 25.0843, longitude: 121.2658 },
-  { district: '蘆竹區', village: '海湖里', latitude: 25.1012, longitude: 121.2562 },
-  { district: '蘆竹區', village: '山腳里', latitude: 25.0916, longitude: 121.2875 },
-  { district: '大園區', village: '大園里', latitude: 25.0608, longitude: 121.2006 },
-  { district: '大園區', village: '埔心里', latitude: 25.0532, longitude: 121.2247 },
-  { district: '大園區', village: '菓林里', latitude: 25.0797, longitude: 121.2342 },
-  { district: '大園區', village: '竹圍里', latitude: 25.1041, longitude: 121.2440 },
-  { district: '大園區', village: '橫峰里', latitude: 25.0186, longitude: 121.2145 },
-  { district: '觀音區', village: '觀音里', latitude: 25.0354, longitude: 121.0823 },
-  { district: '觀音區', village: '草漯里', latitude: 25.0435, longitude: 121.1420 },
-  { district: '觀音區', village: '樹林里', latitude: 25.0545, longitude: 121.1245 },
-  { district: '觀音區', village: '崙坪里', latitude: 25.0005, longitude: 121.1512 },
-  { district: '觀音區', village: '新坡里', latitude: 25.0138, longitude: 121.1354 },
-  { district: '新屋區', village: '新屋里', latitude: 24.9697, longitude: 121.1063 },
-  { district: '新屋區', village: '永安里', latitude: 24.9869, longitude: 121.0315 },
-  { district: '新屋區', village: '後庄里', latitude: 24.9509, longitude: 121.0306 },
-  { district: '新屋區', village: '埔頂里', latitude: 24.9588, longitude: 121.0875 },
-  { district: '楊梅區', village: '楊梅里', latitude: 24.9175, longitude: 121.1460 },
-  { district: '楊梅區', village: '埔心里', latitude: 24.9127, longitude: 121.1838 },
-  { district: '楊梅區', village: '富岡里', latitude: 24.9348, longitude: 121.0832 },
-  { district: '楊梅區', village: '上湖里', latitude: 24.8970, longitude: 121.1152 },
-  { district: '龍潭區', village: '龍潭里', latitude: 24.8635, longitude: 121.2168 },
-  { district: '龍潭區', village: '中正里', latitude: 24.8675, longitude: 121.2125 },
-  { district: '龍潭區', village: '高原里', latitude: 24.8358, longitude: 121.1964 },
-  { district: '龍潭區', village: '三林里', latitude: 24.8518, longitude: 121.2322 },
-  { district: '大溪區', village: '一心里', latitude: 24.8838, longitude: 121.2681 },
-  { district: '大溪區', village: '仁善里', latitude: 24.9050, longitude: 121.2816 },
-  { district: '大溪區', village: '南興里', latitude: 24.8860, longitude: 121.2520 },
-  { district: '大溪區', village: '月眉里', latitude: 24.8972, longitude: 121.2923 },
-  { district: '復興區', village: '澤仁里', latitude: 24.8202, longitude: 121.3523 },
-  { district: '復興區', village: '三民里', latitude: 24.8335, longitude: 121.3165 },
-  { district: '復興區', village: '羅浮里', latitude: 24.7904, longitude: 121.3730 },
-  { district: '復興區', village: '華陵里', latitude: 24.6854, longitude: 121.3921 },
-];
-
-const SEARCH_PLACE_ALIASES: Array<{
-  label: string;
-  tokens: string[];
-  latitude: number;
-  longitude: number;
-}> = [
-  { label: '桃園市', tokens: ['桃園市', '全市'], latitude: 24.9936, longitude: 121.3010 },
-  { label: '桃園機場', tokens: ['桃園機場', '機場', 'taoyuanairport', 'airport'], latitude: 25.0797, longitude: 121.2342 },
-  { label: '高鐵桃園站', tokens: ['高鐵桃園', '桃園高鐵', '青埔', '高鐵站'], latitude: 25.0137, longitude: 121.2140 },
-  { label: '觀音工業區', tokens: ['觀音工業區', '觀音工業', '工業區'], latitude: 25.0384, longitude: 121.1138 },
-  { label: '中壢交流道', tokens: ['中壢交流道', '中壢'], latitude: 24.9681, longitude: 121.2231 },
-];
-
-const normalizeSearchText = (value: string) => value
-  .trim()
-  .toLowerCase()
-  .replace(/\s+/g, '')
-  .replace(/台/g, '臺');
-
-const getGridDistrict = (grid: GridCell) => (
-  (grid as GridWithDistrict).district ||
-  findNearestDistrict(grid.centerLatLng.latitude, grid.centerLatLng.longitude)
-);
-
-const getGridVillageLocation = (grid: GridCell) => {
-  const existing = grid as GridWithDistrict;
-  if (existing.district && existing.village) {
-    return { district: existing.district, village: existing.village };
-  }
-
-  const nearest = TAOYUAN_VILLAGE_CENTERS.reduce<VillageCenter | null>((best, village) => {
-    if (!best) return village;
-    return calculateDistance(
-      grid.centerLatLng.latitude,
-      grid.centerLatLng.longitude,
-      village.latitude,
-      village.longitude,
-    ) < calculateDistance(
-      grid.centerLatLng.latitude,
-      grid.centerLatLng.longitude,
-      best.latitude,
-      best.longitude,
-    )
-      ? village
-      : best;
-  }, null);
-
-  return nearest
-    ? { district: nearest.district, village: nearest.village }
-    : { district: getGridDistrict(grid), village: '' };
-};
-
-const getGridLocationName = (grid: GridCell) => {
-  const { district, village } = getGridVillageLocation(grid);
-  return village ? `${district}${village}` : district;
-};
-
-const withDistrict = (grid: GridCell): GridWithDistrict => ({
-  ...grid,
-  ...getGridVillageLocation(grid),
-});
-
-const getDistanceToPoint = (grid: GridCell, latitude: number, longitude: number) => (
-  calculateDistance(grid.centerLatLng.latitude, grid.centerLatLng.longitude, latitude, longitude)
-);
-
-const getNearestGridToDistrict = (grids: GridCell[], district: string) => {
-  const coords = DISTRICT_COORDINATES[district];
-  if (!coords) return null;
-  return grids.reduce<GridCell | null>((best, grid) => {
-    if (!best) return grid;
-    return getDistanceToPoint(grid, coords.latitude, coords.longitude) <
-      getDistanceToPoint(best, coords.latitude, coords.longitude)
-      ? grid
-      : best;
-  }, null);
-};
-
-const getNearestGridToPoint = (grids: GridCell[], latitude: number, longitude: number) => (
-  grids.reduce<GridCell | null>((best, grid) => {
-    if (!best) return grid;
-    return getDistanceToPoint(grid, latitude, longitude) < getDistanceToPoint(best, latitude, longitude)
-      ? grid
-      : best;
-  }, null)
-);
-
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-
-const seededNoise = (seed: number) => {
-  const raw = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
-  return raw - Math.floor(raw);
-};
-
-const TAOYUAN_DEMO_BOUNDS = {
-  south: 24.82,
-  north: 25.19,
-  west: 121.02,
-  east: 121.49,
-};
-
-const generateDemoTEDSPoints = (count = 420): TEDSPoint[] => {
-  if (TAOYUAN_VILLAGE_CENTERS.length === 0) return [];
-
-  const points: TEDSPoint[] = [];
-  for (let i = 0; i < count; i += 1) {
-    const center = TAOYUAN_VILLAGE_CENTERS[i % TAOYUAN_VILLAGE_CENTERS.length];
-    const angle = seededNoise(i + 7) * Math.PI * 2;
-    const distance = 0.0018 + seededNoise(i + 97) * 0.0105;
-    const latitude = clamp(center.latitude + Math.cos(angle) * distance, TAOYUAN_DEMO_BOUNDS.south, TAOYUAN_DEMO_BOUNDS.north);
-    const longitude = clamp(center.longitude + Math.sin(angle) * distance, TAOYUAN_DEMO_BOUNDS.west, TAOYUAN_DEMO_BOUNDS.east);
-    const heightM = 18 + Math.round(seededNoise(i + 163) * 178);
-
-    points.push({
-      id: `demo-stack-${String(i + 1).padStart(4, '0')}`,
-      name: `${center.district}${center.village}排放點`,
-      latLng: { latitude, longitude },
-      heightM,
-      source: 'demo-fallback',
-    });
-  }
-
-  return points;
-};
-
-const generateDemoExamPoints = (count = 19): ExamPoint[] => {
-  if (TAOYUAN_VILLAGE_CENTERS.length === 0) return [];
-
-  const points: ExamPoint[] = [];
-  for (let i = 0; i < count; i += 1) {
-    const center = TAOYUAN_VILLAGE_CENTERS[i % TAOYUAN_VILLAGE_CENTERS.length];
-    const angle = seededNoise(i + 401) * Math.PI * 2;
-    const distance = 0.0015 + seededNoise(i + 557) * 0.005;
-    const latitude = clamp(center.latitude + Math.cos(angle) * distance, TAOYUAN_DEMO_BOUNDS.south, TAOYUAN_DEMO_BOUNDS.north);
-    const longitude = clamp(center.longitude + Math.sin(angle) * distance, TAOYUAN_DEMO_BOUNDS.west, TAOYUAN_DEMO_BOUNDS.east);
-
-    points.push({
-      id: `demo-mercury-${String(i + 1).padStart(3, '0')}`,
-      name: `${center.district}${center.village}汞排放點`,
-      latLng: { latitude, longitude },
-      source: '汞',
-      note: 'demo-fallback',
-    });
-  }
-
-  return points;
-};
-
-const IconTemp = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
-  </svg>
-);
-const IconHumidity = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-  </svg>
-);
-const IconWind = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
-  </svg>
-);
-const IconCompass = ({ deg }: { deg: number }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ transform: `rotate(${deg}deg)`, display: 'block' }}>
-    <circle cx="12" cy="12" r="10"/>
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="currentColor" stroke="none" opacity="0.3"/>
-    <line x1="12" y1="8" x2="12" y2="12" strokeWidth="2.5"/>
-  </svg>
-);
-
-// ── Section label (same style as Dashboard SecLabel) ─────────────
-function SecLabel({ title, sub }: { title: string; sub?: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ width: 3, height: 14, borderRadius: 2, flexShrink: 0, background: palette.primaryDeep, boxShadow: `0 0 6px ${palette.primaryDeep}55` }} />
-      <span style={{ fontSize: 12, fontWeight: 800, color: palette.textMain }}>{title}</span>
-      {sub && <small style={{ fontSize: 11, color: '#aaa', fontWeight: 600 }}>{sub}</small>}
-    </div>
-  );
-}
-
-// ── Map page ─────────────────────────────────────────────────────
 export default function MapPage() {
   const store = useStore();
   const { mode, setMode, setGridCells, setSelectedGridId, selectedScenario, isLoading, setIsLoading } = store;
@@ -593,20 +132,6 @@ export default function MapPage() {
     });
 
     // 保留舊搜尋邏輯（地點 alias + 網格 ID），目前依需求先註解僅保留行政區搜尋。
-    // SEARCH_PLACE_ALIASES
-    //   .filter((place) => place.tokens.some((token) => normalizeSearchText(token).includes(query)))
-    //   .forEach((place) => {
-    //     const grid = getNearestGridToPoint(gridCells, place.latitude, place.longitude);
-    //     if (!grid || usedGridIds.has(grid.gridId)) return;
-    //     usedGridIds.add(grid.gridId);
-    //     results.push({
-    //       key: `place-${place.label}`,
-    //       label: place.label,
-    //       detail: `前往 ${getGridLocationName(grid)} 附近網格 ${grid.gridId}`,
-    //       grid: withDistrict(grid),
-    //     });
-    //   });
-
     // gridCells
     //   .filter((grid) => normalizeSearchText(grid.gridId).includes(query) && !usedGridIds.has(grid.gridId))
     //   .slice(0, 4)
@@ -786,11 +311,11 @@ export default function MapPage() {
         <div style={{
           width: 296, backgroundColor: 'rgba(255,255,255,0.97)', borderRadius: 16,
           padding: '16px 16px 14px', border: `1px solid ${palette.borderSoft}`,
-          boxShadow: '0 8px 32px rgba(58,30,45,0.14)', backdropFilter: 'blur(18px)',
+          boxShadow: '0 8px 32px rgba(23,58,94,0.14)', backdropFilter: 'blur(18px)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <SecLabel title="圖層控制" />
-            <span style={{ padding: '3px 9px', borderRadius: 999, background: 'rgba(231,101,149,0.10)', color: palette.primaryDeep, fontSize: 11, fontWeight: 700 }}>
+            <span style={{ padding: '3px 9px', borderRadius: 999, background: 'rgba(49,94,143,0.10)', color: palette.primaryDeep, fontSize: 11, fontWeight: 700 }}>
               {mode === 'NOW' ? '即時' : '預報'}
             </span>
           </div>
@@ -810,7 +335,7 @@ export default function MapPage() {
                   onClick={() => setActiveLayerInfo(tab.key)}
                   style={{
                     border: `1px solid ${on ? palette.primaryDeep : palette.borderSoft}`,
-                    background: on ? 'rgba(231,101,149,0.12)' : 'rgba(248,249,250,0.78)',
+                    background: on ? 'rgba(49,94,143,0.12)' : 'rgba(248,249,250,0.78)',
                     color: on ? palette.primaryDeep : palette.textSecondary,
                     borderRadius: 9,
                     cursor: 'pointer',
@@ -825,10 +350,10 @@ export default function MapPage() {
                     }}
                     style={{
                       width: '100%',
-                      border: `1px solid ${visible ? '#d4567a66' : palette.borderSoft}`,
+                      border: `1px solid ${visible ? '#315E8F66' : palette.borderSoft}`,
                       borderRadius: 7,
-                      background: visible ? 'rgba(212,86,122,0.12)' : '#fff',
-                      color: visible ? '#b2476b' : '#8e7f89',
+                      background: visible ? 'rgba(49,94,143,0.12)' : '#fff',
+                      color: visible ? palette.primaryDeep : palette.textSecondary,
                       padding: '3px 0',
                       fontSize: 10,
                       fontWeight: 700,
@@ -843,12 +368,12 @@ export default function MapPage() {
           </div>
 
           {activeLayerInfo === 'chimney' && (
-            <div style={{ borderRadius: 10, background: 'rgba(248,208,218,0.18)', border: `1px solid ${palette.borderSoft}`, padding: '10px 11px', marginBottom: 8 }}>
+            <div style={{ borderRadius: 10, background: 'rgba(216,225,234,0.18)', border: `1px solid ${palette.borderSoft}`, padding: '10px 11px', marginBottom: 8 }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: palette.textMain }}>點源煙囪說明</p>
               <p style={{ margin: '6px 0 0', fontSize: 11, lineHeight: 1.6, color: palette.textSecondary }}>
                 來源：2021年TEDS點源工廠排放資料。顯示工業排放點位置與煙囪資訊。
               </p>
-              <p style={{ margin: '6px 0 0', fontSize: 11, color: '#7c6070', fontWeight: 700 }}>目前顯示：{showChimneyLayer ? `${tedsPoints.length} 筆` : '已關閉'}</p>
+              <p style={{ margin: '6px 0 0', fontSize: 11, color: palette.primaryDeep, fontWeight: 700 }}>目前顯示：{showChimneyLayer ? `${tedsPoints.length} 筆` : '已關閉'}</p>
             </div>
           )}
 
@@ -869,7 +394,7 @@ export default function MapPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                 {[{ label: '桃園平均', value: gridAverage }, { label: '最高網格', value: gridMaximum }].map(({ label, value }) => (
-                  <div key={label} style={{ borderRadius: 10, background: 'rgba(248,208,218,0.26)', padding: '9px 12px' }}>
+                  <div key={label} style={{ borderRadius: 10, background: 'rgba(216,225,234,0.26)', padding: '9px 12px' }}>
                     <p style={{ margin: 0, fontSize: 11, color: palette.textSecondary }}>{label}</p>
                     <p style={{ margin: '3px 0 0', fontSize: 20, fontWeight: 800, color: palette.textMain, lineHeight: 1 }}>
                       {value}<span style={{ fontSize: 10, fontWeight: 500, color: palette.textSecondary, marginLeft: 3 }}>{selectedMeta.unit}</span>
@@ -916,7 +441,7 @@ export default function MapPage() {
             return (
               <button key={m} onClick={() => setMapMode(m)} style={{
                 width: 58, height: 50, borderRadius: 9, border: `1.5px solid ${on ? palette.primaryDeep : 'transparent'}`,
-                cursor: 'pointer', background: on ? 'rgba(231,101,149,0.08)' : 'rgba(248,249,250,0.8)',
+                cursor: 'pointer', background: on ? 'rgba(49,94,143,0.08)' : 'rgba(248,249,250,0.8)',
                 color: on ? palette.primaryDeep : palette.textSecondary,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
                 transition: 'all 0.18s',
@@ -1000,7 +525,7 @@ export default function MapPage() {
               <div style={{ marginBottom: 8 }}><SecLabel title="健康建議" /></div>
               <p style={{ margin: '0 0 10px', color: palette.textSecondary, fontSize: 12, lineHeight: 1.65 }}>{selectedGrid.health.summary}</p>
               <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 999, background: 'rgba(248,208,218,0.35)', fontSize: 12, color: palette.textMain }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 999, background: 'rgba(216,225,234,0.35)', fontSize: 12, color: palette.textMain }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={palette.primaryDeep} strokeWidth="2.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                   戶外活動：{selectedGrid.health.outdoorActivity}
                 </div>
@@ -1026,7 +551,6 @@ export default function MapPage() {
                         <div style={{
                           width: 44, height: 44, borderRadius: 13,
                           background: active ? `${iconColor}1a` : 'rgba(0,0,0,0.03)',
-                          border: `1.5px solid ${active ? iconColor + '50' : 'rgba(0,0,0,0.06)'}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           color: iconColor,
                           boxShadow: active ? `0 2px 8px ${iconColor}30` : 'none',
@@ -1064,82 +588,7 @@ export default function MapPage() {
         </aside>
       )}
 
-      {/* ── Loading overlay ──────────────────────────────────── */}
-      {isLoading && (
-        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.50)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1300, backdropFilter: 'blur(4px)' }}>
-          <div style={{
-            width: 270, backgroundColor: 'rgba(255,255,255,0.97)', border: `1px solid ${palette.borderSoft}`,
-            borderRadius: 16, boxShadow: '0 16px 48px rgba(58,30,45,0.16)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: 28,
-          }}>
-            <div className="map-spinner" />
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ margin: 0, fontSize: 15, color: palette.textMain, fontWeight: 800 }}>載入地圖資料</p>
-              <p style={{ margin: '5px 0 0', fontSize: 12, color: palette.textSecondary }}>正在同步最新空品資訊…</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style jsx>{`
-        .map-spinner {
-          width: 38px; height: 38px; border-radius: 50%;
-          border: 3.5px solid rgba(248,208,218,0.8);
-          border-top-color: ${palette.primaryDeep};
-          animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .card-body::-webkit-scrollbar { width: 4px; }
-        .card-body::-webkit-scrollbar-track {
-          background: rgba(246,200,214,0.18);
-          border-radius: 999px;
-          margin: 10px 0;
-        }
-        .card-body::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #FBA7BC, ${palette.primaryDeep});
-          border-radius: 999px;
-        }
-        .card-body::-webkit-scrollbar-thumb:hover {
-          background: ${palette.primaryDeep};
-        }
-        .pollutant-btn {
-          min-width: 0;
-          padding: 8px 6px;
-          border-radius: 11px;
-          text-align: center;
-          cursor: pointer;
-          border: 1.5px solid transparent;
-          background-color: rgba(248,208,218,0.22);
-          transition: all 0.18s;
-        }
-        .pollutant-btn.selected {
-          border-color: ${palette.primaryDeep};
-          background-color: rgba(231,101,149,0.09);
-        }
-        .pollutant-btn-name {
-          font-size: 12px;
-          font-weight: 800;
-          color: ${palette.textMain};
-          line-height: 1.2;
-          white-space: nowrap;
-        }
-        .pollutant-btn.selected .pollutant-btn-name {
-          color: ${palette.primaryDeep};
-        }
-        .pollutant-btn-label {
-          margin-top: 2px;
-          font-size: 9px;
-          color: ${palette.textSecondary};
-          line-height: 1.2;
-          opacity: 0.85;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .pollutant-btn.selected .pollutant-btn-label {
-          color: ${palette.primaryDeep};
-        }
-      `}</style>
+      <MapLoadingOverlay isLoading={isLoading} />
     </div>
     </AuthGuard>
   );

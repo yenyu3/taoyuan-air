@@ -9,9 +9,9 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 
 /* ─── Design tokens ──────────────────────────────────────────── */
 const C = {
-  primary:        '#D4567A',
-  primaryAlpha:   'rgba(212,86,122,0.12)',
-  primaryBorder:  'rgba(212,86,122,0.30)',
+  primary:        '#315E8F',
+  primaryAlpha:   'rgba(49,94,143,0.12)',
+  primaryBorder:  'rgba(49,94,143,0.30)',
   coral:          '#C4614A',
   coralAlpha:     'rgba(196,97,74,0.12)',
   coralBorder:    'rgba(196,97,74,0.28)',
@@ -23,10 +23,10 @@ const C = {
   lavenderBorder: 'rgba(120,120,168,0.28)',
   glass:          'rgba(255,255,255,0.52)',
   glassBorder:    'rgba(255,255,255,0.72)',
-  glassShadow:    '0 4px 16px rgba(180,140,160,0.10)',
-  text:           '#1a1220',
-  muted:          '#7a6880',
-  hint:           '#b0a0b8',
+  glassShadow:    '0 4px 16px rgba(23,58,94,0.10)',
+  text:           '#172A40',
+  muted:          '#506780',
+  hint:           '#6F91B2',
 };
 
 const card: React.CSSProperties = {
@@ -50,7 +50,6 @@ interface Notification {
   Icon: React.ElementType;
   iconColor: string;
   iconBg: string;
-  iconBorder: string;
   unread: boolean;
 }
 
@@ -60,7 +59,7 @@ const DATA: Notification[] = [
     title: '空氣品質警報', subtitle: <>中壢區 · PM<sub className="text-xs">2.5</sub></>,
     time: '2 小時前',
     content: <>PM<sub className="text-xs">2.5</sub> 濃度超過 35 µg/m³，已偶測到局部工業排放。建議室內使用空氣清凈機，避免長時間戶外活動。</>,
-    Icon: ShieldAlert, iconColor: C.coral, iconBg: C.coralAlpha, iconBorder: C.coralBorder,
+    Icon: ShieldAlert, iconColor: C.coral, iconBg: C.coralAlpha,
     unread: true,
   },
   {
@@ -68,7 +67,7 @@ const DATA: Notification[] = [
     title: '戶外活動窗口', subtitle: '桃園區 · 最佳時段',
     time: '5 小時前',
     content: '紫外線指數偏低且空氣品質達到最佳狀態。08:00–10:00 為今日最適合低暴露戶外活動的時段。',
-    Icon: Leaf, iconColor: C.sage, iconBg: C.sageAlpha, iconBorder: C.sageBorder,
+    Icon: Leaf, iconColor: C.sage, iconBg: C.sageAlpha,
     unread: true,
   },
   {
@@ -76,7 +75,7 @@ const DATA: Notification[] = [
     title: '系統更新', subtitle: '版本 2.4.0 上線',
     time: '昨天 14:32',
     content: '蘆竹地區增強 3D 網格視覺化，並更新沿海風場模式的 AI 預測模型，預測精度提升約 8%。',
-    Icon: RefreshCw, iconColor: C.lavender, iconBg: C.lavenderAlpha, iconBorder: C.lavenderBorder,
+    Icon: RefreshCw, iconColor: C.lavender, iconBg: C.lavenderAlpha,
     unread: false,
   },
   {
@@ -84,7 +83,7 @@ const DATA: Notification[] = [
     title: '新監測網格啟用', subtitle: '龍潭監測站',
     time: '昨天 09:15',
     content: '龍潭站已建立即時資料同步，現具備 500 m 高解析度的濕度與懸浮微粒追蹤功能。',
-    Icon: Grid3X3, iconColor: C.primary, iconBg: C.primaryAlpha, iconBorder: C.primaryBorder,
+    Icon: Grid3X3, iconColor: C.primary, iconBg: C.primaryAlpha,
     unread: false,
   },
   {
@@ -92,7 +91,7 @@ const DATA: Notification[] = [
     title: <>臭氧濃度偏高</>, subtitle: <>觀音區 · O<sub className="text-xs">3</sub></>,
     time: '3 天前',
     content: <>下午尖峰時段 O<sub className="text-xs">3</sub> 濃度達 88 ppb，接近敏感族群建議上限。已自動發送預警至當地學校。</>,
-    Icon: ShieldAlert, iconColor: C.coral, iconBg: C.coralAlpha, iconBorder: C.coralBorder,
+    Icon: ShieldAlert, iconColor: C.coral, iconBg: C.coralAlpha,
     unread: false,
   },
   {
@@ -100,7 +99,7 @@ const DATA: Notification[] = [
     title: 'AQI 持續改善', subtitle: '全區 · 連續 3 天',
     time: '4 天前',
     content: '桃園整體 AQI 已連續三天低於 50，達到「良好」等級。觀音區晨間空氣品質尤為突出。',
-    Icon: Wind, iconColor: C.sage, iconBg: C.sageAlpha, iconBorder: C.sageBorder,
+    Icon: Wind, iconColor: C.sage, iconBg: C.sageAlpha,
     unread: false,
   },
 ];
@@ -189,8 +188,8 @@ export default function NotificationsPage() {
               display: 'flex', alignItems: 'center', gap: isMobile ? 0 : 7,
               padding: isMobile ? '9px 12px' : '9px 18px',
               borderRadius: 99, cursor: unreadCount > 0 ? 'pointer' : 'default',
-              backgroundColor: unreadCount > 0 ? C.primaryAlpha : 'rgba(180,140,160,0.08)',
-              border: `1px solid ${unreadCount > 0 ? C.primaryBorder : 'rgba(180,140,160,0.18)'}`,
+              backgroundColor: unreadCount > 0 ? C.primaryAlpha : 'rgba(23,58,94,0.08)',
+              border: `1px solid ${unreadCount > 0 ? C.primaryBorder : 'rgba(23,58,94,0.18)'}`,
               fontSize: 13, fontWeight: 700,
               color: unreadCount > 0 ? C.primary : C.hint,
               transition: 'all 0.18s',
@@ -234,7 +233,7 @@ export default function NotificationsPage() {
                   <span style={{
                     fontSize: 11, fontWeight: 600,
                     color: active ? meta.color : C.hint,
-                    backgroundColor: active ? `${meta.color}22` : 'rgba(180,140,160,0.10)',
+                    backgroundColor: active ? `${meta.color}22` : 'rgba(23,58,94,0.10)',
                     padding: '1px 6px', borderRadius: 99,
                   }}>{countBy(cat)}</span>
                 </button>
@@ -280,7 +279,7 @@ export default function NotificationsPage() {
                         <span style={{
                           fontSize: 11, fontWeight: 600,
                           color: active ? meta.color : C.hint,
-                          backgroundColor: active ? `${meta.color}22` : 'rgba(180,140,160,0.10)',
+                          backgroundColor: active ? `${meta.color}22` : 'rgba(23,58,94,0.10)',
                           padding: '2px 8px', borderRadius: 99,
                         }}>{count}</span>
                       </div>
@@ -340,7 +339,7 @@ export default function NotificationsPage() {
                             <div style={{
                               width: isMobile ? 36 : 42, height: isMobile ? 36 : 42,
                               borderRadius: isMobile ? 10 : 12,
-                              backgroundColor: n.iconBg, border: `1px solid ${n.iconBorder}`,
+                              backgroundColor: n.iconBg,
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                             }}>
                               <n.Icon size={isMobile ? 16 : 18} color={n.iconColor} strokeWidth={2} />

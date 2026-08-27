@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     NAQO_SUPABASE_TABLE: str = "min60"
     NAQO_DEFAULT_DATA_TYPE: str = "min60"
     NAQO_TZ_WORKAROUND: bool = True
+    COOKIE_SECURE: bool = False
+    COOKIE_SAMESITE: str = "lax"
+    COOKIE_PATH: str = "/"
 
     class Config:
         env_file = ".env"

@@ -9,6 +9,7 @@ import {
 import type { MoeStationData } from '@shared/api/moe';
 import type { CwaWeatherBundle } from '@shared/api/cwa';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { API_BASE } from '@/lib/apiBase';
 
 /* ─── Design tokens ──────────────────────────────────────────── */
 const C = {
@@ -990,7 +991,7 @@ export default function ExplorerPage() {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch('/api/moe', { signal: controller.signal })
+    fetch(`${API_BASE}/moe`, { signal: controller.signal })
       .then(async response => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json() as Promise<MoeApiResponse>;
@@ -1049,7 +1050,7 @@ export default function ExplorerPage() {
       try {
         const results = await Promise.all(
           districts.map(async district => {
-            const response = await fetch(`/api/cwa?district=${encodeURIComponent(district)}`, {
+            const response = await fetch(`${API_BASE}/cwa?district=${encodeURIComponent(district)}`, {
               signal: controller.signal,
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -1097,7 +1098,7 @@ export default function ExplorerPage() {
     const loadHistory = async () => {
       setHistoryLoading(true);
       try {
-        const response = await fetch(`/api/explorer/history?days=${days}`, { signal: controller.signal });
+        const response = await fetch(`${API_BASE}/explorer/history?days=${days}`, { signal: controller.signal });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json() as ExplorerHistoryResponse;
 

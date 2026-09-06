@@ -28,6 +28,14 @@
   cursor: grabbing;
 }
 
+.fabIcon {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
 .panel {
   position: fixed;
   z-index: 1501;

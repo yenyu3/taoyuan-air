@@ -1,6 +1,7 @@
 'use client';
 
-import { Bot, GripHorizontal, X } from 'lucide-react';
+import Image from 'next/image';
+import { GripHorizontal, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAIAssistantStore } from '@/store/aiAssistantStore';
 import { ChatPanel } from './ChatPanel';
@@ -169,7 +170,19 @@ export function ChatFab() {
           setOpen(!open);
         }}
       >
-        {open ? <X size={22} /> : <Bot size={22} />}
+        {open ? (
+          <X size={22} />
+        ) : (
+          <Image
+            className={styles.fabIcon}
+            src="/logo-dark.png"
+            alt=""
+            width={38}
+            height={38}
+            aria-hidden="true"
+            priority={false}
+          />
+        )}
       </button>
     </>
   );

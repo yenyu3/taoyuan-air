@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Activity, Database, MapPin, Search, Shield, X } from 'lucide-react';
 import type { MoeStationData } from '@shared/api/moe';
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { Dropdown } from './_components/Dropdown';
 import { StationCard, StatChip } from './_components/StationCard';
 import { MICRO_SENSOR_MOCK_DATA, NAQO_MOCK_DATA, DEFAULT_REGION, PARAMETER_OPTIONS, REGIONS, SOURCE_PARAMETER_OPTIONS, SOURCE_REGION_OPTIONS, SOURCES, TIME_TABS } from './_data/explorerConfig';
@@ -233,7 +232,7 @@ export default function ExplorerPage() {
           : '';
 
   return (
-    <AuthGuard>
+    <>
     <div
       style={{
         minHeight: '100vh',
@@ -405,6 +404,6 @@ export default function ExplorerPage() {
         )}
       </div>
     </div>
-    </AuthGuard>
+    </>
   );
 }

@@ -12,7 +12,6 @@
 | `teds_point_schema.sql` | TEDS 點源 | 排放源位置與年排放量資料 |
 | `uav_schema.sql` | UAV 無人機 | 無人機垂直剖面資料 |
 | `wind_lidar_schema.sql` | WindLidar 風光達 | 風光達垂直風場資料 |
-| `auth_schema.sql` | 登入系統 | 使用者資料表 |
 
 ## 資料源檔名格式（2026-08 更新）
 
@@ -46,7 +45,6 @@ docker exec -i taoyuan-air-db psql -U taoyuan_user -d taoyuan_air < database/tyd
 docker exec -i taoyuan-air-db psql -U taoyuan_user -d taoyuan_air < database/teds_point_schema.sql
 docker exec -i taoyuan-air-db psql -U taoyuan_user -d taoyuan_air < database/uav_schema.sql
 docker exec -i taoyuan-air-db psql -U taoyuan_user -d taoyuan_air < database/wind_lidar_schema.sql
-docker exec -i taoyuan-air-db psql -U taoyuan_user -d taoyuan_air < database/auth_schema.sql
 ```
 
 ## 匯入資料

@@ -2,7 +2,6 @@
 
 import { Bot, GripHorizontal, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import { useAIAssistantStore } from '@/store/aiAssistantStore';
 import { ChatPanel } from './ChatPanel';
 import styles from './ChatFab.module.css';
@@ -77,7 +76,6 @@ function openFabPosition(panel: PanelMetrics): Position {
 }
 
 export function ChatFab() {
-  const pathname = usePathname();
   const open = useAIAssistantStore((state) => state.open);
   const setOpen = useAIAssistantStore((state) => state.setOpen);
   const [fab, setFab] = useState<Position | null>(null);
@@ -89,7 +87,6 @@ export function ChatFab() {
     originX: number;
     originY: number;
   } | null>(null);
-  const hidden = pathname?.startsWith('/login') || pathname?.startsWith('/register');
 
   useEffect(() => {
     const onResize = () => setFab((position) => (position ? constrain(position) : null));
@@ -100,8 +97,6 @@ export function ChatFab() {
       window.visualViewport?.removeEventListener('resize', onResize);
     };
   }, []);
-
-  if (hidden) return null;
 
   const fabPosition = fab ?? defaultFabPosition();
   const panel = panelMetrics(fabPosition);

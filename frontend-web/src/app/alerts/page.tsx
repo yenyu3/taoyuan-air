@@ -8,7 +8,6 @@ import {
 import { useStore } from '@shared/store';
 import { getAlerts, setScenario } from '@shared/api/index';
 import { PentagonRadar } from '@/components/charts/PentagonRadar';
-import { AuthGuard } from '@/components/auth/AuthGuard';
 
 /* ─── Design tokens ──────────────────────────────────────────── */
 const C = {
@@ -198,7 +197,7 @@ export default function AlertsPage() {
   const colGap = 16;
 
   return (
-    <AuthGuard>
+    <>
     <div style={{ minHeight: '100vh', background: 'var(--app-bg-gradient)', paddingBottom: 100 }}>
       <div style={{ padding: isMobile ? '20px 16px 28px' : '28px 40px 32px' }}>
 
@@ -540,6 +539,6 @@ export default function AlertsPage() {
 
       </div>
     </div>
-    </AuthGuard>
+    </>
   );
 }

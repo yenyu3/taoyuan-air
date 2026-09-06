@@ -226,6 +226,7 @@ a {
 .top-nav-action-btn {
   width: 36px;
   height: 36px;
+  padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(106, 141, 115, 0.2);
   background: rgba(255, 255, 255, 0.6);
@@ -234,6 +235,7 @@ a {
   justify-content: center;
   text-decoration: none;
   color: #6e7f5e;
+  cursor: pointer;
   transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
 }
 

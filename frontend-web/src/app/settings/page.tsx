@@ -1,11 +1,7 @@
 ﻿'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
-import { authApi } from '@/lib/api-client';
 import { Check, ChevronRight, LogOut, Settings, Trash2 } from 'lucide-react';
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { C, INIT, NAV, card, type Section } from './_components/SettingsParts';
 import { SettingsSections } from './_components/SettingsSections';
 
@@ -14,7 +10,25 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<Section>('基本資料');
   const [saved, setSaved] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const { user, refreshUser, logout } = useAuth();
+  const user = useMemo(() => ({
+    username: 'Guest',
+    email: 'guest@example.com',
+    birth_date: null,
+    gender: null,
+    default_district: null,
+    sensitivity: '一般民眾',
+    has_respiratory: INIT.conditions.asthma,
+    has_elderly: INIT.conditions.elderly,
+    has_child: INIT.conditions.child,
+    two_factor_enabled: INIT.twoFactor,
+    notif_pm25: INIT.notifs.pm25,
+    notif_aqi: INIT.notifs.aqi,
+    notif_health: INIT.notifs.health,
+    notif_system: INIT.notifs.system,
+    created_at: null,
+    password_changed_at: '',
+  }), []);
+  const refreshUser = async () => undefined;
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -58,10 +72,8 @@ export default function SettingsPage() {
     return new Intl.RelativeTimeFormat('zh-TW', { numeric: 'auto' }).format(-diffInDays, 'day');
   }, [user, now]);
 
-  const router = useRouter();
   const handleLogout = async () => {
-    await logout();
-    router.push('/dashboard');
+    return undefined;
   };
 
   const handleEditStart = () => {
@@ -79,40 +91,20 @@ export default function SettingsPage() {
 
   const handleEditSave = async () => {
     setSaveError('');
-    try {
-      const res = await authApi.updateProfile({ username: editUsername, email: editEmail, birth_date: editBirthDate || null })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setSaveError(parseApiError(data));
-        return;
-      }
-      await refreshUser();
-      setEditMode(false);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch {
-      setSaveError('網路錯誤，請稍後再試');
-    }
+    setUsername(editUsername);
+    setEmail(editEmail);
+    setBirthDate(editBirthDate);
+    await refreshUser();
+    setEditMode(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   const handleDeleteAccount = async () => {
     setDeleteLoading(true);
-    try {
-      const res = await authApi.deleteAccount();
-      if (res.ok || res.status === 204) {
-        await logout();
-        router.push('/login');
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setSaveError(parseApiError(data));
-        setShowDeleteModal(false);
-      }
-    } catch {
-      setSaveError('網路錯誤，請稍後再試');
-      setShowDeleteModal(false);
-    } finally {
-      setDeleteLoading(false);
-    }
+    setSaveError('登入功能已停用，未執行帳號刪除');
+    setShowDeleteModal(false);
+    setDeleteLoading(false);
   };
 
   /* 通知偏好 state */
@@ -175,90 +167,23 @@ export default function SettingsPage() {
     !!notifsDirty ||
     !!healthDirty || !!profileDirty;
 
-  function parseApiError(data: { detail?: unknown }): string {
-    const d = data.detail;
-    if (Array.isArray(d)) return d.map((e: { msg: string }) => e.msg).join('、');
-    if (typeof d === 'string') return d;
-    return '儲存失敗';
-  }
-
   const handleSave = async () => {
     setSaveError('');
-    try {
-      // 基本資料
-      if (activeSection === '基本資料' && profileDirty) {
-        const res = await authApi.updateProfile({ username, email });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setSaveError(parseApiError(data));
-          return;
-        }
-      }
-
-      // 帳戶安全（含 2FA + 密碼）
-      if (activeSection === '帳戶安全' && securityDirty) {
-        const payload: Record<string, unknown> = { two_factor_enabled: twoFactor };
-        if (newPassword) {
-          if (newPassword !== newPasswordConfirm) {
-            setSaveError('兩次新密碼輸入不一致');
-            return;
-          }
-          payload.current_password = currentPassword;
-          payload.new_password = newPassword;
-        }
-        const res = await authApi.updateSecurity(payload);
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setSaveError(parseApiError(data));
-          return;
-        }
-        setCurrentPassword('');
-        setNewPassword('');
-        setNewPasswordConfirm('');
-      }
-
-      // 健康檔案
-      if (healthDirty) {
-        const res = await authApi.updateHealth({
-          gender: profileGender || null,
-          default_district: profileDistrict || null,
-          sensitivity: profileSensitivity,
-          has_respiratory: conditions.asthma,
-          has_elderly: conditions.elderly,
-          has_child: conditions.child,
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setSaveError(parseApiError(data));
-          return;
-        }
-      }
-
-      // 通知偏好
-      if (notifsDirty) {
-        const res = await authApi.updateNotifications({
-          notif_pm25: notifs.pm25,
-          notif_aqi: notifs.aqi,
-          notif_health: notifs.health,
-          notif_system: notifs.system,
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setSaveError(parseApiError(data));
-          return;
-        }
-      }
-
-      await refreshUser();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch {
-      setSaveError('網路錯誤，請稍後再試');
+    if (activeSection === '帳戶安全' && newPassword && newPassword !== newPasswordConfirm) {
+      setSaveError('兩次新密碼輸入不一致');
+      return;
     }
+
+    setCurrentPassword('');
+    setNewPassword('');
+    setNewPasswordConfirm('');
+    await refreshUser();
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
-    <AuthGuard>
+    <>
     <div style={{ minHeight: '100vh', background: 'var(--app-bg-gradient)', paddingBottom: 100 }}>
       <div style={{ padding: isMobile ? '20px 16px 80px' : '28px 40px 32px' }}>
 
@@ -554,6 +479,6 @@ export default function SettingsPage() {
       )}
 
   </div>
-  </AuthGuard>
+  </>
   );
 }

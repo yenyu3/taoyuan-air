@@ -13,9 +13,8 @@ import {
   findNearestDistrict,
 } from '@shared/constants/districts';
 import TaoyuanSVGMap from '@/components/map/TaoyuanSVGMap';
-import { fetchAIInsight, type AIInsightResponse, type AIMetricSnapshot, type AIUserProfileContext } from '@/lib/ai-api';
+import { fetchAIInsight, type AIInsightResponse, type AIMetricSnapshot } from '@/lib/ai-api';
 import { useAIAssistantStore } from '@/store/aiAssistantStore';
-import { useAuth } from '@/lib/auth-context';
 import {
   AQIGauge,
   DISTRICT_EXTENDED,
@@ -41,7 +40,6 @@ export default function DashboardPage() {
   const [past1hrRain, setPast1hrRain] = useState('0.0');
   const [aiInsight, setAIInsight] = useState<AIInsightResponse | null>(null);
   const setAIDashboardContext = useAIAssistantStore((state) => state.setDashboardContext);
-  const { user } = useAuth();
 
   useEffect(() => {
     if (!navigator.geolocation) return; // 不支援定位，維持預設中壢區
@@ -122,29 +120,11 @@ export default function DashboardPage() {
     humidity: Number(currentWeather.humidity) || null,
     past1hrRain,
   }), [aqi, pm25, pm10, o3, no2, so2, co, currentWeather.temperature, currentWeather.humidity, past1hrRain]);
-  const aiUserProfile = useMemo<AIUserProfileContext | undefined>(() => {
-    if (!user) return undefined;
-    const sensitiveGroups = [
-      user.has_respiratory ? 'respiratory' : null,
-      user.has_elderly ? 'elderly' : null,
-      user.has_child ? 'child' : null,
-    ].filter(Boolean) as string[];
-
-    return {
-      mainDistrict: user.default_district,
-      sensitivity: user.sensitivity,
-      sensitiveGroups,
-      hasRespiratory: user.has_respiratory,
-      hasElderly: user.has_elderly,
-      hasChild: user.has_child,
-    };
-  }, [user]);
-
   useEffect(() => {
-    setAIDashboardContext(district, aiMetrics, aiUserProfile);
+    setAIDashboardContext(district, aiMetrics);
 
     let cancelled = false;
-    fetchAIInsight(district, aiMetrics, aiUserProfile)
+    fetchAIInsight(district, aiMetrics)
       .then((response) => {
         if (!cancelled) setAIInsight(response);
       })
@@ -155,7 +135,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [district, aiMetrics, aiUserProfile, setAIDashboardContext]);
+  }, [district, aiMetrics, setAIDashboardContext]);
 
   const aiActivityAdvice = aiInsight?.activityAdvice;
   const aiTrendInsight = aiInsight?.trendInsight;

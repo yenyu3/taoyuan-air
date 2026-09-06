@@ -7,7 +7,6 @@ import { getExamPoints, getGrid, setScenario, getTEDSPoints } from '@shared/api/
 import { palette } from '@shared/constants/theme';
 import { DISTRICTS } from '@shared/constants/districts';
 import { ExamPoint, GridCell, TEDSPoint } from '@shared/types';
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { CardAQIGauge, CardPollutantArc, getAQIBadgeBg, getAQIColor, getPollutantColor, pollutantMeta } from './_lib/airQuality';
 import { generateDemoExamPoints, generateDemoTEDSPoints } from './_lib/demoData';
 import { formatTime, getGridLocationName, getNearestGridToDistrict, normalizeSearchText, withDistrict, type SearchResult } from './_lib/search';
@@ -183,7 +182,7 @@ export default function MapPage() {
   const pollColor = selectedGrid ? getPollutantColor(selectedGrid.values.value, selectedMeta.arcStandard) : '#76c476';
 
   return (
-    <AuthGuard>
+    <>
     <div style={{ position: 'relative', height: 'calc(100vh - 80px)', background: 'var(--app-bg-gradient)', overflow: 'hidden' }}>
 
       {/* ── Top-left controls: mode toggle + search ─────── */}
@@ -590,6 +589,6 @@ export default function MapPage() {
 
       <MapLoadingOverlay isLoading={isLoading} />
     </div>
-    </AuthGuard>
+    </>
   );
 }

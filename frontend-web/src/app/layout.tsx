@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { TopNav } from "@/components/navigation/TopNav";
 import { ChatFab } from "@/components/ai/ChatFab";
-import { AuthProvider } from "@/lib/auth-context";
+import { LoginButtonProvider } from "@/lib/login-button-context";
 import "./globals.css";
 
 const APP_ICON_URL = "/icon.png?v=1787303369";
@@ -25,11 +25,11 @@ export default function RootLayout({
     // Browser extensions can inject attributes before React hydrates the app.
     <html lang="zh-TW" suppressHydrationWarning>
       <body style={{ minHeight: '100vh' }}>
-        <AuthProvider>
+        <LoginButtonProvider>
           <TopNav />
           <main style={{ paddingTop: 80 }}>{children}</main>
           <ChatFab />
-        </AuthProvider>
+        </LoginButtonProvider>
       </body>
     </html>
   );

@@ -138,7 +138,7 @@ export function SecLabel({ title, sub }: { title: React.ReactNode; sub?: string 
   );
 }
 
-export const GAUGE_SIZE = 158;
+export const GAUGE_SIZE = 168;
 const STROKE_W = 9;
 const GAUGE_R = (GAUGE_SIZE - STROKE_W) / 2;
 const GAUGE_CIRC = 2 * Math.PI * GAUGE_R;

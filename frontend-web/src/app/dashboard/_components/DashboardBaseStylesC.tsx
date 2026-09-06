@@ -43,14 +43,14 @@ export function DashboardBaseStylesC() {
       .dashboard-second-row,
       .dashboard-lower-row {
         display: grid;
-        gap: 20px;
+        gap: 18px;
         min-width: 0;
       }
 
       .dashboard-first-row {
-        grid-template-columns: minmax(190px, 0.78fr) minmax(430px, 1.9fr);
+        grid-template-columns: minmax(190px, 0.78fr) minmax(420px, 2fr);
         align-items: start;
-        gap: 30px;
+        gap: 24px;
         min-height: 0;
         flex: 0 0 auto;
       }
@@ -66,8 +66,8 @@ export function DashboardBaseStylesC() {
       .dashboard-lower-row {
         grid-template-columns: minmax(220px, 2fr) minmax(360px, 3fr);
         align-items: stretch;
-        gap: 40px;
-        margin-top: 35px;
+        gap: 32px;
+        margin-top: 24px;
         min-height: 0;
         flex: 0 0 auto;
       }
@@ -75,7 +75,7 @@ export function DashboardBaseStylesC() {
       .dashboard-side-stack {
         display: flex;
         flex-direction: column;
-        gap: 22px;
+        gap: 16px;
         height: 100%;
         min-width: 0;
       }
@@ -91,7 +91,7 @@ export function DashboardBaseStylesC() {
         align-items: center;
         gap: 9px;
         min-height: 16px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         color: ${C.text};
         font-size: 12px;
         font-weight: 800;
@@ -116,7 +116,7 @@ export function DashboardBaseStylesC() {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding-top: 6px;
+        padding-top: 2px;
       }
 
       .aqi-gauge {
@@ -174,7 +174,7 @@ export function DashboardBaseStylesC() {
       }
 
       .aqi-hint {
-        margin-top: 12px;
+        margin-top: 14px;
         color: ${C.hint};
         font-size: 10px;
         font-weight: 600;
@@ -194,7 +194,7 @@ export function DashboardBaseStylesC() {
       .mini-gauge-row {
         grid-template-columns: 1fr 1px 1fr;
         gap: 0 18px;
-        margin-bottom: 18px;
+        margin-bottom: 12px;
       }
 
       .mini-gauge-card {
@@ -212,7 +212,7 @@ export function DashboardBaseStylesC() {
       }
 
       .mini-gauge-card p {
-        margin: 6px 0 4px;
+        margin: 4px 0 3px;
         color: ${C.muted};
         font-size: 9px;
         font-weight: 600;
@@ -239,8 +239,8 @@ export function DashboardBaseStylesC() {
         display: block;
         margin: 0 auto;
         overflow: visible;
-        width: 152px;
-        height: 72px;
+        width: 148px;
+        height: 68px;
       }
 
       .mini-arc path,
@@ -255,7 +255,7 @@ export function DashboardBaseStylesC() {
 
       .mini-pollut-card {
         min-width: 0;
-        padding: 10px 12px;
+        padding: 8px 11px;
         text-align: center;
       }
 
@@ -273,7 +273,7 @@ export function DashboardBaseStylesC() {
       }
 
       .mini-pollut-card p {
-        margin: 6px 0 9px;
+        margin: 4px 0 6px;
         color: ${C.muted};
         font-size: 9px;
         font-weight: 600;
@@ -305,7 +305,7 @@ export function DashboardBaseStylesC() {
         align-items: center;
         gap: 14px;
         border-radius: 12px;
-        padding: 16px 18px;
+        padding: 14px 16px;
         min-width: 0;
       }
 
@@ -331,7 +331,7 @@ export function DashboardBaseStylesC() {
       .advice-card p {
         color: ${C.muted};
         font-size: 13px;
-        line-height: 1.5;
+        line-height: 1.45;
         font-weight: 700;
         min-width: 0;
         overflow-wrap: anywhere;
@@ -367,7 +367,7 @@ export function DashboardBaseStylesC() {
 
       .insight-copy span {
         display: block;
-        margin-top: 6px;
+        margin-top: 4px;
         color: ${C.muted};
         font-size: 11px;
         font-weight: 600;
@@ -506,14 +506,14 @@ export function DashboardBaseStylesC() {
       }
 
       .trend-bars {
-        height: 80px;
+        height: 74px;
         display: flex;
         align-items: flex-end;
       }
 
       .trend-bar-wrap {
         position: relative;
-        height: 80px;
+        height: 74px;
         flex-shrink: 0;
         display: flex;
         align-items: flex-end;
@@ -525,7 +525,7 @@ export function DashboardBaseStylesC() {
         bottom: 0;
         left: 50%;
         width: 1.5px;
-        height: 70px;
+        height: 66px;
         transform: translateX(-50%);
         background: ${C.blue};
         z-index: 0;
@@ -569,7 +569,7 @@ export function DashboardBaseStylesC() {
       .trend-footer {
         position: relative;
         height: 22px;
-        margin-top: 10px;
+        margin-top: 6px;
         display: flex;
         justify-content: space-between;
         color: ${C.hint};

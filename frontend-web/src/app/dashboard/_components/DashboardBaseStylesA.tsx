@@ -7,11 +7,11 @@ export function DashboardBaseStylesA() {
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
-        min-height: calc(100vh - 80px);
-        padding: 12px 40px 32px;
+        min-height: calc(100svh - 80px);
+        padding: 10px 32px 22px;
         display: grid;
-        grid-template-columns: minmax(380px, 36%) minmax(760px, 1fr);
-        gap: 22px;
+        grid-template-columns: minmax(320px, 32%) minmax(680px, 1fr);
+        gap: 20px;
         overflow-x: hidden;
       }
 
@@ -19,31 +19,31 @@ export function DashboardBaseStylesA() {
       align-self: start;
         position: relative;
         min-width: 0;
-        padding: 26px 18px 42px 0;
+        padding: 12px 8px 34px 0;
         display: flex;
         flex-direction: column;
         align-items: center;
       }
 
       .dashboard-map-wrap {
-        width: min(100%, 560px);
-        height: min(68vh, 610px);
+        width: min(100%, 500px);
+        height: clamp(360px, calc(100svh - 150px), 560px);
         overflow: hidden;
       }
 
       .dashboard-map-action {
         position: absolute;
-        left: 32px;
-        bottom: 16px;
+        left: 20px;
+        bottom: 6px;
         display: inline-flex;
         align-items: center;
         gap: 8px;
         border: 1px solid #6a8d73;
         border-radius: 999px;
-        padding: 10px 18px;
+        padding: 8px 14px;
         background: #e8e6d3;
         color: #6a8d73;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 800;
         white-space: nowrap;
       }
@@ -55,12 +55,12 @@ export function DashboardBaseStylesA() {
         max-width: 100%;
         overflow: hidden;
         align-self: start;    
-        margin-top: 10px;
+        margin-top: 6px;
         background: rgba(255, 255, 255, 0.97);
         border: 1px solid rgba(106, 141, 115, 0.08);
-        border-radius: 20px;
+        border-radius: 16px;
         box-shadow: 0 4px 32px rgba(106, 141, 115, 0.08);
-        padding: 26px 36px 24px;
+        padding: 22px 32px 20px;
         display: flex;
         flex-direction: column;
       }
@@ -70,7 +70,7 @@ export function DashboardBaseStylesA() {
         align-items: center;
         gap: 10px;
         color: #6a8d73;
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 900;
         letter-spacing: 0;
         flex: 0 0 auto;
@@ -86,7 +86,7 @@ export function DashboardBaseStylesA() {
       .dash-divider {
         height: 1px;
         background: rgba(0, 0, 0, 0.06);
-        margin: 14px 0 18px;
+        margin: 12px 0 16px;
         flex: 0 0 auto;
       }
 

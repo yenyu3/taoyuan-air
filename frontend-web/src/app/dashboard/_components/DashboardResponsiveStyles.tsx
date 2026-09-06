@@ -184,6 +184,8 @@ export function DashboardResponsiveStyles() {
 
         .trend-day-line {
           height: 50px;
+        }
+
         .trend-heading {
           height: auto;
           min-height: 22px;
@@ -197,22 +199,22 @@ export function DashboardResponsiveStyles() {
       @media (max-height: 760px) and (min-width: 1281px) {
         .dashboard-page {
           overflow: auto;
-          padding-top: 8px;
-          padding-bottom: 14px;
+          padding-top: 6px;
+          padding-bottom: 12px;
         }
 
         .dashboard-map-pane {
-          padding-top: 34px;
-          padding-bottom: 24px;
+          padding-top: 8px;
+          padding-bottom: 30px;
         }
 
         .dashboard-map-wrap {
-          height: min(60vh, 540px);
+          height: clamp(330px, calc(100svh - 138px), 510px);
         }
 
         .dashboard-panel {
-          margin-top: 12px;
-          padding: 14px 24px 12px;
+          margin-top: 2px;
+          padding: 14px 22px 12px;
         }
 
         .dash-divider {

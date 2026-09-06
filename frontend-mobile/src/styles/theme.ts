@@ -1,34 +1,34 @@
 export const palette = {
   // Primary palette - CMYK 0 80 0 0 同色系
-  primary: "#315E8F",
-  primarySoft: "#C8D8E8",
-  primaryMid: "#6F91B2",
-  primaryDeep: "#315E8F",
+  primary: "#6a8d73",
+  primarySoft: "#b5c99a",
+  primaryMid: "#8fa96f",
+  primaryDeep: "#6a8d73",
   
   // 特別標籤色系
-  accentRed: "#173A5E", // CMYK 10 13 81 0
+  accentRed: "#3e5142", // CMYK 10 13 81 0
   accentYellow: "#B88A2E", // CMYK 10 13 81 0
-  accentBlue: "#3E8FB8",   // CMYK 46 0 70 0
+  accentBlue: "#4f9d85",   // CMYK 46 0 70 0
   accentGreen: "#4F8D7A",  // CMYK 44 0 63 0
 
 
   // 基礎色彩
-  bgBase: "#EAF1F8",
+  bgBase: "#f4f2e9",
   bgCard: "#FFFFFF",
   surface: "#FFFFFF",
-  background: "#EAF1F8",
+  background: "#f4f2e9",
   backgroundSecondary: "#F8F9FA",
   
   // 文字色彩
-  text: "#172A40",
-  textMain: "#172A40",
-  textSecondary: "#506780",
+  text: "#2d3129",
+  textMain: "#2d3129",
+  textSecondary: "#5d6f49",
   textMuted: "#9CA3AF",
   
   // 邊框與陰影
-  borderSoft: "#AFC3D8",
+  borderSoft: "#c3cfa8",
   borderLight: "#E5E7EB",
-  shadow: "#173A5E",
+  shadow: "#3e5142",
 } as const;
 
 export const semantic = {
@@ -42,8 +42,8 @@ export const semantic = {
 export const Colors = palette;
 
 export const gradients = {
-  page: [palette.bgBase, "#DCE8F3"] as [string, string],
-  highlight: [palette.primarySoft, "#C8D8E8"] as [string, string],
+  page: [palette.bgBase, "#e8e6d3"] as [string, string],
+  highlight: [palette.primarySoft, "#b5c99a"] as [string, string],
 } as const;
 
 export const elevation = {

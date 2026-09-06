@@ -25,7 +25,7 @@ export function MapLoadingOverlay({ isLoading }: { isLoading: boolean }) {
       <style jsx>{`
         .map-spinner {
           width: 38px; height: 38px; border-radius: 50%;
-          border: 3.5px solid rgba(216,225,234,0.8);
+          border: 3.5px solid rgba(205, 213, 180, 0.8);
           border-top-color: ${palette.primaryDeep};
           animation: spin 0.8s linear infinite;
         }
@@ -37,7 +37,7 @@ export function MapLoadingOverlay({ isLoading }: { isLoading: boolean }) {
           margin: 10px 0;
         }
         .card-body::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #6F91B2, ${palette.primaryDeep});
+          background: linear-gradient(to bottom, #8fa96f, ${palette.primaryDeep});
           border-radius: 999px;
         }
         .card-body::-webkit-scrollbar-thumb:hover {
@@ -50,12 +50,12 @@ export function MapLoadingOverlay({ isLoading }: { isLoading: boolean }) {
           text-align: center;
           cursor: pointer;
           border: 1.5px solid transparent;
-          background-color: rgba(216,225,234,0.22);
+          background-color: rgba(205, 213, 180, 0.22);
           transition: all 0.18s;
         }
         .pollutant-btn.selected {
           border-color: ${palette.primaryDeep};
-          background-color: rgba(49,94,143,0.09);
+          background-color: rgba(106, 141, 115, 0.09);
         }
         .pollutant-btn-name {
           font-size: 12px;

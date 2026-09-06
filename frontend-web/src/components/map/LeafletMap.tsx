@@ -125,12 +125,19 @@ const ensureTEDSMarkerStyles = () => {
       box-sizing: border-box;
     }
     .teds-pin.pin-chimney {
-      color: #315E8F;
-      background: #315E8F;
+      color: #6a8d73;
+      background: #6a8d73;
     }
     .teds-pin.pin-mercury {
-      color: #4f79d8;
-      background: #4f79d8;
+      color: #8b6fb0;
+      background: #8b6fb0;
+    }
+    /* 底圖降藍：把地形圖的水域/河流藍色轉為暖綠灰，與陸地融合 */
+    #detail-map .leaflet-tile {
+      filter: grayscale(0.72) sepia(0.18) saturate(0.9) brightness(1.03);
+    }
+    #detail-map .leaflet-control-attribution a {
+      color: #5d6f49;
     }
   `;
   document.head.appendChild(style);
@@ -213,7 +220,7 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
         //     const marker = targetL.circleMarker(pos, {
         //       radius: zoom <= 10 ? 2.5 : 3.5,
         //       stroke: false,
-        //       fillColor: "#315E8F",
+        //       fillColor: "#6a8d73",
         //       fillOpacity: 0.85,
         //       interactive: false,
         //     });
@@ -597,7 +604,7 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
           zIndex: 520,
           width: 214,
           background: 'rgba(255,255,255,0.97)',
-          border: '1px solid rgba(49, 94, 143, 0.28)',
+          border: '1px solid rgba(106, 141, 115, 0.28)',
           borderRadius: 14,
           padding: '10px 12px',
           boxShadow: '0 10px 24px rgba(58,30,45,0.2)',
@@ -634,7 +641,7 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
             step={1}
             value={zoomLevel}
             onChange={(e) => handleZoomRequest(Number(e.target.value))}
-            style={{ flex: 1, minWidth: 0, accentColor: '#315E8F', height: 24 }}
+            style={{ flex: 1, minWidth: 0, accentColor: '#6a8d73', height: 24 }}
           />
           <button
             onClick={() => handleZoomRequest(zoomLevel + 1)}

@@ -27,8 +27,8 @@ export function DashboardBaseStylesC() {
       .weather-forecast-label { font-size: 12px; font-weight: 700; color: ${C.text}; }
       .weather-forecast-date { font-size: 10px; color: ${C.hint}; margin-top: 2px; }
       .weather-forecast-temp-row { font-size: 13px; }
-      .weather-forecast-hi { font-weight: 700; color: #357DA4; }
-      .weather-forecast-lo { font-weight: 600; color: #6F91B2; }
+      .weather-forecast-hi { font-weight: 700; color: #6a8d73; }
+      .weather-forecast-lo { font-weight: 600; color: #8fa96f; }
       .weather-forecast-pop-row {
         display: flex;
         align-items: center;
@@ -287,7 +287,7 @@ export function DashboardBaseStylesC() {
       }
 
       .mini-pollut-value strong {
-        color: #315E8F;
+        color: #6a8d73;
         font-size: 16px;
         line-height: 1;
         font-weight: 800;
@@ -348,7 +348,7 @@ export function DashboardBaseStylesC() {
       }
 
       .insight-icon {
-        background: rgba(49, 94, 143, 0.16);
+        background: rgba(106, 141, 115, 0.16);
         color: ${C.blue};
       }
 
@@ -403,13 +403,13 @@ export function DashboardBaseStylesC() {
       }
 
       .ai-action-chip {
-        border: 1px solid rgba(49, 94, 143, 0.22);
-        background: rgba(49, 94, 143, 0.08);
+        border: 1px solid rgba(106, 141, 115, 0.22);
+        background: rgba(106, 141, 115, 0.08);
         color: ${C.blue};
       }
 
       .ai-source-chip {
-        border: 1px solid rgba(80, 103, 128, 0.18);
+        border: 1px solid rgba(93, 111, 73, 0.18);
         background: rgba(255, 255, 255, 0.58);
         color: ${C.muted};
       }
@@ -447,7 +447,7 @@ export function DashboardBaseStylesC() {
         border: 1px solid ${C.blueBorder};
         border-radius: 999px;
         padding: 4px 10px;
-        background: rgba(49, 94, 143, 0.10);
+        background: rgba(106, 141, 115, 0.10);
         color: ${C.blue};
         font-size: 11px;
         font-weight: 800;
@@ -466,7 +466,7 @@ export function DashboardBaseStylesC() {
         overscroll-behavior-inline: contain;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
-        scrollbar-color: rgba(49, 94, 143, 0.28) transparent;
+        scrollbar-color: rgba(106, 141, 115, 0.28) transparent;
       }
 
       .trend-scroll::-webkit-scrollbar {
@@ -478,12 +478,12 @@ export function DashboardBaseStylesC() {
       }
 
       .trend-scroll::-webkit-scrollbar-thumb {
-        background: rgba(49, 94, 143, 0.28);
+        background: rgba(106, 141, 115, 0.28);
         border-radius: 99px;
       }
 
       .trend-scroll::-webkit-scrollbar-thumb:hover {
-        background: rgba(49, 94, 143, 0.55);
+        background: rgba(106, 141, 115, 0.55);
       }
 
       .trend-inner {
@@ -550,7 +550,7 @@ export function DashboardBaseStylesC() {
         top: 2px;
         width: 20px;
         text-align: center;
-        color: rgba(93, 115, 137, 0.6);
+        color: rgba(109, 127, 94, 0.6);
         font-size: 9px;
         font-weight: 700;
       }
@@ -562,7 +562,7 @@ export function DashboardBaseStylesC() {
       }
 
       .trend-hour.prediction {
-        color: rgba(93, 115, 137, 0.4);
+        color: rgba(109, 127, 94, 0.4);
         font-style: italic;
       }
 

@@ -93,7 +93,7 @@ export function CardAQIGauge({ aqi }: { aqi: number }) {
         </circle>
       </svg>
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: G.SIZE - 38, height: G.SIZE - 38, borderRadius: '50%', background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(255,255,255,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(58,30,45,0.08)' }}>
-        <span style={{ fontSize: 8, color: '#6F91B2', letterSpacing: '1.5px', fontFamily: 'monospace' }}>AQI</span>
+        <span style={{ fontSize: 8, color: '#8fa96f', letterSpacing: '1.5px', fontFamily: 'monospace' }}>AQI</span>
         <strong style={{ fontSize: 26, lineHeight: 1.1, fontWeight: 900, color }}>{aqi}</strong>
         <span style={{ marginTop: 3, padding: '1px 6px', borderRadius: 999, background: `${color}22`, border: `1px solid ${color}44`, fontSize: 8, fontWeight: 800, color }}>{getAQIStatus(aqi)}</span>
       </div>

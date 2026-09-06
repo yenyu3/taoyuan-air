@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(113, 137, 165, 0.2)',
+    borderColor: 'rgba(140, 160, 110, 0.2)',
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   content: {
-    backgroundColor: 'rgba(216, 225, 234, 0.8)',
+    backgroundColor: 'rgba(205, 213, 180, 0.8)',
     padding: 16,
   }
 });

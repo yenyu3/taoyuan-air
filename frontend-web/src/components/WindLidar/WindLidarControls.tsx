@@ -6,14 +6,14 @@ import type { PanelKey, StationInfo } from '@/lib/windLidarApi';
 
 // ── Design tokens（與 events/page.tsx 一致） ──────────────────────────────────
 const C = {
-  blue:       '#315E8F',
-  blueAlpha:  'rgba(49,94,143,0.10)',
-  blueBorder: 'rgba(49,94,143,0.28)',
+  blue:       '#6a8d73',
+  blueAlpha:  'rgba(106, 141, 115, 0.10)',
+  blueBorder: 'rgba(106, 141, 115, 0.28)',
   glass:      'rgba(255,255,255,0.90)',
-  glassShadow:'0 4px 20px rgba(23,58,94,0.12)',
-  text:       '#172A40',
-  muted:      '#506780',
-  hint:       '#6F91B2',
+  glassShadow:'0 4px 20px rgba(62, 81, 66, 0.12)',
+  text:       '#2d3129',
+  muted:      '#5d6f49',
+  hint:       '#8fa96f',
 };
 
 // ── 面板中文標籤 ──────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ function StationDropdown({
             position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 400,
             background: '#fff',
             border: `1px solid ${C.blueBorder}`,
-            borderRadius: 12, boxShadow: '0 8px 32px rgba(23,58,94,0.18)',
+            borderRadius: 12, boxShadow: '0 8px 32px rgba(62, 81, 66, 0.18)',
             minWidth: 180, overflow: 'hidden',
           }}
         >
@@ -103,7 +103,7 @@ function StationDropdown({
                 fontSize: 13, fontWeight: selected === s.station ? 700 : 500,
                 color: selected === s.station ? C.blue : C.text,
                 background: selected === s.station ? C.blueAlpha : 'transparent',
-                borderBottom: i < stations.length - 1 ? '1px solid rgba(23,58,94,0.08)' : 'none',
+                borderBottom: i < stations.length - 1 ? '1px solid rgba(62, 81, 66, 0.08)' : 'none',
               }}
             >
               {s.station}
@@ -161,7 +161,7 @@ function DateDropdown({
             position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 400,
             background: '#fff',
             border: `1px solid ${C.blueBorder}`,
-            borderRadius: 12, boxShadow: '0 8px 32px rgba(23,58,94,0.18)',
+            borderRadius: 12, boxShadow: '0 8px 32px rgba(62, 81, 66, 0.18)',
             minWidth: 160, maxHeight: 260, overflowY: 'auto',
           }}
         >
@@ -176,7 +176,7 @@ function DateDropdown({
                 fontSize: 13, fontWeight: selected === d ? 700 : 500,
                 color: selected === d ? C.blue : C.text,
                 background: selected === d ? C.blueAlpha : 'transparent',
-                borderBottom: i < dates.length - 1 ? '1px solid rgba(23,58,94,0.06)' : 'none',
+                borderBottom: i < dates.length - 1 ? '1px solid rgba(62, 81, 66, 0.06)' : 'none',
               }}
             >
               {d}
@@ -209,7 +209,7 @@ export default function WindLidarControls({
       style={{
         margin: '0 0 0',
         background: C.glass,
-        border: '1px solid rgba(49,94,143,0.08)',
+        border: '1px solid rgba(106, 141, 115, 0.08)',
         borderRadius: 16,
         boxShadow: C.glassShadow,
         padding: '16px 24px',
@@ -238,7 +238,7 @@ export default function WindLidarControls({
       </div>
 
       {/* 分隔線 */}
-      <div style={{ height: 1, background: 'rgba(23,58,94,0.10)' }} />
+      <div style={{ height: 1, background: 'rgba(62, 81, 66, 0.10)' }} />
 
       {/* 第二列：高度上限 + 面板顯示 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
@@ -270,7 +270,7 @@ export default function WindLidarControls({
         </div>
 
         {/* 小分隔 */}
-        <div style={{ width: 1, height: 24, background: 'rgba(23,58,94,0.20)', margin: '0 4px' }} />
+        <div style={{ width: 1, height: 24, background: 'rgba(62, 81, 66, 0.20)', margin: '0 4px' }} />
 
         {/* 面板顯示勾選 */}
         <span style={{ fontSize: 12, fontWeight: 800, color: C.muted, whiteSpace: 'nowrap' }}>
@@ -299,7 +299,7 @@ export default function WindLidarControls({
                 {/* 小圓點指示 */}
                 <span style={{
                   width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                  background: active ? C.blue : 'rgba(23,58,94,0.4)',
+                  background: active ? C.blue : 'rgba(62, 81, 66, 0.4)',
                 }} />
                 {PANEL_LABELS[key]}
               </button>

@@ -41,8 +41,8 @@ export function StationCard({ station }: { station: StationData }) {
 
   const TrendIcon  = station.trend === '上升中' ? TrendingUp : station.trend === '下降中' ? TrendingDown : Minus;
   const tColor  = station.trend === '上升中' ? sColor  : station.trend === '下降中' ? C.green : C.hint;
-  const tAlpha  = station.trend === '上升中' ? sAlpha  : station.trend === '下降中' ? C.greenAlpha : 'rgba(80,103,128,0.10)';
-  const tBorder = station.trend === '上升中' ? sBorder : station.trend === '下降中' ? C.greenBorder : 'rgba(80,103,128,0.20)';
+  const tAlpha  = station.trend === '上升中' ? sAlpha  : station.trend === '下降中' ? C.greenAlpha : 'rgba(93, 111, 73, 0.10)';
+  const tBorder = station.trend === '上升中' ? sBorder : station.trend === '下降中' ? C.greenBorder : 'rgba(93, 111, 73, 0.20)';
 
   return (
     <div style={{
@@ -50,7 +50,7 @@ export function StationCard({ station }: { station: StationData }) {
       backgroundColor: 'rgba(255,255,255,0.94)',
       border: '1px solid rgba(0,0,0,0.06)',
       borderRadius: 20,
-      boxShadow: '0 4px 16px rgba(23,58,94,0.10)',
+      boxShadow: '0 4px 16px rgba(62, 81, 66, 0.10)',
       height: 440,
       overflow: 'hidden',
       minWidth: 0,

@@ -37,7 +37,7 @@ export default function BottomSheet({
                 <Text style={styles.subtitle}>詳細資訊</Text>
               </View>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#64748B" />
+                <Ionicons name="close" size={24} color="#6B6A5F" />
               </TouchableOpacity>
             </View>
 
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: '#CBD5E1',
+    backgroundColor: '#D4D0C2',
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 12,
@@ -88,11 +88,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1E293B',
+    color: '#2D3129',
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#6B6A5F',
     marginTop: 4,
   },
   closeButton: {
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#6B6A5F',
     lineHeight: 20,
   },
 });

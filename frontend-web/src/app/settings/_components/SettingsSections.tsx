@@ -145,7 +145,7 @@ export function SettingsSections(props: SettingsSectionsProps) {
                             onClick={handleEditCancel}
                             style={{
                               flex: 1, padding: '11px 0', borderRadius: 12, cursor: 'pointer',
-                              backgroundColor: 'rgba(23,58,94,0.08)', border: `1.5px solid rgba(23,58,94,0.20)`,
+                              backgroundColor: 'rgba(62, 81, 66, 0.08)', border: `1.5px solid rgba(62, 81, 66, 0.20)`,
                               fontSize: 13, fontWeight: 700, color: C.muted,
                             }}
                           >
@@ -232,7 +232,7 @@ export function SettingsSections(props: SettingsSectionsProps) {
                       title="雙因素驗證" desc="使用驗證器 App 進行第二步驟確認"
                       value={twoFactor} onChange={setTwoFactor}
                     />
-                    <div style={{ height: 1, backgroundColor: 'rgba(23,58,94,0.12)' }} />
+                    <div style={{ height: 1, backgroundColor: 'rgba(62, 81, 66, 0.12)' }} />
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
@@ -364,8 +364,8 @@ export function SettingsSections(props: SettingsSectionsProps) {
                     <div key={label} style={{
                       display: 'flex', alignItems: 'center', gap: 14,
                       padding: '16px 18px', borderRadius: 14,
-                      backgroundColor: done ? C.primaryAlpha : 'rgba(23,58,94,0.07)',
-                      border: `1px solid ${done ? C.primaryBorder : 'rgba(23,58,94,0.15)'}`,
+                      backgroundColor: done ? C.primaryAlpha : 'rgba(62, 81, 66, 0.07)',
+                      border: `1px solid ${done ? C.primaryBorder : 'rgba(62, 81, 66, 0.15)'}`,
                     }}>
                       <CheckCircle2
                         size={22} strokeWidth={2}
@@ -436,13 +436,13 @@ export function SettingsSections(props: SettingsSectionsProps) {
                       title="氣喘 / 呼吸道疾病" desc={<>調低 PM<sub style={{ fontSize: '0.75em' }}>2.5</sub> 警報門檻至 15 µg/m³</>}
                       value={conditions.asthma} onChange={(v) => setConditions(p => ({ ...p, asthma: v }))}
                     />
-                    <div style={{ height: 1, backgroundColor: 'rgba(23,58,94,0.12)' }} />
+                    <div style={{ height: 1, backgroundColor: 'rgba(62, 81, 66, 0.12)' }} />
                     <ToggleRow
                       Icon={Heart} iconColor={C.primary} iconBg={C.primaryAlpha}
                       title="年長者 (65 歲以上)" desc="啟用額外健康警示與建議"
                       value={conditions.elderly} onChange={(v) => setConditions(p => ({ ...p, elderly: v }))}
                     />
-                    <div style={{ height: 1, backgroundColor: 'rgba(23,58,94,0.12)' }} />
+                    <div style={{ height: 1, backgroundColor: 'rgba(62, 81, 66, 0.12)' }} />
                     <ToggleRow
                       Icon={Star} iconColor={C.primary} iconBg={C.primaryAlpha}
                       title="兒童 (12 歲以下)" desc="針對兒童調整戶外活動建議"
@@ -466,7 +466,7 @@ export function SettingsSections(props: SettingsSectionsProps) {
                       title={<>PM<sub style={{ fontSize: '0.75em' }}>2.5</sub> 超標警報</>} desc="濃度超過設定門檻時即時通知"
                       value={notifs.pm25} onChange={(v) => setNotifs(p => ({ ...p, pm25: v }))}
                     />
-                    <div style={{ height: 1, backgroundColor: 'rgba(23,58,94,0.12)' }} />
+                    <div style={{ height: 1, backgroundColor: 'rgba(62, 81, 66, 0.12)' }} />
                     <ToggleRow
                       Icon={Wind} iconColor={C.primary} iconBg={C.primaryAlpha}
                       title="AQI ????" desc="???? 7:00 ????????"
@@ -483,7 +483,7 @@ export function SettingsSections(props: SettingsSectionsProps) {
                       title="??????" desc="AI ????????????"
                       value={notifs.health} onChange={(v) => setNotifs(p => ({ ...p, health: v }))}
                     />
-                    <div style={{ height: 1, backgroundColor: 'rgba(23,58,94,0.12)' }} />
+                    <div style={{ height: 1, backgroundColor: 'rgba(62, 81, 66, 0.12)' }} />
                     <ToggleRow
                       Icon={Bell} iconColor={C.primary} iconBg={C.primaryAlpha}
                       title="系統更新通知" desc="版本更新與新功能上線通報"

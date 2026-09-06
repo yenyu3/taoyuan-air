@@ -4,18 +4,18 @@ import React from 'react';
 import { Bell, Heart, Settings, Shield, UserCheck } from 'lucide-react';
 
 export const C = {
-  primary:       '#315E8F',
-  primaryAlpha:  'rgba(49,94,143,0.12)',
-  primaryBorder: 'rgba(49,94,143,0.30)',
+  primary:       '#6a8d73',
+  primaryAlpha:  'rgba(106, 141, 115, 0.12)',
+  primaryBorder: 'rgba(106, 141, 115, 0.30)',
   coral:         '#C4614A',
   coralAlpha:    'rgba(196,97,74,0.10)',
   coralBorder:   'rgba(196,97,74,0.25)',
   glass:         'rgba(255,255,255,0.52)',
   glassBorder:   'rgba(255,255,255,0.72)',
-  glassShadow:   '0 4px 16px rgba(23,58,94,0.10)',
-  text:          '#172A40',
-  muted:         '#506780', 
-  hint:          '#6F91B2',
+  glassShadow:   '0 4px 16px rgba(62, 81, 66, 0.10)',
+  text:          '#2d3129',
+  muted:         '#5d6f49', 
+  hint:          '#8fa96f',
 };
 
 export const card: React.CSSProperties = {
@@ -47,7 +47,7 @@ export function Toggle({ value, onChange }: { value: boolean; onChange: (v: bool
       style={{
         width: 44, height: 26, borderRadius: 13, cursor: 'pointer',
         position: 'relative', flexShrink: 0, outline: 'none',
-        backgroundColor: value ? C.primary : 'rgba(23,58,94,0.25)',
+        backgroundColor: value ? C.primary : 'rgba(62, 81, 66, 0.25)',
         transition: 'background-color 0.2s',
         boxShadow: value ? `0 0 0 3px ${C.primaryAlpha}` : 'none',
       }}

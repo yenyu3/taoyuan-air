@@ -311,11 +311,11 @@ export default function MapPage() {
         <div style={{
           width: 296, backgroundColor: 'rgba(255,255,255,0.97)', borderRadius: 16,
           padding: '16px 16px 14px', border: `1px solid ${palette.borderSoft}`,
-          boxShadow: '0 8px 32px rgba(23,58,94,0.14)', backdropFilter: 'blur(18px)',
+          boxShadow: '0 8px 32px rgba(62, 81, 66, 0.14)', backdropFilter: 'blur(18px)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <SecLabel title="圖層控制" />
-            <span style={{ padding: '3px 9px', borderRadius: 999, background: 'rgba(49,94,143,0.10)', color: palette.primaryDeep, fontSize: 11, fontWeight: 700 }}>
+            <span style={{ padding: '3px 9px', borderRadius: 999, background: 'rgba(106, 141, 115, 0.10)', color: palette.primaryDeep, fontSize: 11, fontWeight: 700 }}>
               {mode === 'NOW' ? '即時' : '預報'}
             </span>
           </div>
@@ -335,7 +335,7 @@ export default function MapPage() {
                   onClick={() => setActiveLayerInfo(tab.key)}
                   style={{
                     border: `1px solid ${on ? palette.primaryDeep : palette.borderSoft}`,
-                    background: on ? 'rgba(49,94,143,0.12)' : 'rgba(248,249,250,0.78)',
+                    background: on ? 'rgba(106, 141, 115, 0.12)' : 'rgba(248,249,250,0.78)',
                     color: on ? palette.primaryDeep : palette.textSecondary,
                     borderRadius: 9,
                     cursor: 'pointer',
@@ -350,9 +350,9 @@ export default function MapPage() {
                     }}
                     style={{
                       width: '100%',
-                      border: `1px solid ${visible ? '#315E8F66' : palette.borderSoft}`,
+                      border: `1px solid ${visible ? '#6a8d7366' : palette.borderSoft}`,
                       borderRadius: 7,
-                      background: visible ? 'rgba(49,94,143,0.12)' : '#fff',
+                      background: visible ? 'rgba(106, 141, 115, 0.12)' : '#fff',
                       color: visible ? palette.primaryDeep : palette.textSecondary,
                       padding: '3px 0',
                       fontSize: 10,
@@ -368,7 +368,7 @@ export default function MapPage() {
           </div>
 
           {activeLayerInfo === 'chimney' && (
-            <div style={{ borderRadius: 10, background: 'rgba(216,225,234,0.18)', border: `1px solid ${palette.borderSoft}`, padding: '10px 11px', marginBottom: 8 }}>
+            <div style={{ borderRadius: 10, background: 'rgba(205, 213, 180, 0.18)', border: `1px solid ${palette.borderSoft}`, padding: '10px 11px', marginBottom: 8 }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: palette.textMain }}>點源煙囪說明</p>
               <p style={{ margin: '6px 0 0', fontSize: 11, lineHeight: 1.6, color: palette.textSecondary }}>
                 來源：2021年TEDS點源工廠排放資料。顯示工業排放點位置與煙囪資訊。
@@ -378,12 +378,12 @@ export default function MapPage() {
           )}
 
           {activeLayerInfo === 'mercury' && (
-            <div style={{ borderRadius: 10, background: 'rgba(210,224,255,0.24)', border: `1px solid ${palette.borderSoft}`, padding: '10px 11px', marginBottom: 8 }}>
+            <div style={{ borderRadius: 10, background: 'rgba(205, 213, 180, 0.24)', border: `1px solid ${palette.borderSoft}`, padding: '10px 11px', marginBottom: 8 }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: palette.textMain }}>汞排放點說明</p>
               <p style={{ margin: '6px 0 0', fontSize: 11, lineHeight: 1.6, color: palette.textSecondary }}>
                 來源：環境部固定污染源排放檢測資料（HG 汞及其化合物）。顯示排放煙道位置與煙道資訊。
               </p>
-              <p style={{ margin: '6px 0 0', fontSize: 11, color: '#5f6f9c', fontWeight: 700 }}>目前顯示：{showMercuryLayer ? `${examPoints.length} 筆` : '已關閉'}</p>
+              <p style={{ margin: '6px 0 0', fontSize: 11, color: '#8fa96f', fontWeight: 700 }}>目前顯示：{showMercuryLayer ? `${examPoints.length} 筆` : '已關閉'}</p>
             </div>
           )}
 
@@ -394,7 +394,7 @@ export default function MapPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                 {[{ label: '桃園平均', value: gridAverage }, { label: '最高網格', value: gridMaximum }].map(({ label, value }) => (
-                  <div key={label} style={{ borderRadius: 10, background: 'rgba(216,225,234,0.26)', padding: '9px 12px' }}>
+                  <div key={label} style={{ borderRadius: 10, background: 'rgba(205, 213, 180, 0.26)', padding: '9px 12px' }}>
                     <p style={{ margin: 0, fontSize: 11, color: palette.textSecondary }}>{label}</p>
                     <p style={{ margin: '3px 0 0', fontSize: 20, fontWeight: 800, color: palette.textMain, lineHeight: 1 }}>
                       {value}<span style={{ fontSize: 10, fontWeight: 500, color: palette.textSecondary, marginLeft: 3 }}>{selectedMeta.unit}</span>
@@ -441,7 +441,7 @@ export default function MapPage() {
             return (
               <button key={m} onClick={() => setMapMode(m)} style={{
                 width: 58, height: 50, borderRadius: 9, border: `1.5px solid ${on ? palette.primaryDeep : 'transparent'}`,
-                cursor: 'pointer', background: on ? 'rgba(49,94,143,0.08)' : 'rgba(248,249,250,0.8)',
+                cursor: 'pointer', background: on ? 'rgba(106, 141, 115, 0.08)' : 'rgba(248,249,250,0.8)',
                 color: on ? palette.primaryDeep : palette.textSecondary,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
                 transition: 'all 0.18s',
@@ -525,7 +525,7 @@ export default function MapPage() {
               <div style={{ marginBottom: 8 }}><SecLabel title="健康建議" /></div>
               <p style={{ margin: '0 0 10px', color: palette.textSecondary, fontSize: 12, lineHeight: 1.65 }}>{selectedGrid.health.summary}</p>
               <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 999, background: 'rgba(216,225,234,0.35)', fontSize: 12, color: palette.textMain }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 999, background: 'rgba(205, 213, 180, 0.35)', fontSize: 12, color: palette.textMain }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={palette.primaryDeep} strokeWidth="2.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                   戶外活動：{selectedGrid.health.outdoorActivity}
                 </div>

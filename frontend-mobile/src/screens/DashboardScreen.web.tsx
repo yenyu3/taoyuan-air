@@ -145,7 +145,7 @@ const TrendBars: React.FC<{ trend: number[] }> = ({ trend }) => {
                       backgroundColor: getBarColor(value, isPrediction),
                       marginRight: index < displayData.length - 1 ? barSpacing : 0,
                       borderWidth: isNow ? 1 : 0,
-                      borderColor: isNow ? '#6F91B2' : 'transparent',
+                      borderColor: isNow ? '#8fa96f' : 'transparent',
                       zIndex: 1,                 // bar 疊在線上面
                     },
                   ]}
@@ -300,14 +300,14 @@ const useUserLocation = () => {
 // ─── Design tokens ────────────────────────────────────────────────────
 const C = {
   // Primary accent — one blue ramp only
-  blue:     "#315E8F",
-  blueMid:  "#173A5E",
-  blueLt:   "rgba(49,94,143,0.12)",
-  blueGlow: "rgba(49,94,143,0.22)",
-  blueBorder: "rgba(49,94,143,0.30)",
+  blue:     "#6a8d73",
+  blueMid:  "#3e5142",
+  blueLt:   "rgba(106, 141, 115, 0.12)",
+  blueGlow: "rgba(106, 141, 115, 0.22)",
+  blueBorder: "rgba(106, 141, 115, 0.30)",
 
   // Functional data colors (minimal)
-  sky:   "#5BA0C8",
+  sky:   "#7fae8a",
   mint:  "#37A085",
   amber: "#B87820",
 
@@ -316,13 +316,13 @@ const C = {
   glass2:      "rgba(255,255,255,0.32)",
   glassBorder: "rgba(255,255,255,0.72)",
   glassBorder2:"rgba(255,255,255,0.50)",
-  glassShadow: "rgba(23,58,94,0.14)",
+  glassShadow: "rgba(62, 81, 66, 0.14)",
   glassInner:  "rgba(255,255,255,0.80)",
 
   // Text
-  text:    "#172A40",
-  muted:   "#506780",
-  hint:    "#6F91B2",
+  text:    "#2d3129",
+  muted:   "#5d6f49",
+  hint:    "#8fa96f",
 };
 
 const COLORS = {
@@ -336,7 +336,7 @@ const COLORS = {
 
 // ─── Helper: AQI color ───────────────────────────────────────
 const getAQIColor = (aqi: number) => {
-  if (aqi <= 50) return "#315E8F";
+  if (aqi <= 50) return "#6a8d73";
   if (aqi <= 100) return COLORS.MODERATE;
   if (aqi <= 150) return COLORS.UNHEALTHY_SENSITIVE;
   if (aqi <= 200) return COLORS.UNHEALTHY;
@@ -357,7 +357,7 @@ const getAQIStatus = (aqi: number) => {
 // ─── Air Quality Helpers ──────────────────────────────────────────────────────
 
 const getPM25Color = (v: number) => {
-  if (v <= 15.4)  return "#315E8F";
+  if (v <= 15.4)  return "#6a8d73";
   if (v <= 35.4)  return COLORS.MODERATE;
   if (v <= 54.4)  return COLORS.UNHEALTHY_SENSITIVE; 
   if (v <= 150.4) return COLORS.UNHEALTHY;
@@ -366,7 +366,7 @@ const getPM25Color = (v: number) => {
 };
 
 const getO3Color = (v: number) => {
-  if (v <= 54)  return "#315E8F";                  
+  if (v <= 54)  return "#6a8d73";                  
   if (v <= 70)  return COLORS.MODERATE;             
   if (v <= 85)  return COLORS.UNHEALTHY_SENSITIVE;  
   if (v <= 105) return COLORS.UNHEALTHY;            
@@ -383,7 +383,7 @@ const getActivityInfo = ( aqi: number,): {
   if (aqi <= 50)
     return {
       icon: "smile",
-      color: "#315E8F",
+      color: "#6a8d73",
       generalAdvice: "正常戶外活動，無須特別注意。",
     };
   if (aqi <= 100)
@@ -686,8 +686,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ scrollRef }) =
             {/* 左下角詳情按鈕 */}             
               <TouchableOpacity
                 style={S.areaDetailBtn}>
-                <Text style={{ color: '#315E8F', fontWeight: '700', fontSize: 15 }}>
-                  點選查看區域詳情　<Feather name="map-pin" size={15} color="#315E8F" /> {selectedDistrict}
+                <Text style={{ color: '#6a8d73', fontWeight: '700', fontSize: 15 }}>
+                  點選查看區域詳情　<Feather name="map-pin" size={15} color="#6a8d73" /> {selectedDistrict}
                 </Text>
               </TouchableOpacity>            
           </View>    
@@ -700,7 +700,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ scrollRef }) =
 
             {/* Choosen District Name */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Feather name="map-pin" size={30} color="#315E8F" style={{marginRight: 10 ,marginTop: 5}} />
+              <Feather name="map-pin" size={30} color="#6a8d73" style={{marginRight: 10 ,marginTop: 5}} />
               <Text style={S.districtName}>{selectedDistrict}</Text>
             </View>
             
@@ -842,12 +842,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ scrollRef }) =
                   {showScrollHint && (
                     <View style={{
                       flexDirection: 'row', alignItems: 'center', gap: 4,
-                      backgroundColor: 'rgba(49,94,143,0.10)',
-                      borderWidth: 1, borderColor: 'rgba(49,94,143,0.30)',
+                      backgroundColor: 'rgba(106, 141, 115, 0.10)',
+                      borderWidth: 1, borderColor: 'rgba(106, 141, 115, 0.30)',
                       borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4,
                     }}>
-                      <Feather name="chevrons-right" size={13} color="#315E8F" />
-                      <Text style={{ fontSize: 11, color: '#315E8F', fontWeight: '700' }}>左右滑動查看</Text>
+                      <Feather name="chevrons-right" size={13} color="#6a8d73" />
+                      <Text style={{ fontSize: 11, color: '#6a8d73', fontWeight: '700' }}>左右滑動查看</Text>
                     </View>
                   )}
                 </View>
@@ -918,20 +918,20 @@ const S = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
     backgroundColor: C.glass2, borderWidth: 1, borderColor: C.glassBorder2,
   },
-  badgeBlue:    { backgroundColor: "rgba(49,94,143,0.10)", borderColor: C.blueBorder },
+  badgeBlue:    { backgroundColor: "rgba(106, 141, 115, 0.10)", borderColor: C.blueBorder },
   badgeText:    { fontSize: 11, color: C.muted, fontWeight: "600" },
 
   // District name
-  districtName: { fontSize: 30, fontWeight: "800", color: "#315E8F", letterSpacing: -0.5 },
+  districtName: { fontSize: 30, fontWeight: "800", color: "#6a8d73", letterSpacing: -0.5 },
 
   // 查看區域詳情按鈕
-  areaDetailBtn: { position: 'absolute', bottom: 50, left: 100, backgroundColor: '#DCE8F3', borderWidth: 1, borderColor: '#315E8F', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, alignItems: 'center', },
+  areaDetailBtn: { position: 'absolute', bottom: 50, left: 100, backgroundColor: '#e8e6d3', borderWidth: 1, borderColor: '#6a8d73', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, alignItems: 'center', },
 
   // Grid
   grid: { flexDirection: "column", paddingHorizontal: 12, gap: 10, alignItems: "stretch", },
 
   // 右半部全部資訊
-  rightDataInfoGrid: { width: '59%', backgroundColor: 'rgb(255, 255, 255)', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 28, shadowColor: "rgba(49, 94, 143, 0.08)", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 20, elevation: 8, borderWidth: 1, borderColor: "rgba(49, 94, 143, 0.08)" },
+  rightDataInfoGrid: { width: '59%', backgroundColor: 'rgb(255, 255, 255)', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 28, shadowColor: "rgba(106, 141, 115, 0.08)", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 20, elevation: 8, borderWidth: 1, borderColor: "rgba(106, 141, 115, 0.08)" },
 
   // Rows 
   firstRow:  { flexDirection: "row", alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, width: "100%", marginBottom: 20 },
@@ -988,10 +988,10 @@ const S = StyleSheet.create({
 
   // AI insight
   insightRow:     { flexDirection: "row", alignItems: "center", gap: 11, padding: 13, borderRadius: 12, backgroundColor: C.blueLt, borderWidth: 1, borderColor: C.blueBorder, marginBottom: 10, },
-  insightIcon:    { width: 34, height: 34, borderRadius: 8, backgroundColor: "rgba(49,94,143,0.16)", justifyContent: "center", alignItems: "center", flexShrink: 0 },
+  insightIcon:    { width: 34, height: 34, borderRadius: 8, backgroundColor: "rgba(106, 141, 115, 0.16)", justifyContent: "center", alignItems: "center", flexShrink: 0 },
   insightMain:    { fontSize: 12, fontWeight: "700", color: C.blue },
   insightSub:     { fontSize: 10, color: C.muted, marginTop: 2 },
-  insightChip:    { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: "rgba(49,94,143,0.14)", borderWidth: 1, borderColor: C.blueBorder, flexShrink: 0 },
+  insightChip:    { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: "rgba(106, 141, 115, 0.14)", borderWidth: 1, borderColor: C.blueBorder, flexShrink: 0 },
   insightChipText:{ fontSize: 12, fontWeight: "700", color: C.blue },
 
   
@@ -1006,7 +1006,7 @@ const S = StyleSheet.create({
   miniPillDivider:   { width: 0.5, backgroundColor: "rgba(0,0,0,0.08)", marginVertical: 8 },
   miniPillName:      { fontSize: 17, fontWeight: "700", color: "#555" },
   miniPillSub:       { fontSize: 10, color: C.muted, marginBottom: 4 },
-  miniPillVal:       { color: "#315E8F",fontSize: 18, fontWeight: "700" },
+  miniPillVal:       { color: "#6a8d73",fontSize: 18, fontWeight: "700" },
   miniPillValRow:    { flexDirection: "row", justifyContent: "center", alignItems: "center" , gap: 8 },
   miniPillUnit:      { fontSize: 9, color: "#aaa" },
 });
@@ -1018,8 +1018,8 @@ const styles = StyleSheet.create({
   barWrapper:          { alignItems: "center" },
   timeLabelsContainer: { flexDirection: "row", alignItems: "center", height: 20 },
   timeLabelWrapper:    { alignItems: "center", justifyContent: "center" },
-  timeLabel:           { fontSize: 9, color: "rgba(93,115,137,0.6)", fontWeight: "400", textAlign: "center" },
+  timeLabel:           { fontSize: 9, color: "rgba(109, 127, 94, 0.6)", fontWeight: "400", textAlign: "center" },
   timeLabelNow:        { color: C.blue, fontWeight: "700", fontSize: 10 },
-  timeLabelPrediction: { color: "rgba(93,115,137,0.4)", fontStyle: "italic" },
+  timeLabelPrediction: { color: "rgba(109, 127, 94, 0.4)", fontStyle: "italic" },
   nowIndicator:        { width: 2, height: 2, borderRadius: 1, backgroundColor: C.blue, marginTop: 2 },
 });

@@ -138,7 +138,7 @@ export default function EventsPage() {
           style={{
             margin: '20px 40px 0',
             background: C.glass,
-            border: `1px solid rgba(49,94,143,0.08)`,
+            border: `1px solid rgba(106, 141, 115, 0.08)`,
             borderRadius: 16,
             boxShadow: C.glassShadow,
             padding: '18px 24px',
@@ -170,7 +170,7 @@ export default function EventsPage() {
           </div>
 
           {/* Divider */}
-          <div style={{ height: 1, background: 'rgba(23,58,94,0.10)' }} />
+          <div style={{ height: 1, background: 'rgba(62, 81, 66, 0.10)' }} />
 
           {/* Parameter selector */}
           <UAVParameterSelector
@@ -227,7 +227,7 @@ export default function EventsPage() {
           display: flex;
           flex-direction: column;
           background: ${C.glass};
-          border: 1px solid rgba(49,94,143,0.08);
+          border: 1px solid rgba(106, 141, 115, 0.08);
           border-radius: 16px;
           box-shadow: ${C.glassShadow};
           padding: 24px 28px;
@@ -241,9 +241,9 @@ export default function EventsPage() {
         .uav-flight-title-inner {
           display: flex; flex-direction: column; gap: 6px;
           background: ${C.glass};
-          border: 1px solid rgba(49,94,143,0.14);
+          border: 1px solid rgba(106, 141, 115, 0.14);
           border-radius: 12px;
-          box-shadow: 0 2px 12px rgba(49,94,143,0.10), ${C.glassShadow};
+          box-shadow: 0 2px 12px rgba(106, 141, 115, 0.10), ${C.glassShadow};
           padding: 14px 20px;
         }
 
@@ -273,7 +273,7 @@ export default function EventsPage() {
         /* ── Individual parameter card ───────────────────────── */
         .uav-param-card {
           background: ${C.glass};
-          border: 1px solid rgba(49,94,143,0.08);
+          border: 1px solid rgba(106, 141, 115, 0.08);
           border-radius: 16px; box-shadow: ${C.glassShadow};
           padding: 16px 18px; box-sizing: border-box;
           height: 420px; display: flex; flex-direction: column;
@@ -288,7 +288,7 @@ export default function EventsPage() {
         /* ── Placeholder cards ───────────────────────────────── */
         .uav-placeholder {
           min-height: 480px; display: flex; align-items: center; justify-content: center;
-          background: ${C.glass}; border: 1px solid rgba(49,94,143,0.08);
+          background: ${C.glass}; border: 1px solid rgba(106, 141, 115, 0.08);
           border-radius: 16px; color: ${C.hint}; font-size: 14px; font-weight: 600;
         }
 
@@ -331,7 +331,7 @@ export default function EventsPage() {
           justify-content: center;
           padding: 4px 7px;
           border-radius: 9px;
-          border: 1.5px solid rgba(49,94,143,0.34);
+          border: 1.5px solid rgba(106, 141, 115, 0.34);
           background: rgba(255,255,255,0.74);
           color: ${C.blue};
           cursor: pointer;
@@ -344,14 +344,14 @@ export default function EventsPage() {
           box-sizing: border-box;
         }
         .uav-param-btn:hover {
-          background: rgba(49,94,143,0.10);
-          border-color: rgba(49,94,143,0.55);
+          background: rgba(106, 141, 115, 0.10);
+          border-color: rgba(106, 141, 115, 0.55);
         }
         .uav-param-btn.active {
           background: ${C.blue};
           border-color: ${C.blue};
           color: #fff;
-          box-shadow: 0 5px 14px rgba(49,94,143,0.18);
+          box-shadow: 0 5px 14px rgba(106, 141, 115, 0.18);
         }
         .uav-param-btn-text {
           display: flex;
@@ -376,9 +376,9 @@ export default function EventsPage() {
         /* ── Custom Tooltip ──────────────────────────────────── */
         .uav-tooltip {
           background: rgba(255,255,255,0.97);
-          border: 1px solid rgba(49,94,143,0.18);
+          border: 1px solid rgba(106, 141, 115, 0.18);
           border-radius: 10px; padding: 10px 14px;
-          box-shadow: 0 4px 20px rgba(23,58,94,0.18);
+          box-shadow: 0 4px 20px rgba(62, 81, 66, 0.18);
           font-size: 12px; min-width: 160px;
         }
         .uav-tooltip-label { font-size: 11px; font-weight: 700; color: ${C.hint}; margin: 0 0 6px; }

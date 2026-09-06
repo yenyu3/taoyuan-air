@@ -202,7 +202,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ scrollRef }) => {
             <Ionicons 
               name={mapMode === '2D' ? 'map' : mapMode === '3D' ? 'cube-outline' : 'globe'} 
               size={20} 
-              color="#315E8F" 
+              color="#6a8d73" 
             />
             <Text style={styles.mapModeText}>{mapMode}</Text>
           </TouchableOpacity>
@@ -250,7 +250,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ scrollRef }) => {
           <Polygon
             coordinates={selectedGrid.polygonCoords}
             fillColor="rgba(106, 141, 115, 0.9)"
-            strokeColor="#315E8F"
+            strokeColor="#6a8d73"
             strokeWidth={3}
           />
         )}
@@ -259,7 +259,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ scrollRef }) => {
       {/* FORECAST 模式提示 */}
       {mode === 'FORECAST' && (
         <View style={styles.forecastBanner}>
-          <Ionicons name="time-outline" size={14} color="#315E8F" />
+          <Ionicons name="time-outline" size={14} color="#6a8d73" />
           <Text style={styles.forecastBannerText}>預報模式：顯示未來 24 小時預測數據</Text>
         </View>
       )}
@@ -330,7 +330,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ scrollRef }) => {
       {/* Loading Indicator */}
       {isLoading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#315E8F" />
+          <ActivityIndicator size="large" color="#6a8d73" />
         </View>
       )}
 
@@ -407,7 +407,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ scrollRef }) => {
                   {/* AI Insight */}
                   <View style={styles.aiSection}>
                     <View style={styles.aiHeader}>
-                      <Ionicons name="bulb" size={16} color="#6F91B2" />
+                      <Ionicons name="bulb" size={16} color="#8fa96f" />
                       <Text style={styles.aiTitle}>AI 分析</Text>
                     </View>
                     <Text style={styles.aiText}>
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   activeModeButton: {
-    backgroundColor: '#6F91B2',
+    backgroundColor: '#8fa96f',
   },
   modeButtonText: {
     fontSize: 14,
@@ -495,12 +495,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   activePollutantDot: {
-    backgroundColor: '#315E8F',
+    backgroundColor: '#6a8d73',
   },
   pollutantDotText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#315E8F',
+    color: '#6a8d73',
   },
   activePollutantDotText: {
     color: 'white',
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   legendTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#315E8F',
+    color: '#6a8d73',
     textAlign: 'left',
     marginBottom: 12,
   },
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   },
   mapModeText: {
     fontSize: 12,
-    color: '#315E8F',
+    color: '#6a8d73',
     fontWeight: '600',
   },
   loadingOverlay: {
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   riskBadge: {
-    backgroundColor: '#6F91B2',
+    backgroundColor: '#8fa96f',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   activeLevelBar: {
-    backgroundColor: '#6F91B2',
+    backgroundColor: '#8fa96f',
   },
   aiSection: {
     backgroundColor: '#F8F9FA',
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
   aiTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6F91B2',
+    color: '#8fa96f',
     marginLeft: 6,
   },
   aiText: {
@@ -780,6 +780,6 @@ const styles = StyleSheet.create({
   },
   windyLink: {
     textDecorationLine: 'underline',
-    color: '#315E8F', 
+    color: '#6a8d73', 
   },
 });

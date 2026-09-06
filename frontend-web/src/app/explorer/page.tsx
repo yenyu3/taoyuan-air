@@ -261,7 +261,7 @@ export default function ExplorerPage() {
             backgroundColor: 'rgba(255,255,255,0.85)',
             border: '1px solid rgba(255,255,255,0.92)',
             borderRadius: 999,
-            boxShadow: '0 4px 16px rgba(23,58,94,0.10)',
+            boxShadow: '0 4px 16px rgba(62, 81, 66, 0.10)',
             display: 'flex', alignItems: 'center', padding: '10px 18px', gap: 10,
             ...(isMobile ? {} : { width: 340, flexShrink: 0 }),
           }}>
@@ -314,7 +314,7 @@ export default function ExplorerPage() {
               }}>
                 <div style={{
                   width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                  backgroundColor: active ? C.primary : 'rgba(23,58,94,0.35)',
+                  backgroundColor: active ? C.primary : 'rgba(62, 81, 66, 0.35)',
                   transition: 'background-color 0.18s',
                 }} />
                 {tab}
@@ -322,7 +322,7 @@ export default function ExplorerPage() {
             );
           })}
 
-          {!isMobile && <div style={{ width: 1, height: 24, backgroundColor: 'rgba(23,58,94,0.20)', margin: '0 2px' }} />}
+          {!isMobile && <div style={{ width: 1, height: 24, backgroundColor: 'rgba(62, 81, 66, 0.20)', margin: '0 2px' }} />}
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', minWidth: 0 }} onClick={(e) => e.stopPropagation()}>
             <Dropdown id="parameter" value={selectedParameter} options={parameterOptions} onSelect={setSelectedParameter} openId={openId} setOpenId={setOpenId} renderOption={getParameterDisplay} />
@@ -354,8 +354,8 @@ export default function ExplorerPage() {
             marginBottom: 18,
             padding: '9px 15px',
             borderRadius: 12,
-            backgroundColor: 'rgba(80,103,128,0.08)',
-            border: '1px solid rgba(80,103,128,0.20)',
+            backgroundColor: 'rgba(93, 111, 73, 0.08)',
+            border: '1px solid rgba(93, 111, 73, 0.20)',
             color: C.muted,
             fontSize: 12,
             fontWeight: 500,

@@ -26,12 +26,12 @@ const WindLidarPanel = dynamic(() => import('./WindLidarPanel'), { ssr: false })
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  blue:      '#315E8F',
-  blueAlpha: 'rgba(49,94,143,0.10)',
-  blueBorder:'rgba(49,94,143,0.28)',
+  blue:      '#6a8d73',
+  blueAlpha: 'rgba(106, 141, 115, 0.10)',
+  blueBorder:'rgba(106, 141, 115, 0.28)',
   glass:     'rgba(255,255,255,0.90)',
-  glassShadow:'0 4px 20px rgba(23,58,94,0.12)',
-  hint:      '#6F91B2',
+  glassShadow:'0 4px 20px rgba(62, 81, 66, 0.12)',
+  hint:      '#8fa96f',
 };
 
 // ── 面板設定（colorscale / zmin / zmax / unit / arrows）────────────────────────

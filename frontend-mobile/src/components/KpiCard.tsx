@@ -18,7 +18,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   unit, 
   subtitle, 
   trend,
-  color = '#315E8F',
+  color = '#6a8d73',
   style
 }) => {
   const getTrendIcon = () => {

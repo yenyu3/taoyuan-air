@@ -38,11 +38,11 @@ export function DashboardBaseStylesA() {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        border: 1px solid #315E8F;
+        border: 1px solid #6a8d73;
         border-radius: 999px;
         padding: 10px 18px;
-        background: #DCE8F3;
-        color: #315E8F;
+        background: #e8e6d3;
+        color: #6a8d73;
         font-size: 15px;
         font-weight: 800;
         white-space: nowrap;
@@ -57,9 +57,9 @@ export function DashboardBaseStylesA() {
         align-self: start;    
         margin-top: 10px;
         background: rgba(255, 255, 255, 0.97);
-        border: 1px solid rgba(49, 94, 143, 0.08);
+        border: 1px solid rgba(106, 141, 115, 0.08);
         border-radius: 20px;
-        box-shadow: 0 4px 32px rgba(49, 94, 143, 0.08);
+        box-shadow: 0 4px 32px rgba(106, 141, 115, 0.08);
         padding: 26px 36px 24px;
         display: flex;
         flex-direction: column;
@@ -69,7 +69,7 @@ export function DashboardBaseStylesA() {
         display: flex;
         align-items: center;
         gap: 10px;
-        color: #315E8F;
+        color: #6a8d73;
         font-size: 22px;
         font-weight: 900;
         letter-spacing: 0;

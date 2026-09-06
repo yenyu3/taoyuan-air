@@ -52,7 +52,7 @@ export function Dropdown({ id, value, options, onSelect, openId, setOpenId, rend
               fontSize: 13, fontWeight: value === opt ? 700 : 500,
               color: value === opt ? C.primary : C.text,
               backgroundColor: value === opt ? C.primaryAlpha : 'transparent',
-              borderBottom: i < options.length - 1 ? '1px solid rgba(23,58,94,0.08)' : 'none',
+              borderBottom: i < options.length - 1 ? '1px solid rgba(62, 81, 66, 0.08)' : 'none',
             }}>
               {renderOption ? renderOption(opt) : opt}
             </button>

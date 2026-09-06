@@ -1,9 +1,9 @@
 'use client';
 
 export const C = {
-  primary:       '#315E8F',
-  primaryAlpha:  'rgba(49,94,143,0.12)',
-  primaryBorder: 'rgba(49,94,143,0.30)',
+  primary:       '#6a8d73',
+  primaryAlpha:  'rgba(106, 141, 115, 0.12)',
+  primaryBorder: 'rgba(106, 141, 115, 0.30)',
   red:           '#B4234D',
   redAlpha:      'rgba(233,76,120,0.12)',
   redBorder:     'rgba(233,76,120,0.30)',
@@ -19,9 +19,9 @@ export const C = {
   green:         '#059669',
   greenAlpha:    'rgba(5,150,105,0.12)',
   greenBorder:   'rgba(5,150,105,0.28)',
-  blue:          '#2563EB',
-  blueAlpha:     'rgba(37,99,235,0.12)',
-  blueBorder:    'rgba(37,99,235,0.30)',
+  blue:          '#4f8d7a',
+  blueAlpha:     'rgba(79, 141, 122, 0.12)',
+  blueBorder:    'rgba(79, 141, 122, 0.30)',
   purple:        '#7C3AED',
   purpleAlpha:   'rgba(124,58,237,0.12)',
   purpleBorder:  'rgba(124,58,237,0.30)',
@@ -30,10 +30,10 @@ export const C = {
   maroonBorder:  'rgba(159,18,57,0.30)',
   glass:         'rgba(255,255,255,0.60)',
   glassBorder:   'rgba(255,255,255,0.80)',
-  glassShadow:   '0 4px 16px rgba(23,58,94,0.10)',
-  text:          '#172A40',
-  muted:         '#506780',
-  hint:          '#6F91B2',
+  glassShadow:   '0 4px 16px rgba(62, 81, 66, 0.10)',
+  text:          '#2d3129',
+  muted:         '#5d6f49',
+  hint:          '#8fa96f',
 };
 
 /* ─── Gauge helpers ──────────────────────────────────────────── */

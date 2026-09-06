@@ -80,7 +80,7 @@ export default function TGOSMap({ gridCells, onGridPress, focusGrid }: TGOSMapPr
       const lineString = new TGOS.LineString(points);
       const ring = new TGOS.LinearRing(lineString);
       const polygon = new TGOS.Polygon([ring]);
-      const fill = new TGOS.Fill(map, polygon, { fillColor: getGridColor(grid.values.value), fillopacity: 0.5, strokeColor: '#315E8F', strokeWeight: 1, strokeOpacity: 0.4 });
+      const fill = new TGOS.Fill(map, polygon, { fillColor: getGridColor(grid.values.value), fillopacity: 0.5, strokeColor: '#6a8d73', strokeWeight: 1, strokeOpacity: 0.4 });
       fillsRef.current.push(fill);
     });
     if (onGridPress) {
@@ -150,8 +150,8 @@ export default function TGOSMap({ gridCells, onGridPress, focusGrid }: TGOSMapPr
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#EAF1F8',
-        color: '#506780',
+        backgroundColor: '#f4f2e9',
+        color: '#5d6f49',
         fontSize: 14,
         fontWeight: 600,
       }}>

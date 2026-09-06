@@ -28,7 +28,7 @@ export interface ParameterConfig {
 
 export const PARAMETER_CONFIG: Record<ParameterId, ParameterConfig> = {
   // 氣象
-  t:       { label: '氣溫',      unit: '°C',    color: '#356F9A', category: 'meteorology', domainType: 'data-range', domainPadding: 1.5 },
+  t:       { label: '氣溫',      unit: '°C',    color: '#6a8d73', category: 'meteorology', domainType: 'data-range', domainPadding: 1.5 },
   rh:      { label: '相對濕度',  unit: '%',     color: '#3498db', category: 'meteorology', domainType: 'data-range', domainPadding: 2   },
   p:       { label: '氣壓',      unit: 'hPa',   color: '#9b59b6', category: 'meteorology', domainType: 'data-range', domainPadding: 1   },
   ws:      { label: '風速',      unit: 'm/s',   color: '#2ecc71', category: 'meteorology', domainType: 'zero-based', domainPadding: 1   },

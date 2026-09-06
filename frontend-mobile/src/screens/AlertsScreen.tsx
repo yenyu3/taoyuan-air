@@ -153,7 +153,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                 <CustomSwitch
                   value={healthGuardEnabled}
                   onValueChange={setHealthGuardEnabled}
-                  trackColor={{ false: "#E0E0E0", true: "#315E8F" }}
+                  trackColor={{ false: "#E0E0E0", true: "#6a8d73" }}
                   thumbColor="#FFFFFF"
                 />
               </View>
@@ -163,7 +163,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                 <View style={styles.thresholdItem}>
                   <View style={styles.thresholdHeader}>
                     <View style={styles.thresholdLabelContainer}>
-                      <Ionicons name="medical" size={18} color="#315E8F" />
+                      <Ionicons name="medical" size={18} color="#6a8d73" />
                       <Text style={styles.thresholdLabel}>氣喘門檻</Text>
                     </View>
                     <Text style={styles.thresholdValue}>
@@ -176,7 +176,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                     maximumValue={100}
                     value={thresholds.asthma}
                     onValueChange={(v) => setThresholds((p) => ({ ...p, asthma: Math.round(v) }))}
-                    minimumTrackTintColor="#315E8F"
+                    minimumTrackTintColor="#6a8d73"
                     maximumTrackTintColor="rgba(255,255,255,0.3)"
                     thumbTintColor="white"
                   />
@@ -190,7 +190,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                 <View style={styles.thresholdItem}>
                   <View style={styles.thresholdHeader}>
                     <View style={styles.thresholdLabelContainer}>
-                      <Ionicons name="fitness" size={18} color="#315E8F" />
+                      <Ionicons name="fitness" size={18} color="#6a8d73" />
                       <Text style={styles.thresholdLabel}>活動強度</Text>
                     </View>
                     <Text style={styles.thresholdValue}>
@@ -203,7 +203,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                     maximumValue={100}
                     value={thresholds.activity}
                     onValueChange={(v) => setThresholds((p) => ({ ...p, activity: Math.round(v) }))}
-                    minimumTrackTintColor="#315E8F"
+                    minimumTrackTintColor="#6a8d73"
                     maximumTrackTintColor="rgba(255,255,255,0.3)"
                     thumbTintColor="white"
                   />
@@ -217,7 +217,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                 <View style={styles.thresholdItem}>
                   <View style={styles.thresholdHeader}>
                     <View style={styles.thresholdLabelContainer}>
-                      <Ionicons name="flash" size={18} color="#315E8F" />
+                      <Ionicons name="flash" size={18} color="#6a8d73" />
                       <Text style={styles.thresholdLabel}>通知緊急度</Text>
                     </View>
                     <Text style={styles.thresholdValue}>
@@ -230,7 +230,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                     maximumValue={100}
                     value={thresholds.urgency}
                     onValueChange={(v) => setThresholds((p) => ({ ...p, urgency: Math.round(v) }))}
-                    minimumTrackTintColor="#315E8F"
+                    minimumTrackTintColor="#6a8d73"
                     maximumTrackTintColor="rgba(255,255,255,0.3)"
                     thumbTintColor="white"
                   />
@@ -278,11 +278,11 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                 </View>
                 <View style={styles.legendContainer}>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: "#315E8F" }]} />
+                    <View style={[styles.legendDot, { backgroundColor: "#6a8d73" }]} />
                     <Text style={styles.legendLabel}>工廠</Text>
                   </View>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: "#506780" }]} />
+                    <View style={[styles.legendDot, { backgroundColor: "#5d6f49" }]} />
                     <Text style={styles.legendLabel}>交通</Text>
                   </View>
                 </View>
@@ -297,7 +297,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
               </View>
               <View style={styles.criticalAlert}>
                 <View style={styles.criticalIcon}>
-                  <Ionicons name="medical" size={24} color="#3F8EAD" />
+                  <Ionicons name="medical" size={24} color="#5c9a7a" />
                 </View>
                 <View style={styles.criticalContent}>
                   <View style={styles.criticalHeader}>
@@ -316,7 +316,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
             {/* AI Health Tip */}
             <View style={[styles.healthTipCard, !isMobile && { marginHorizontal: 0, marginTop: 16 }]}>
               <View style={styles.healthTipIcon}>
-                <Ionicons name="bulb" size={20} color="#315E8F" />
+                <Ionicons name="bulb" size={20} color="#6a8d73" />
               </View>
               <View style={styles.healthTipContent}>
                 <Text style={styles.healthTipTitle}>AI 健康建議</Text>
@@ -349,7 +349,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                   <Text style={styles.healthGuardSubtitle}>調整治理強度</Text>
                 </View>
                 <View style={styles.workbenchIcon}>
-                  <Ionicons name="analytics" size={20} color="#315E8F" />
+                  <Ionicons name="analytics" size={20} color="#6a8d73" />
                 </View>
               </View>
 
@@ -358,7 +358,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                 <View style={styles.thresholdItem}>
                   <View style={styles.thresholdHeader}>
                     <View style={styles.thresholdLabelContainer}>
-                      <Ionicons name="business" size={18} color="#315E8F" />
+                      <Ionicons name="business" size={18} color="#6a8d73" />
                       <Text style={styles.thresholdLabel}>工業產出汙染物削減</Text>
                     </View>
                     <Text style={styles.thresholdValue}>
@@ -371,7 +371,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                     maximumValue={50}
                     value={govThresholds.industrial}
                     onValueChange={(v) => setGovThresholds((p) => ({ ...p, industrial: Math.round(v) }))}
-                    minimumTrackTintColor="#315E8F"
+                    minimumTrackTintColor="#6a8d73"
                     maximumTrackTintColor="rgba(255,255,255,0.3)"
                     thumbTintColor="white"
                   />
@@ -385,10 +385,10 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                 <View style={styles.thresholdItem}>
                   <View style={styles.thresholdHeader}>
                     <View style={styles.thresholdLabelContainer}>
-                      <Ionicons name="car" size={18} color="#3B82F6" />
+                      <Ionicons name="car" size={18} color="#7fae8a" />
                       <Text style={styles.thresholdLabel}>交通管制強度</Text>
                     </View>
-                    <Text style={[styles.thresholdValue, { color: "#3B82F6" }]}>
+                    <Text style={[styles.thresholdValue, { color: "#7fae8a" }]}>
                       {govThresholds.traffic}
                     </Text>
                   </View>
@@ -417,10 +417,10 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                 <View style={styles.thresholdItem}>
                   <View style={styles.thresholdHeader}>
                     <View style={styles.thresholdLabelContainer}>
-                      <Ionicons name="megaphone" size={18} color="#3F8EAD" />
+                      <Ionicons name="megaphone" size={18} color="#5c9a7a" />
                       <Text style={styles.thresholdLabel}>公眾警報門檻</Text>
                     </View>
-                    <Text style={[styles.thresholdValue, { color: "#3F8EAD" }]}>
+                    <Text style={[styles.thresholdValue, { color: "#5c9a7a" }]}>
                       {getGovThresholdLabel("alert", govThresholds.alert)}
                     </Text>
                   </View>
@@ -430,7 +430,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                     maximumValue={200}
                     value={govThresholds.alert}
                     onValueChange={(v) => setGovThresholds((p) => ({ ...p, alert: Math.round(v) }))}
-                    minimumTrackTintColor="#3F8EAD"
+                    minimumTrackTintColor="#5c9a7a"
                     maximumTrackTintColor="rgba(255,255,255,0.3)"
                     thumbTintColor="white"
                   />
@@ -480,11 +480,11 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
                 </View>
                 <View style={styles.legendContainer}>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: "#315E8F" }]} />
+                    <View style={[styles.legendDot, { backgroundColor: "#6a8d73" }]} />
                     <Text style={styles.legendLabel}>工業</Text>
                   </View>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: "#506780" }]} />
+                    <View style={[styles.legendDot, { backgroundColor: "#5d6f49" }]} />
                     <Text style={styles.legendLabel}>交通</Text>
                   </View>
                 </View>
@@ -518,7 +518,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
 
               <View style={styles.strategyCard}>
                 <View style={styles.strategyIcon}>
-                  <Ionicons name="business" size={20} color="#315E8F" />
+                  <Ionicons name="business" size={20} color="#6a8d73" />
                 </View>
                 <View style={styles.strategyContent}>
                   <View style={styles.strategyHeader}>
@@ -534,14 +534,14 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
               </View>
 
               <View style={styles.strategyCard}>
-                <View style={[styles.strategyIcon, { backgroundColor: "rgba(59,130,246,0.1)" }]}>
-                  <Ionicons name="car" size={20} color="#3B82F6" />
+                <View style={[styles.strategyIcon, { backgroundColor: "rgba(127, 174, 138, 0.1)" }]}>
+                  <Ionicons name="car" size={20} color="#7fae8a" />
                 </View>
                 <View style={styles.strategyContent}>
                   <View style={styles.strategyHeader}>
                     <Text style={styles.strategyItemTitle}>交通分流</Text>
-                    <View style={[styles.priorityBadge, { backgroundColor: "rgba(59,130,246,0.2)" }]}>
-                      <Text style={[styles.priorityText, { color: "#1D4ED8" }]}>例行</Text>
+                    <View style={[styles.priorityBadge, { backgroundColor: "rgba(127, 174, 138, 0.2)" }]}>
+                      <Text style={[styles.priorityText, { color: "#3e7d68" }]}>例行</Text>
                     </View>
                   </View>
                   <Text style={styles.strategyDescription}>
@@ -552,7 +552,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ scrollRef }) => {
 
               <View style={styles.strategyCard}>
                 <View style={[styles.strategyIcon, { backgroundColor: "rgba(249,115,22,0.1)" }]}>
-                  <Ionicons name="megaphone" size={20} color="#3F8EAD" />
+                  <Ionicons name="megaphone" size={20} color="#5c9a7a" />
                 </View>
                 <View style={styles.strategyContent}>
                   <View style={styles.strategyHeader}>
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
   healthGuardSubtitle: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
     letterSpacing: 1.5,
     marginTop: 2,
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
   thresholdValue: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#315E8F",
+    color: "#6a8d73",
   },
   slider: {
     width: "100%",
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   sliderLabel: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
   },
   aiCardsContainer: {
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
   },
   aiCardSubtitle: {
     fontSize: 10,
-    color: "#506780",
+    color: "#5d6f49",
   },
   radarContainer: {
     flex: 1,
@@ -749,9 +749,9 @@ const styles = StyleSheet.create({
     borderRadius: 48,
     borderWidth: 12,
     borderColor: "rgba(255, 255, 255, 0.3)",
-    borderTopColor: "#315E8F",
-    borderRightColor: "#315E8F",
-    borderBottomColor: "#506780",
+    borderTopColor: "#6a8d73",
+    borderRightColor: "#6a8d73",
+    borderBottomColor: "#5d6f49",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -776,7 +776,7 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: 8,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
   },
   criticalSection: {
@@ -787,7 +787,7 @@ const styles = StyleSheet.create({
   criticalTitle: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
     letterSpacing: 2,
     paddingHorizontal: 4,
@@ -845,16 +845,16 @@ const styles = StyleSheet.create({
   },
   criticalDescription: {
     fontSize: 12,
-    color: "#506780",
+    color: "#5d6f49",
     lineHeight: 16,
   },
   healthTipCard: {
     flexDirection: "row",
     marginHorizontal: 24,
     marginTop: 24,
-    backgroundColor: "rgba(200, 216, 232, 0.1)",
+    backgroundColor: "rgba(181, 201, 154, 0.1)",
     borderWidth: 2,
-    borderColor: "rgba(200, 216, 232, 0.2)",
+    borderColor: "rgba(181, 201, 154, 0.2)",
     borderRadius: 24,
     padding: 20,
     alignItems: "flex-start",
@@ -873,7 +873,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
     borderWidth: 1,
-    borderColor: "rgba(200, 216, 232, 0.1)",
+    borderColor: "rgba(181, 201, 154, 0.1)",
   },
   healthTipContent: {
     flex: 1,
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
   healthTipTitle: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 4,
@@ -923,7 +923,7 @@ const styles = StyleSheet.create({
   workbenchSubtitle: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
     letterSpacing: 1.5,
     marginTop: 2,
@@ -932,7 +932,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(49, 94, 143, 0.1)",
+    backgroundColor: "rgba(106, 141, 115, 0.1)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -951,7 +951,7 @@ const styles = StyleSheet.create({
   analysisLabel: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
   policyTarget: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#315E8F",
+    color: "#6a8d73",
   },
   policyContent: {
     flexDirection: "row",
@@ -995,7 +995,7 @@ const styles = StyleSheet.create({
   policyLabel: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
@@ -1010,13 +1010,13 @@ const styles = StyleSheet.create({
   outcomeLabel: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#315E8F",
+    color: "#6a8d73",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
   outcomeText: {
     fontSize: 12,
-    color: "#506780",
+    color: "#5d6f49",
     lineHeight: 16,
   },
   strategySection: {
@@ -1027,7 +1027,7 @@ const styles = StyleSheet.create({
   strategyTitle: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
     letterSpacing: 2,
     paddingHorizontal: 4,
@@ -1051,7 +1051,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: "rgba(49, 94, 143, 0.1)",
+    backgroundColor: "rgba(106, 141, 115, 0.1)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
     color: "#2D3129",
   },
   priorityBadge: {
-    backgroundColor: "rgba(49, 94, 143, 0.2)",
+    backgroundColor: "rgba(106, 141, 115, 0.2)",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -1078,16 +1078,16 @@ const styles = StyleSheet.create({
   priorityText: {
     fontSize: 9,
     fontWeight: "bold",
-    color: "#506780",
+    color: "#5d6f49",
     textTransform: "uppercase",
   },
   strategyDescription: {
     fontSize: 12,
-    color: "#506780",
+    color: "#5d6f49",
     lineHeight: 16,
   },
   webContainer: {
-    backgroundColor: '#EAF1F8',
+    backgroundColor: '#f4f2e9',
   },
 
   // ── Web Tab Bar（左上角兩個按鈕）──
@@ -1109,32 +1109,32 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.52)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.72)",
-    shadowColor: "rgba(23,58,94,0.14)",
+    shadowColor: "rgba(62, 81, 66, 0.14)",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 8,
   },
   webTabBtnActive: {
-    backgroundColor: "rgba(49,94,143,0.12)",
-    borderColor: "rgba(49,94,143,0.30)",
+    backgroundColor: "rgba(106, 141, 115, 0.12)",
+    borderColor: "rgba(106, 141, 115, 0.30)",
   },
   webTabDot: {
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: "rgba(23,58,94,0.30)",
+    backgroundColor: "rgba(62, 81, 66, 0.30)",
   },
   webTabDotActive: {
-    backgroundColor: "#315E8F",
+    backgroundColor: "#6a8d73",
   },
   webTabText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6F91B2",
+    color: "#8fa96f",
     letterSpacing: 0.3,
   },
   webTabTextActive: {
-    color: "#315E8F",
+    color: "#6a8d73",
   },
 
   // ── Web 頁面主結構 ──
@@ -1167,9 +1167,9 @@ const styles = StyleSheet.create({
   sectionDot: {
     width: 3,
     height: 14,
-    backgroundColor: "#315E8F",
+    backgroundColor: "#6a8d73",
     borderRadius: 2,
-    shadowColor: "rgba(49,94,143,0.22)",
+    shadowColor: "rgba(106, 141, 115, 0.22)",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 6,
@@ -1177,7 +1177,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#172A40",
+    color: "#2d3129",
     letterSpacing: 0.2,
   },
   trafficOptions: {
@@ -1195,16 +1195,16 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.6)",
   },
   trafficOptionActive: {
-    backgroundColor: "rgba(59,130,246,0.12)",
-    borderColor: "rgba(59,130,246,0.35)",
+    backgroundColor: "rgba(127, 174, 138, 0.12)",
+    borderColor: "rgba(127, 174, 138, 0.35)",
   },
   trafficOptionText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#506780",
+    color: "#5d6f49",
   },
   trafficOptionTextActive: {
-    color: "#3B82F6",
+    color: "#7fae8a",
   },
 });
 

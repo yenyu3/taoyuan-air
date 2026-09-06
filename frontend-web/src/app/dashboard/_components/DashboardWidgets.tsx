@@ -13,15 +13,15 @@ import {
 } from '@shared/api/cwa';
 
 export const C = {
-  blue: '#315E8F',
-  blueLt: 'rgba(49,94,143,0.12)',
-  blueBorder: 'rgba(49,94,143,0.30)',
+  blue: '#6a8d73',
+  blueLt: 'rgba(106, 141, 115, 0.12)',
+  blueBorder: 'rgba(106, 141, 115, 0.30)',
   glass: 'rgba(255,255,255,0.52)',
   glassInner: 'rgba(255,255,255,0.80)',
-  glassShadow: 'rgba(23,58,94,0.14)',
-  text: '#172A40',
-  muted: '#506780',
-  hint: '#6F91B2',
+  glassShadow: 'rgba(62, 81, 66, 0.14)',
+  text: '#2d3129',
+  muted: '#5d6f49',
+  hint: '#8fa96f',
 };
 
 const COLORS = {
@@ -75,7 +75,7 @@ const getAQIStatus = (aqi: number) => {
 };
 
 export const getPM25Color = (v: number) => {
-  if (v <= 15.4) return '#315E8F';
+  if (v <= 15.4) return '#6a8d73';
   if (v <= 35.4) return COLORS.moderate;
   if (v <= 54.4) return COLORS.unhealthySensitive;
   if (v <= 150.4) return COLORS.unhealthy;
@@ -84,7 +84,7 @@ export const getPM25Color = (v: number) => {
 };
 
 export const getO3Color = (v: number) => {
-  if (v <= 54) return '#315E8F';
+  if (v <= 54) return '#6a8d73';
   if (v <= 70) return COLORS.moderate;
   if (v <= 85) return COLORS.unhealthySensitive;
   if (v <= 105) return COLORS.unhealthy;
@@ -102,7 +102,7 @@ const WEATHER_ICON_MAP: Record<WeatherIconKey, typeof Sun> = {
 
 export const getActivityInfo = (aqi: number) => {
   if (aqi <= 50) {
-    return { icon: Smile, color: '#315E8F', advice: '正常戶外活動，無須特別注意。' };
+    return { icon: Smile, color: '#6a8d73', advice: '正常戶外活動，無須特別注意。' };
   }
   if (aqi <= 100) {
     return { icon: Meh, color: COLORS.moderate, advice: '正常戶外活動。' };
@@ -345,7 +345,7 @@ export function TrendBars() {
                     height: Math.max(5, value * MAX_H),
                     width: BAR_W,
                     backgroundColor: barColor(value, slot.isPrediction),
-                    borderColor: slot.isNow ? '#6F91B2' : 'transparent',
+                    borderColor: slot.isNow ? '#8fa96f' : 'transparent',
                   }}
                 />
               </div>
@@ -418,7 +418,7 @@ export function WeatherCard({
           </div>
         </div>
         <span className="weather-icon-circle">
-          <CurrentIcon size={32} color="#315E8F" />
+          <CurrentIcon size={32} color="#6a8d73" />
         </span>
       </div>
 
@@ -426,7 +426,7 @@ export function WeatherCard({
         {stats.map(({ Icon, val, label }, i) => (
           <React.Fragment key={label}>
             <div className="weather-stat-item">
-              <Icon size={13} color="#315E8F" />
+              <Icon size={13} color="#6a8d73" />
               <span className="weather-stat-val">{val}</span>
               <span className="weather-stat-label">{label}</span>
             </div>
@@ -448,16 +448,16 @@ export function WeatherCard({
             >
               <span className="weather-forecast-label">{day.label}</span>
               <span className="weather-forecast-date">{day.dateLabel}</span>
-              <DayIcon size={20} color="#315E8F" style={{ margin: '8px 0' }} />
+              <DayIcon size={20} color="#6a8d73" style={{ margin: '8px 0' }} />
               <div className="weather-forecast-temp-row">
                 <span className="weather-forecast-hi">{day.maxTemp}°</span>
                 <span className="weather-forecast-lo"> / {day.minTemp}°</span>
               </div>
               <div className="weather-forecast-pop-row">
-                <CloudRain size={10} color={Number(day.precipProb) >= 50 ? '#5b9bd5' : '#bbb'} />
+                <CloudRain size={10} color={Number(day.precipProb) >= 50 ? '#7fae8a' : '#bbb'} />
                 <span
                   className="weather-forecast-pop-text"
-                  style={Number(day.precipProb) >= 50 ? { color: '#5b9bd5' } : undefined}
+                  style={Number(day.precipProb) >= 50 ? { color: '#7fae8a' } : undefined}
                 >
                   {day.precipProb}%
                 </span>

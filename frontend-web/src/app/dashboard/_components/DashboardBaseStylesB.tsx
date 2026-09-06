@@ -53,8 +53,8 @@ export function DashboardBaseStylesB() {
         font-size: 13px;
         font-weight: 600;
       }
-      .weather-hi { color: #357DA4; }
-      .weather-lo { color: #6F91B2; }
+      .weather-hi { color: #6a8d73; }
+      .weather-lo { color: #8fa96f; }
       .weather-sep { color: #bbb; font-size: 12px; }
       .weather-icon-circle {
         width: 64px;

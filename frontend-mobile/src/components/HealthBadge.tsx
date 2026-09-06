@@ -10,11 +10,11 @@ interface HealthBadgeProps {
 export const HealthBadge: React.FC<HealthBadgeProps> = ({ level, size = 'medium' }) => {
   const getColor = () => {
     switch (level) {
-      case '良好': return '#315E8F';
-      case '普通': return '#6F91B2';
+      case '良好': return '#6a8d73';
+      case '普通': return '#8fa96f';
       case '對敏感族群不健康': return '#6AA6B8';
-      case '對所有族群不健康': return '#346D9C';
-      default: return '#315E8F';
+      case '對所有族群不健康': return '#6a8d73';
+      default: return '#6a8d73';
     }
   };
 

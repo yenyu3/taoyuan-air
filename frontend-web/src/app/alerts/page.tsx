@@ -12,21 +12,21 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 
 /* ─── Design tokens ──────────────────────────────────────────── */
 const C = {
-  primary:      '#315E8F',
-  primaryAlpha: 'rgba(49,94,143,0.12)',
-  primaryBorder:'rgba(49,94,143,0.30)',
-  blue:         '#3B82F6',
-  blueAlpha:    'rgba(59,130,246,0.12)',
-  blueBorder:   'rgba(59,130,246,0.35)',
-  accent:       '#3F8EAD',
-  accentAlpha:  'rgba(63,142,173,0.13)',
-  accentBorder: 'rgba(63,142,173,0.28)',
+  primary:      '#6a8d73',
+  primaryAlpha: 'rgba(106, 141, 115, 0.12)',
+  primaryBorder:'rgba(106, 141, 115, 0.30)',
+  blue:         '#7fae8a',
+  blueAlpha:    'rgba(127, 174, 138, 0.12)',
+  blueBorder:   'rgba(127, 174, 138, 0.35)',
+  accent:       '#5c9a7a',
+  accentAlpha:  'rgba(92, 154, 122, 0.13)',
+  accentBorder: 'rgba(92, 154, 122, 0.28)',
   glass:        'rgba(255,255,255,0.52)',
   glassBorder:  'rgba(255,255,255,0.72)',
-  glassShadow:  '0 4px 16px rgba(23,58,94,0.10)',
-  text:         '#172A40',
-  muted:        '#506780',
-  hint:         '#6F91B2',
+  glassShadow:  '0 4px 16px rgba(62, 81, 66, 0.10)',
+  text:         '#2d3129',
+  muted:        '#5d6f49',
+  hint:         '#8fa96f',
 };
 
 const card: React.CSSProperties = {
@@ -46,7 +46,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
       style={{
         width: 44, height: 26, borderRadius: 13, cursor: 'pointer',
         position: 'relative', flexShrink: 0, outline: 'none',
-        backgroundColor: value ? C.primary : 'rgba(23,58,94,0.25)',
+        backgroundColor: value ? C.primary : 'rgba(62, 81, 66, 0.25)',
         transition: 'background-color 0.2s',
         boxShadow: value ? `0 0 0 3px ${C.primaryAlpha}` : 'none',
       }}
@@ -74,7 +74,7 @@ function Slider({ min, max, value, onChange, color = C.primary }: SliderProps) {
       {/* track bg */}
       <div style={{
         position: 'absolute', width: '100%', height: 5, borderRadius: 3,
-        backgroundColor: 'rgba(23,58,94,0.15)',
+        backgroundColor: 'rgba(62, 81, 66, 0.15)',
       }} />
       {/* filled track */}
       <div style={{
@@ -86,7 +86,7 @@ function Slider({ min, max, value, onChange, color = C.primary }: SliderProps) {
       <div style={{
         position: 'absolute', width: 17, height: 17, borderRadius: '50%',
         backgroundColor: '#fff', border: `2.5px solid ${color}`,
-        boxShadow: `0 2px 8px rgba(23,58,94,0.25)`,
+        boxShadow: `0 2px 8px rgba(62, 81, 66, 0.25)`,
         left: `calc(${pct}% - 8.5px)`, pointerEvents: 'none', zIndex: 1,
         transition: 'left 0.05s',
       }} />
@@ -122,9 +122,9 @@ function DonutChart() {
   return (
     <div style={{
       width: 88, height: 88, borderRadius: '50%',
-      background: `conic-gradient(${C.primary} 0% 70%, rgba(80,103,128,0.42) 70% 100%)`,
+      background: `conic-gradient(${C.primary} 0% 70%, rgba(93, 111, 73, 0.42) 70% 100%)`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      boxShadow: `0 4px 16px rgba(49,94,143,0.15)`,
+      boxShadow: `0 4px 16px rgba(106, 141, 115, 0.15)`,
     }}>
       <div style={{
         width: 60, height: 60, borderRadius: '50%',
@@ -219,7 +219,7 @@ export default function AlertsPage() {
               }}>
                 <div style={{
                   width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                  backgroundColor: active ? C.primary : 'rgba(23,58,94,0.35)',
+                  backgroundColor: active ? C.primary : 'rgba(62, 81, 66, 0.35)',
                   transition: 'background-color 0.18s',
                 }} />
                 {tab === 'HEALTH' ? '個人健康' : '治理支援'}
@@ -303,7 +303,7 @@ export default function AlertsPage() {
                     <DonutChart />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 8 }}>
-                    {[{ color: C.primary, label: '工廠' }, { color: '#506780', label: '交通' }].map(({ color, label }) => (
+                    {[{ color: C.primary, label: '工廠' }, { color: '#5d6f49', label: '交通' }].map(({ color, label }) => (
                       <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: color }} />
                         <span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>{label}</span>
@@ -476,7 +476,7 @@ export default function AlertsPage() {
                     <DonutChart />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 8 }}>
-                    {[{ color: C.primary, label: '工業' }, { color: '#506780', label: '交通' }].map(({ color, label }) => (
+                    {[{ color: C.primary, label: '工業' }, { color: '#5d6f49', label: '交通' }].map(({ color, label }) => (
                       <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: color }} />
                         <span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>{label}</span>

@@ -283,8 +283,8 @@ export default function SettingsPage() {
               <span 
                 style={{ 
                   padding: isMobile ? '5px 10px' : '9px 20px', marginBottom: isMobile ? 5 : 0, borderRadius: 99, fontSize: 12, color: C.primary, fontWeight: 600,
-                  backgroundColor: saved ? 'rgba(92,138,118,0.12)' : isDirty ? C.primaryAlpha : 'rgba(23,58,94,0.08)',
-                  border: `1px solid ${saved ? 'rgba(92,138,118,0.30)' : isDirty ? C.primaryBorder : 'rgba(23,58,94,0.18)'}`,  
+                  backgroundColor: saved ? 'rgba(92,138,118,0.12)' : isDirty ? C.primaryAlpha : 'rgba(62, 81, 66, 0.08)',
+                  border: `1px solid ${saved ? 'rgba(92,138,118,0.30)' : isDirty ? C.primaryBorder : 'rgba(62, 81, 66, 0.18)'}`,  
                 }}
               >
                 有尚未儲存的變更
@@ -296,8 +296,8 @@ export default function SettingsPage() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 7,
                 padding: '9px 20px', borderRadius: 99, cursor: isDirty ? 'pointer' : 'default', marginLeft: isMobile ? 0 : 8,
-                backgroundColor: saved ? 'rgba(92,138,118,0.12)' : isDirty ? C.primaryAlpha : 'rgba(23,58,94,0.08)',
-                border: `1px solid ${saved ? 'rgba(92,138,118,0.30)' : isDirty ? C.primaryBorder : 'rgba(23,58,94,0.18)'}`,
+                backgroundColor: saved ? 'rgba(92,138,118,0.12)' : isDirty ? C.primaryAlpha : 'rgba(62, 81, 66, 0.08)',
+                border: `1px solid ${saved ? 'rgba(92,138,118,0.30)' : isDirty ? C.primaryBorder : 'rgba(62, 81, 66, 0.18)'}`,
                 fontSize: 13, fontWeight: 700,
                 color: saved ? '#5C8A76' : isDirty ? C.primary : C.hint,
                 transition: 'all 0.18s',
@@ -314,7 +314,7 @@ export default function SettingsPage() {
           <div style={{
             padding: '10px 14px', borderRadius: 10, marginBottom: 16,
             backgroundColor: 'rgba(233,76,120,0.10)', border: '1px solid rgba(233,76,120,0.30)',
-            fontSize: 13, color: '#173A5E',
+            fontSize: 13, color: '#3e5142',
           }}>{saveError}</div>
         )}
 
@@ -383,7 +383,7 @@ export default function SettingsPage() {
                     >
                       <div style={{
                         width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-                        backgroundColor: active ? C.primaryBorder : 'rgba(23,58,94,0.10)',
+                        backgroundColor: active ? C.primaryBorder : 'rgba(62, 81, 66, 0.10)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'background-color 0.15s',
                       }}>
@@ -541,7 +541,7 @@ export default function SettingsPage() {
                 disabled={deleteLoading}
                 style={{
                   width: '100%', padding: '13px 0', borderRadius: 12, cursor: 'pointer',
-                  backgroundColor: 'rgba(23,58,94,0.08)', border: `1.5px solid rgba(23,58,94,0.20)`,
+                  backgroundColor: 'rgba(62, 81, 66, 0.08)', border: `1.5px solid rgba(62, 81, 66, 0.20)`,
                   fontSize: 14, fontWeight: 700, color: C.muted,
                   transition: 'all 0.15s',
                 }}

@@ -55,7 +55,7 @@ export function ViewSwitcher({
               fontWeight: isActive ? 800 : 600,
               color: isActive ? '#fff' : C.muted,
               background: isActive ? C.blue : 'transparent',
-              boxShadow: isActive ? '0 2px 10px rgba(49,94,143,0.30)' : 'none',
+              boxShadow: isActive ? '0 2px 10px rgba(106, 141, 115, 0.30)' : 'none',
               transition: 'all 0.18s',
             }}
             aria-pressed={isActive}
@@ -116,7 +116,7 @@ export function FlightDropdown({
             position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 300,
             background: '#fff',
             border: `1px solid ${C.blueBorder}`,
-            borderRadius: 14, boxShadow: '0 8px 32px rgba(23,58,94,0.18)',
+            borderRadius: 14, boxShadow: '0 8px 32px rgba(62, 81, 66, 0.18)',
             minWidth: 280, overflow: 'hidden',
           }}
         >
@@ -132,14 +132,14 @@ export function FlightDropdown({
                 fontSize: 13, fontWeight: selected === f.flight_id ? 700 : 500,
                 color: selected === f.flight_id ? C.blue : C.text,
                 background: selected === f.flight_id ? C.blueAlpha : 'transparent',
-                borderBottom: i < flights.length - 1 ? '1px solid rgba(23,58,94,0.08)' : 'none',
+                borderBottom: i < flights.length - 1 ? '1px solid rgba(62, 81, 66, 0.08)' : 'none',
                 transition: 'background-color 0.12s',
               }}
             >
               <div
                 style={{
                   width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                  background: selected === f.flight_id ? C.blue : 'rgba(23,58,94,0.4)',
+                  background: selected === f.flight_id ? C.blue : 'rgba(62, 81, 66, 0.4)',
                 }}
               />
               <span style={{ flex: 1 }}>

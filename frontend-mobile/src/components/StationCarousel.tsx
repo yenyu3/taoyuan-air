@@ -285,7 +285,7 @@ const TrendBars: React.FC<{ trend: number[] }> = ({ trend }) => {
 
     // 2. 如果是真實數據，使用原本的彩色系統
     let baseColor;
-    if (value <= 0.3) baseColor = 'rgba(49, 94, 143'; // 主色系 - 低
+    if (value <= 0.3) baseColor = 'rgba(106, 141, 115'; // 主色系 - 低
     else if (value <= 0.5) baseColor = 'rgba(255, 193, 7'; // 黃色 - 一般
     else if (value <= 0.7) baseColor = 'rgba(255, 87, 34'; // 紅色 - 高
     else baseColor = 'rgba(156, 39, 176'; // 紫色 - 很高
@@ -322,7 +322,7 @@ const TrendBars: React.FC<{ trend: number[] }> = ({ trend }) => {
                     backgroundColor: getBarColor(value, isPrediction),
                     marginRight: index < displayData.length - 1 ? barSpacing : 0,
                     borderWidth: isNow ? 1 : 0,
-                    borderColor: isNow ? '#6F91B2' : 'transparent',
+                    borderColor: isNow ? '#8fa96f' : 'transparent',
                   },
                 ]}
               />
@@ -420,7 +420,7 @@ const DistrictCard: React.FC<{
           </View>
 
           <View style={styles.stationTypeRow}>
-            <Feather name="map-pin" size={13} color="#6F91B2" />
+            <Feather name="map-pin" size={13} color="#8fa96f" />
             <Text style={styles.stationType}>{district.region}</Text>
           </View>
 
@@ -445,7 +445,7 @@ const DistrictCard: React.FC<{
             <View style={styles.divider} />
             <View style={styles.metricItem}>
               <Text style={styles.metricLabel}>AQI</Text>
-              <Text style={[styles.metricValue, { color: "#6F91B2" }]}>
+              <Text style={[styles.metricValue, { color: "#8fa96f" }]}>
                 {displayAqi}
               </Text>
             </View>
@@ -454,7 +454,7 @@ const DistrictCard: React.FC<{
           <View style={styles.statusRow}>
             <View style={{flexDirection: "row"}}>
               <Text style={styles.trendLabel}>空氣狀況  </Text>
-              <Text style={[styles.statusBadge, { color: "#6F91B2" }]}>
+              <Text style={[styles.statusBadge, { color: "#8fa96f" }]}>
                 {district.status}
               </Text>
             </View>
@@ -603,13 +603,13 @@ export const StationCarousel: React.FC<{
       {/* 定位狀態提示 */}
       {isLoading && (
         <View style={styles.locationStatus}>
-          <Feather name="map-pin" size={14} color="#6F91B2" />
+          <Feather name="map-pin" size={14} color="#8fa96f" />
           <Text style={styles.locationStatusText}>正在獲取您的位置...</Text>
         </View>
       )}
       {permission === 'granted' && location && (
         <View style={styles.locationStatus}>
-          <Feather name="check-circle" size={14} color="#6F91B2" />
+          <Feather name="check-circle" size={14} color="#8fa96f" />
           <Text style={styles.locationStatusText}>已定位到 {defaultDistrict}</Text>
         </View>
       )}
@@ -748,7 +748,7 @@ export const StationCarousel: React.FC<{
                   {
                     width: dotWidth,
                     opacity: dotOpacity,
-                    backgroundColor: "#6F91B2",
+                    backgroundColor: "#8fa96f",
                   },
                 ]}
               />
@@ -777,11 +777,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignSelf: "center",
     borderWidth: 1,
-    borderColor: "rgba(111, 145, 178, 0.2)",
+    borderColor: "rgba(143, 169, 111, 0.2)",
   },
   locationStatusText: {
     fontSize: 12,
-    color: "#6F91B2",
+    color: "#8fa96f",
     fontWeight: "500",
   },
   locationStatusTextGray: {
@@ -799,7 +799,7 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: "rgba(111, 145, 178, 0.38)",
+    backgroundColor: "rgba(143, 169, 111, 0.38)",
     zIndex: 0,
   },
   cardBlob2: {
@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: "rgba(200, 216, 232, 0.35)",
+    backgroundColor: "rgba(181, 201, 154, 0.35)",
     zIndex: 0,
   },
   card: {
@@ -832,7 +832,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(200, 216, 232, 0.12)",
+    backgroundColor: "rgba(181, 201, 154, 0.12)",
   },
   edgeHighlight: {
     position: "absolute",
@@ -873,13 +873,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     letterSpacing: -0.5,
-    color: "#1a2332",
+    color: "#1f2620",
   },
   updateTime: {
     fontSize: 12,
     marginTop: 6,
     fontWeight: "400",
-    color: "rgba(93, 115, 137, 0.7)",
+    color: "rgba(109, 127, 94, 0.7)",
   },
   stationTypeRow: {
     flexDirection: "row",
@@ -891,7 +891,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     letterSpacing: 0.4,
-    color: "#6F91B2",
+    color: "#8fa96f",
   },
   metricsRow: {
     flexDirection: "row",
@@ -908,7 +908,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontWeight: "400",
     letterSpacing: 0.3,
-    color: "rgba(93, 115, 137, 0.75)",
+    color: "rgba(109, 127, 94, 0.75)",
   },
   metricValue: {
     fontSize: 20,
@@ -919,7 +919,7 @@ const styles = StyleSheet.create({
     width: 1,
     height: 48,
     marginHorizontal: 2,
-    backgroundColor: "rgba(93, 115, 137, 0.15)",
+    backgroundColor: "rgba(109, 127, 94, 0.15)",
   },
   statusRow: {
     flexDirection: "row",
@@ -934,7 +934,7 @@ const styles = StyleSheet.create({
   },
   trendLabel: {
     fontSize: 12,
-    color: "rgba(93, 115, 137, 0.65)",
+    color: "rgba(109, 127, 94, 0.65)",
   },
   trendContainer: {
     height: 80,  // 從70增加到80以配合更大的柱狀圖
@@ -968,24 +968,24 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: 9,
-    color: "rgba(93, 115, 137, 0.6)",
+    color: "rgba(109, 127, 94, 0.6)",
     fontWeight: "400",
     textAlign: "center",
   },
   timeLabelNow: {
-    color: "#6F91B2",
+    color: "#8fa96f",
     fontWeight: "700",
     fontSize: 10,
   },
   timeLabelPrediction: {
-    color: "rgba(93, 115, 137, 0.4)",
+    color: "rgba(109, 127, 94, 0.4)",
     fontStyle: "italic",
   },
   nowIndicator: {
     width: 2,
     height: 2,
     borderRadius: 1,
-    backgroundColor: "#6F91B2",
+    backgroundColor: "#8fa96f",
     marginTop: 2,
   },
   pagination: {

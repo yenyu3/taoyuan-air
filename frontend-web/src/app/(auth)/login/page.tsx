@@ -7,12 +7,12 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 const C = {
-  primary: '#315E8F',
-  primaryAlpha: 'rgba(49,94,143,0.12)',
-  primaryBorder: 'rgba(49,94,143,0.30)',
-  text: '#172A40',
-  muted: '#506780',
-  hint: '#6F91B2',
+  primary: '#6a8d73',
+  primaryAlpha: 'rgba(106, 141, 115, 0.12)',
+  primaryBorder: 'rgba(106, 141, 115, 0.30)',
+  text: '#2d3129',
+  muted: '#5d6f49',
+  hint: '#8fa96f',
   glass: 'rgba(255,255,255,0.80)',
   glassBorder: 'rgba(255,255,255,0.90)',
 };
@@ -76,7 +76,7 @@ export default function LoginPage() {
         width: '100%', maxWidth: 440,
         backgroundColor: C.glass, border: `1px solid ${C.glassBorder}`,
         borderRadius: 24, padding: '40px 36px',
-        boxShadow: '0 8px 32px rgba(23,58,94,0.14)',
+        boxShadow: '0 8px 32px rgba(62, 81, 66, 0.14)',
       }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 6 }}>登入帳號</h1>
         <p style={{ fontSize: 13, color: C.hint, marginBottom: 28 }}>歡迎回來，請輸入您的帳號資訊</p>
@@ -85,7 +85,7 @@ export default function LoginPage() {
           <div style={{
             padding: '12px 16px', borderRadius: 12, marginBottom: 20,
             backgroundColor: 'rgba(233,76,120,0.10)', border: '1px solid rgba(233,76,120,0.30)',
-            fontSize: 13, color: '#173A5E',
+            fontSize: 13, color: '#3e5142',
           }}>{error}</div>
         )}
 
@@ -156,7 +156,7 @@ export default function LoginPage() {
             marginTop: 10,
             borderRadius: 999,
             border: `1px solid ${C.primaryBorder}`,
-            background: 'rgba(49,94,143,0.08)',
+            background: 'rgba(106, 141, 115, 0.08)',
             color: C.primary,
             opacity: 0.28,
             cursor: loading ? 'wait' : 'pointer',

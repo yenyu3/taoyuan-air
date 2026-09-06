@@ -5,9 +5,7 @@ import { ChevronsRight, MapPin, TrendingDown } from 'lucide-react';
 import type { MoeStationData } from '@shared/api/moe';
 import {
   MOCK_CURRENT_WEATHER,
-  generateMockForecast,
   type CurrentWeatherData,
-  type ForecastDay,
 } from '@shared/api/cwa';
 import {
   DISTRICT_STATIC_AQ,
@@ -24,7 +22,6 @@ import {
   GaugeArc,
   SecLabel,
   TrendBars,
-  WeatherCard,
   getActivityInfo,
   getO3Color,
   getPM25Color,
@@ -41,7 +38,6 @@ export default function DashboardPage() {
   const [district, setDistrict] = useState('中壢區');
   const [allStations, setAllStations] = useState<MoeStationData[]>([]);
   const [currentWeather, setCurrentWeather] = useState<CurrentWeatherData>(MOCK_CURRENT_WEATHER);
-  const [forecast, setForecast] = useState<ForecastDay[]>(generateMockForecast());
   const [past1hrRain, setPast1hrRain] = useState('0.0');
   const [aiInsight, setAIInsight] = useState<AIInsightResponse | null>(null);
   const setAIDashboardContext = useAIAssistantStore((state) => state.setDashboardContext);
@@ -72,9 +68,8 @@ export default function DashboardPage() {
   useEffect(() => {
     fetch(`/api/cwa?district=${encodeURIComponent(district)}`)
       .then(r => r.json())
-      .then(({ data: { current, forecast, past1hrRain } }) => {
+      .then(({ data: { current, past1hrRain } }) => {
         setCurrentWeather(current);
-        setForecast(forecast);
         setPast1hrRain(past1hrRain);
       })
       .catch(console.error);
@@ -296,16 +291,6 @@ export default function DashboardPage() {
               <TrendBars />
             </section>
           </div>
-
-          <section className="weather-section" aria-label={`${district} 天氣預報`}>
-            <SecLabel title="天氣"/>
-            <WeatherCard
-              district={district}
-              current={currentWeather}
-              forecast={forecast}
-              past1hrRain={past1hrRain}
-            />
-          </section>
         </section>
 
         

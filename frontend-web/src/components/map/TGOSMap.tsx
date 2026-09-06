@@ -67,6 +67,23 @@ let tgosInitialized = false;
 
 const createScriptLoadError = (src: string) => new Error(`Failed to load map script: ${src}`);
 
+const TGOS_THEME_STYLE_ID = 'tgos-map-theme-style';
+
+// 底圖降藍：把 TGOS 底圖的水域藍色轉為暖綠灰，與站內主題融合（作法同 LeafletMap 的 #detail-map 處理）
+const ensureTgosThemeStyle = () => {
+  if (document.getElementById(TGOS_THEME_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = TGOS_THEME_STYLE_ID;
+  style.textContent = `
+    #tgos-map img,
+    #tgos-map canvas,
+    #tgos-map .olTileImage {
+      filter: grayscale(0.72) sepia(0.18) saturate(0.9) brightness(1.03);
+    }
+  `;
+  document.head.appendChild(style);
+};
+
 export default function TGOSMap({ gridCells, onGridPress, focusGrid }: TGOSMapProps) {
   const tgosMapRef = useRef<TGOSMapInstance | null>(null);
   const fillsRef = useRef<TGOSFillInstance[]>([]);
@@ -111,6 +128,7 @@ export default function TGOSMap({ gridCells, onGridPress, focusGrid }: TGOSMapPr
       if (!apiKey) return;
       tgosInitialized = true;
       try {
+        ensureTgosThemeStyle();
         await loadScript(`https://api.tgos.tw/TGOS_MAP_API_3?APIKEY=${apiKey}`, 'tgos-sdk');
         const TGOS = getTGOS();
         if (!TGOS) return;

@@ -549,12 +549,6 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
   }, [focusGrid]);
 
   const showDetailMap = true;
-  const handleZoomRequest = useCallback((nextZoom: number) => {
-    if (!detailMapRef.current) return;
-    const clamped = Math.max(DETAIL_MIN_ZOOM, Math.min(DETAIL_MAX_ZOOM, Math.round(nextZoom)));
-    detailMapRef.current.setView(detailMapRef.current.getCenter(), clamped, { animate: true });
-    setZoomLevel(clamped);
-  }, []);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -595,75 +589,6 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
         <div id="satellite-map" style={{ width: '100%', height: '100%' }} />
       </div>
       */}
-
-      <div
-        style={{
-          position: 'absolute',
-          right: 18,
-          bottom: 58,
-          zIndex: 520,
-          width: 214,
-          background: 'rgba(255,255,255,0.97)',
-          border: '1px solid rgba(106, 141, 115, 0.28)',
-          borderRadius: 14,
-          padding: '10px 12px',
-          boxShadow: '0 10px 24px rgba(58,30,45,0.2)',
-          backdropFilter: 'blur(10px)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#6a5a66' }}>縮放尺</div>
-          <div style={{ fontSize: 11, color: '#8f7f8a', fontWeight: 700 }}>Zoom {zoomLevel}</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button
-            onClick={() => handleZoomRequest(zoomLevel - 1)}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              flexShrink: 0, 
-              border: '1px solid rgba(106,141,115,0.38)',
-              background: 'linear-gradient(180deg, #ffffff, #f5f5f5)',
-              cursor: 'pointer',
-              color: '#566',
-              fontWeight: 900,
-              fontSize: 18,
-              lineHeight: 1,
-            }}
-          >
-            -
-          </button>
-          <input
-            type="range"
-            min={DETAIL_MIN_ZOOM}
-            max={DETAIL_MAX_ZOOM}
-            step={1}
-            value={zoomLevel}
-            onChange={(e) => handleZoomRequest(Number(e.target.value))}
-            style={{ flex: 1, minWidth: 0, accentColor: '#6a8d73', height: 24 }}
-          />
-          <button
-            onClick={() => handleZoomRequest(zoomLevel + 1)}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              flexShrink: 0, 
-              border: '1px solid rgba(106,141,115,0.38)',
-              background: 'linear-gradient(180deg, #ffffff, #f5f5f5)',
-              cursor: 'pointer',
-              color: '#566',
-              fontWeight: 900,
-              fontSize: 18,
-              lineHeight: 1,
-            }}
-          >
-            +
-          </button>
-        </div>
-        <div style={{ marginTop: 6, fontSize: 10, color: '#9a8b95' }}>拖曳中間滑桿或使用 +/- 調整比例</div>
-      </div>
     </div>
   );
 }

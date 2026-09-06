@@ -8,6 +8,7 @@ import {
 import { useStore } from '@shared/store';
 import { getAlerts, setScenario } from '@shared/api/index';
 import { PentagonRadar } from '@/components/charts/PentagonRadar';
+import { useLoginButton } from '@/lib/login-button-context';
 
 /* ─── Design tokens ──────────────────────────────────────────── */
 const C = {
@@ -139,7 +140,8 @@ function DonutChart() {
 /* ══════════════════════════════════════════════════════════════ */
 export default function AlertsPage() {
   const { setAlerts, selectedScenario, setIsLoading } = useStore();
-  const [activeTab, setActiveTab] = useState<'HEALTH' | 'GOV'>('HEALTH');
+  const { role } = useLoginButton();
+  const activeTab: 'HEALTH' | 'GOV' = role === 'government' ? 'GOV' : 'HEALTH';
   const [healthGuardEnabled, setHealthGuardEnabled] = useState(true);
   const [thresholds, setThresholds] = useState({ asthma: 35, activity: 80, urgency: 20 });
   const [govThresholds, setGovThresholds] = useState({
@@ -200,32 +202,6 @@ export default function AlertsPage() {
     <>
     <div style={{ minHeight: '100vh', background: 'var(--app-bg-gradient)', paddingBottom: 100 }}>
       <div style={{ padding: isMobile ? '20px 16px 28px' : '28px 40px 32px' }}>
-
-        {/* ── Tab bar ──────────────────────────────────────── */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 28 }}>
-          {(['HEALTH', 'GOV'] as const).map((tab) => {
-            const active = activeTab === tab;
-            return (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                padding: '9px 20px', borderRadius: 999, cursor: 'pointer',
-                backgroundColor: active ? C.primaryAlpha : C.glass,
-                border: `1px solid ${active ? C.primaryBorder : C.glassBorder}`,
-                boxShadow: C.glassShadow,
-                fontWeight: 700, fontSize: 13, letterSpacing: 0.2,
-                color: active ? C.primary : C.hint,
-                transition: 'all 0.18s',
-              }}>
-                <div style={{
-                  width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                  backgroundColor: active ? C.primary : 'rgba(62, 81, 66, 0.35)',
-                  transition: 'background-color 0.18s',
-                }} />
-                {tab === 'HEALTH' ? '個人健康' : '治理支援'}
-              </button>
-            );
-          })}
-        </div>
 
         {/* ════════════════════════════════════════════════════
             個人健康

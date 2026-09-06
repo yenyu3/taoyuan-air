@@ -7,19 +7,24 @@ import { useEffect, useState } from 'react';
 import { Bell, LogIn, LogOut, Menu, Settings, X } from 'lucide-react';
 import { useLoginButton } from '@/lib/login-button-context';
 
-const navItems = [
-  { href: '/dashboard', label: '儀表板' },
-  { href: '/map', label: '空氣地圖' },
-  { href: '/explorer', label: '資料探索' },
-  { href: '/events', label: '事件紀錄' },
-  { href: '/alerts', label: '警示通知' },
+type NavItem = { href: string; label: string; public: boolean; govLabel?: string };
+
+const navItems: NavItem[] = [
+  { href: '/dashboard', label: '空氣總覽', public: true },
+  { href: '/map', label: '監測地圖', public: true },
+  { href: '/explorer', label: '資料檢索', public: false },
+  { href: '/events', label: '垂直觀測', public: false },
+  { href: '/alerts', label: '健康守護', govLabel: '治理支援', public: true },
 ];
 
 export function TopNav() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isLoginButtonActive, toggleLoginButton } = useLoginButton();
+  const { isLoginButtonActive, role, toggleLoginButton } = useLoginButton();
+  const visibleNavItems = navItems.filter((item) => role === 'government' || item.public);
+  const navLabel = (item: NavItem) =>
+    role === 'government' && item.govLabel ? item.govLabel : item.label;
 
   useEffect(() => {
     let ticking = false;
@@ -45,7 +50,7 @@ export function TopNav() {
       onClick={toggleLoginButton}
       className="top-nav-action-btn"
       aria-label={isLoginButtonActive ? '登出' : '登入'}
-      title={isLoginButtonActive ? '登出' : '登入'}
+      title={isLoginButtonActive ? '政府模式：按下切回民眾模式' : '民眾模式：按下切到政府模式'}
     >
       {isLoginButtonActive ? <LogOut size={17} /> : <LogIn size={17} />}
     </button>
@@ -55,47 +60,54 @@ export function TopNav() {
     <>
       <nav className={`top-nav${scrolled ? ' scrolled' : ''}`}>
         <div className="top-nav-inner">
-          <Link href="/dashboard" className="top-nav-logo">
-            <span className="top-nav-logo-img">
+          <Link href="/dashboard" className="top-nav-brand" aria-label="Taoyuan Air">
+            <span className="top-nav-brand-logo">
               <Image
-                src="https://res.cloudinary.com/da3bvump4/image/upload/v1787303369/5f7a91ad-47c8-40e5-9981-cd41395dcb99_vrclgp.png"
+                src="/logo.png"
                 alt="Taoyuan Air Logo"
-                width={34}
-                height={34}
+                width={46}
+                height={46}
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                unoptimized
               />
             </span>
-            <span className="top-nav-logo-text">Taoyuan Air</span>
+            <span className="top-nav-brand-text">
+              <span className="top-nav-brand-primary">Taoyuan Air</span>
+              <span className="top-nav-brand-secondary">
+                Monitor &amp; Decision
+                <span className="top-nav-brand-bang" aria-hidden="true">!</span>
+              </span>
+            </span>
           </Link>
 
-          <div className="top-nav-links">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`top-nav-link${isActive(item.href) ? ' active' : ''}`}
-              >
-                <span className="top-nav-link-inner">{item.label}</span>
-              </Link>
-            ))}
-          </div>
+          <div className="top-nav-right">
+            <div className="top-nav-links">
+              {visibleNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`top-nav-link${isActive(item.href) ? ' active' : ''}`}
+                >
+                  <span className="top-nav-link-inner">{navLabel(item)}</span>
+                </Link>
+              ))}
+            </div>
 
-          <div className="top-nav-actions">
-            <Link href="/notifications" className="top-nav-action-btn" title="通知" aria-label="通知">
-              <Bell size={17} />
-            </Link>
-            <Link href="/settings" className="top-nav-action-btn" title="設定" aria-label="設定">
-              <Settings size={17} />
-            </Link>
-            {renderAuthButton()}
-            <button
-              className="top-nav-hamburger"
-              aria-label={mobileOpen ? '關閉選單' : '開啟選單'}
-              onClick={() => setMobileOpen(!mobileOpen)}
-            >
-              <Menu size={22} />
-            </button>
+            <div className="top-nav-actions">
+              <Link href="/notifications" className="top-nav-action-btn" title="通知" aria-label="通知">
+                <Bell size={17} />
+              </Link>
+              <Link href="/settings" className="top-nav-action-btn" title="設定" aria-label="設定">
+                <Settings size={17} />
+              </Link>
+              {renderAuthButton()}
+              <button
+                className="top-nav-hamburger"
+                aria-label={mobileOpen ? '關閉選單' : '開啟選單'}
+                onClick={() => setMobileOpen(!mobileOpen)}
+              >
+                <Menu size={22} />
+              </button>
+            </div>
           </div>
         </div>
       </nav>
@@ -114,14 +126,14 @@ export function TopNav() {
           <X size={28} />
         </button>
 
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={`mobile-nav-link${isActive(item.href) ? ' active' : ''}`}
             onClick={() => setMobileOpen(false)}
           >
-            {item.label}
+            {navLabel(item)}
           </Link>
         ))}
 

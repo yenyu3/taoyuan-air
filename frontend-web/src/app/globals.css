@@ -124,52 +124,90 @@ a {
 }
 
 .top-nav-inner {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 28px;
+  padding: 0 40px;
   height: 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 24px;
 }
 
 /* Logo */
-.top-nav-logo {
-  display: flex;
+.top-nav-brand {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
-  min-width: 200px;
+  min-width: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
-.top-nav-logo-img {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 2px solid rgba(106, 141, 115, 0.28);
+.top-nav-brand-logo {
+  width: 46px;
+  height: 46px;
+  border-radius: 0;
+  border: none;
   overflow: hidden;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(106, 141, 115, 0.06);
-  box-shadow: 0 0 0 4px rgba(106, 141, 115, 0.07);
+  background: transparent;
+  box-shadow: none;
 }
 
-.top-nav-logo-text {
+.top-nav-brand-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1.1;
+}
+
+.top-nav-brand-primary {
+  color: #2d3129;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.top-nav-brand-secondary {
+  display: inline-flex;
+  align-items: center;
   color: #6a8d73;
-  letter-spacing: 0.5px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.top-nav-brand-bang {
+  display: inline-block;
+  margin-left: 6px;
+  color: inherit;
+  font-weight: 700;
+  transform: rotate(30deg) skewX(-8deg);
+  transform-origin: center;
+}
+
+.top-nav-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 44px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* Nav links */
 .top-nav-links {
   display: flex;
   align-items: stretch;
-  flex: 1;
-  justify-content: center;
+  justify-content: flex-end;
   height: 100%;
+  min-width: 0;
 }
 
 .top-nav-link {
@@ -218,8 +256,8 @@ a {
 .top-nav-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 100px;
+  gap: 6px;
+  min-width: max-content;
   justify-content: flex-end;
 }
 
@@ -343,11 +381,15 @@ a {
 
 /* ── 中等螢幕：960px 以下收合成漢堡 ── */
 @media (max-width: 960px) {
+  .top-nav-inner {
+    padding: 0 16px;
+  }
+
   .top-nav-links {
     display: none;
   }
 
-  .top-nav-logo {
+  .top-nav-brand {
     min-width: unset;
   }
 
@@ -373,8 +415,18 @@ a {
 
 /* ── 超窄螢幕（≤ 400px）：logo 文字縮小 ── */
 @media (max-width: 400px) {
-  .top-nav-logo-text {
+  .top-nav-brand-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .top-nav-brand-primary {
     font-size: 17px;
+  }
+
+  .top-nav-brand-secondary {
+    font-size: 11px;
   }
 
   .top-nav-inner {

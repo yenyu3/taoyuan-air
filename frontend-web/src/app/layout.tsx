@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { TopNav } from "@/components/navigation/TopNav";
+import { RoleRouteGuard } from "@/components/navigation/RoleRouteGuard";
 import { ChatFab } from "@/components/ai/ChatFab";
 import { LoginButtonProvider } from "@/lib/login-button-context";
 import "./globals.css";
 
-const APP_ICON_URL = "/icon.png?v=1787303369";
+const APP_ICON_URL = "/logo.png";
 
 export const metadata: Metadata = {
   title: "Taoyuan Air Monitor",
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body style={{ minHeight: '100vh' }}>
         <LoginButtonProvider>
           <TopNav />
+          <RoleRouteGuard />
           <main style={{ paddingTop: 80 }}>{children}</main>
           <ChatFab />
         </LoginButtonProvider>

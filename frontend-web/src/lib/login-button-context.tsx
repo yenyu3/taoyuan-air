@@ -2,8 +2,11 @@
 
 import React, { createContext, useCallback, useContext, useState } from 'react';
 
+export type DemoRole = 'public' | 'government';
+
 interface LoginButtonContextValue {
   isLoginButtonActive: boolean;
+  role: DemoRole;
   toggleLoginButton: () => void;
 }
 
@@ -17,7 +20,13 @@ export function LoginButtonProvider({ children }: { children: React.ReactNode })
   }, []);
 
   return (
-    <LoginButtonContext.Provider value={{ isLoginButtonActive, toggleLoginButton }}>
+    <LoginButtonContext.Provider
+      value={{
+        isLoginButtonActive,
+        role: isLoginButtonActive ? 'government' : 'public',
+        toggleLoginButton,
+      }}
+    >
       {children}
     </LoginButtonContext.Provider>
   );

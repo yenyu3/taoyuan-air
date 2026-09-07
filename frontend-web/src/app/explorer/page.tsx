@@ -1,23 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import {
   ArrowRightLeft,
+  ArrowUpRight,
   Check,
   Download,
   ExternalLink,
   FileSearch,
-  FolderOpen,
   Layers3,
   Table2,
   X,
@@ -32,6 +24,11 @@ import {
   type DatasetCategory,
 } from './_data/datasetCatalog';
 import styles from './explorer.module.css';
+
+const DatasetMap = dynamic(() => import('./_components/DatasetMap'), {
+  ssr: false,
+  loading: () => <div className={styles.datasetMapFallback}><span>地圖載入中…</span></div>,
+});
 
 type ActiveCategory = DatasetCategory | 'all';
 type DetailTab = 'overview' | 'fields' | 'quality' | 'coverage';
@@ -103,71 +100,37 @@ function statusClass(dataset: DatasetCatalogItem) {
     : '';
 }
 
-function MiniMap({ dataset }: { dataset: DatasetCatalogItem }) {
-  const points = useMemo(() => {
-    const seed = dataset.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-    return Array.from({ length: Math.min(9, Math.max(3, dataset.regions.length + 2)) }, (_, index) => ({
-      left: 14 + ((seed + index * 19) % 68),
-      top: 16 + ((seed * 3 + index * 23) % 62),
-    }));
-  }, [dataset.id, dataset.regions.length]);
-
-  return (
-    <div className={styles.miniMap} aria-label={`${dataset.name} 空間分布預覽`}>
-      {points.map((point, index) => (
-        <span
-          key={`${dataset.id}-point-${index}`}
-          className={styles.mapPoint}
-          style={{
-            '--accent': dataset.accent,
-            left: `${point.left}%`,
-            top: `${point.top}%`,
-          } as React.CSSProperties}
-        />
-      ))}
-    </div>
-  );
-}
-
 function OverviewTab({ dataset }: { dataset: DatasetCatalogItem }) {
-  const chartData = [
-    { name: '完整', value: dataset.quality.completeness },
-    { name: '即時', value: dataset.quality.freshness },
-    { name: '欄位', value: dataset.quality.schemaStandardized },
-    { name: '空間', value: dataset.quality.spatialCoverage },
+  const governance = [
+    { label: '完整度', value: dataset.quality.completeness },
+    { label: '即時性', value: dataset.quality.freshness },
+    { label: '欄位標準化', value: dataset.quality.schemaStandardized },
+    { label: '空間覆蓋', value: dataset.quality.spatialCoverage },
   ];
 
   return (
     <>
-      <div className={styles.datasetHeader} style={{ '--accent': dataset.accent } as React.CSSProperties}>
-        <div>
-          <h2>{dataset.name}</h2>
-          <p>
-            {dataset.sourceType} · {dataset.recordCountLabel} · {dataset.coverageLabel}
-          </p>
-        </div>
-        <div className={styles.bigPercent}>
-          {dataset.completeness}%
-          <span>資料健康度</span>
-        </div>
-      </div>
-
       <div className={styles.visualGrid}>
         <div className={styles.naturalPanel}>
           <p className={styles.panelLabel}>空間資料預覽</p>
-          <MiniMap dataset={dataset} />
+          <DatasetMap dataset={dataset} />
         </div>
         <div className={styles.naturalPanel}>
           <p className={styles.panelLabel}>資料治理狀態</p>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 10, left: 4, bottom: 4 }}>
-              <CartesianGrid stroke="rgba(31,42,37,0.08)" horizontal={false} />
-              <XAxis type="number" domain={[0, 100]} hide />
-              <YAxis type="category" dataKey="name" width={42} tickLine={false} axisLine={false} />
-              <Tooltip cursor={{ fill: 'rgba(31,42,37,0.04)' }} />
-              <Bar dataKey="value" fill={dataset.accent} radius={[0, 7, 7, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className={styles.qualityList}>
+            {governance.map(item => (
+              <div key={item.label} className={styles.qualityRow}>
+                <span>{item.label}</span>
+                <div className={styles.barTrack}>
+                  <div
+                    className={styles.barFill}
+                    style={{ width: `${item.value}%`, '--accent': dataset.accent } as React.CSSProperties}
+                  />
+                </div>
+                <strong>{item.value}%</strong>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -289,20 +252,20 @@ function DatasetPreview({
   return (
     <>
       <div
-        key={dataset.id}
-        className={styles.fileSpread}
+        className={styles.previewHead}
         style={{ '--accent': dataset.accent } as React.CSSProperties}
-        aria-hidden="true"
       >
-        <span className={styles.fileSheetBack} />
-        <span className={styles.fileSheetMain}>
-          <span className={styles.fileSheetAgency}>{dataset.sourceAgency}</span>
-          <span className={styles.fileSheetTitle}>{dataset.name}</span>
-          <span className={styles.fileSheetMeta}>{dataset.shortName} · {dataset.completeness}%</span>
-        </span>
-        <span className={styles.filePhotoCard}>
-          <span />
-        </span>
+        <div>
+          <span className={styles.previewAgency}>{dataset.sourceAgency}</span>
+          <h2>{dataset.name}</h2>
+          <span className={styles.previewMeta}>
+            {dataset.sourceType} · {dataset.recordCountLabel}
+          </span>
+        </div>
+        <div className={styles.previewHealth}>
+          <strong>{dataset.completeness}%</strong>
+          <span>資料健康度</span>
+        </div>
       </div>
       <div className={styles.detailTabs}>
         {DETAIL_TABS.map(tab => (
@@ -335,6 +298,7 @@ function AccessPanel({
 }) {
   const compareSelected = compareIds.includes(dataset.id);
   const compareDisabled = !compareSelected && compareIds.length >= 3;
+  const mapLinkLabel = dataset.mapLink === '/events' ? '事件記錄' : '監測地圖';
 
   return (
     <>
@@ -371,24 +335,49 @@ function AccessPanel({
         <h3>取用</h3>
         <div className={styles.actionRow}>
           {dataset.apiPath ? (
-            <Link className={styles.actionButton} href={dataset.apiPath} target="_blank">
-              <FileSearch size={15} /> API
+            <Link
+              className={styles.actionButton}
+              href={dataset.apiPath}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`在新分頁開啟 API：${dataset.apiPath}`}
+            >
+              <ExternalLink size={15} /> API 預覽
             </Link>
           ) : (
-            <button className={styles.actionButton} type="button" disabled>
-              <FileSearch size={15} /> 待開放
+            <button
+              className={styles.actionButton}
+              type="button"
+              disabled
+              title="此資料源尚未提供即時 API"
+            >
+              <FileSearch size={15} /> API 待開放
             </button>
           )}
-          <button className={styles.actionButton} type="button" disabled>
-            <Download size={15} /> 待開放
+          <button
+            className={styles.actionButton}
+            type="button"
+            disabled
+            title="資料匯出功能開發中"
+          >
+            <Download size={15} /> 下載待開放
           </button>
           {dataset.mapLink ? (
-            <Link className={styles.actionButton} href={dataset.mapLink}>
-              <ExternalLink size={15} /> 跳轉
+            <Link
+              className={styles.actionButton}
+              href={dataset.mapLink}
+              title={`前往${mapLinkLabel}頁`}
+            >
+              <ArrowUpRight size={15} /> {mapLinkLabel}
             </Link>
           ) : (
-            <button className={styles.actionButton} type="button" disabled>
-              <ExternalLink size={15} /> 待開放
+            <button
+              className={styles.actionButton}
+              type="button"
+              disabled
+              title="此資料源尚無對應的視覺化頁面"
+            >
+              <ArrowUpRight size={15} /> 無對應頁面
             </button>
           )}
           <button
@@ -396,9 +385,16 @@ function AccessPanel({
             type="button"
             disabled={compareDisabled}
             onClick={() => toggleCompare(dataset.id)}
+            title={
+              compareDisabled
+                ? '最多同時比較 3 個資料源'
+                : compareSelected
+                  ? '從比較清單移除'
+                  : '加入比較清單'
+            }
           >
             {compareSelected ? <Check size={15} /> : <ArrowRightLeft size={15} />}
-            {compareSelected ? '已加入' : '比較'}
+            {compareSelected ? '移除比較' : '加入比較'}
           </button>
         </div>
         <p className={styles.sectionHint} style={{ marginTop: 12 }}>{dataset.accessNote}</p>
@@ -514,35 +510,28 @@ export default function ExplorerPage() {
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
-        <div className={styles.metricRail}>
-          <div className={styles.metric}><strong>{DATASET_CATALOG.length}</strong><span>資料源</span></div>
-          <div className={styles.metric}><strong>{connectedCount}</strong><span>已串接/匯入</span></div>
-          <div className={styles.metric}><strong>{totalFieldCount}</strong><span>標準欄位</span></div>
-          <div className={styles.metric}><strong>{avgCompleteness}%</strong><span>平均健康度</span></div>
-          <div className={styles.metric}><strong>{filteredDatasets.length}</strong><span>符合篩選</span></div>
-        </div>
-
-        <div className={styles.tabs} aria-label="資料類型篩選">
-          {CATEGORY_ORDER.map(category => (
-            <button
-              key={category}
-              type="button"
-              className={`${styles.tab} ${activeCategory === category ? styles.tabActive : ''}`}
-              onClick={() => selectCategory(category)}
-            >
-              {CATEGORY_LABELS[category]}
-            </button>
-          ))}
-        </div>
-
-        <section className={styles.workspace}>
-          <div className={`${styles.column} ${styles.cabinetColumn}`}>
+        <div className={styles.layout}>
+          <aside className={`${styles.rail} ${styles.cabinetColumn}`}>
             <div className={styles.sectionHead}>
               <div>
                 <h2 className={styles.sectionTitle}>資料檔案櫃</h2>
-                <p className={styles.sectionHint}>篩選後符合的資料夾會被保留亮度</p>
+                <p className={styles.sectionHint}>
+                  依類型篩選，符合 {filteredDatasets.length} / {DATASET_CATALOG.length} 份
+                </p>
               </div>
               <Layers3 size={18} color="#65736d" />
+            </div>
+            <div className={styles.cabinetFilter} role="group" aria-label="資料類型篩選">
+              {CATEGORY_ORDER.map(category => (
+                <button
+                  key={category}
+                  type="button"
+                  className={`${styles.tab} ${activeCategory === category ? styles.tabActive : ''}`}
+                  onClick={() => selectCategory(category)}
+                >
+                  {CATEGORY_LABELS[category]}
+                </button>
+              ))}
             </div>
             <div
               className={styles.cabinetShell}
@@ -616,54 +605,77 @@ export default function ExplorerPage() {
               <span className={styles.cabinetHandle} />
             </div>
             </div>
-          </div>
-
-          <div className={`${styles.column} ${styles.previewColumn}`}>
-            <div className={styles.extractedFolderMark} style={{ '--accent': selectedDataset.accent } as React.CSSProperties}>
-              <FolderOpen size={17} />
-              <span>{selectedDataset.shortName}</span>
-            </div>
-            <DatasetPreview
-              dataset={selectedDataset}
-              activeTab={activeDetailTab}
-              setActiveTab={setActiveDetailTab}
-            />
-          </div>
-
-          <aside className={styles.column}>
-            <div className={styles.sectionHead}>
-              <div>
-                <h2 className={styles.sectionTitle}>來源與取用</h2>
-                <p className={styles.sectionHint}>正式、待串接與模擬狀態分開標示</p>
-              </div>
-              <Table2 size={18} color="#65736d" />
-            </div>
-            <AccessPanel dataset={selectedDataset} compareIds={compareIds} toggleCompare={toggleCompare} />
           </aside>
-        </section>
+
+          <div className={styles.main}>
+            <div className={styles.metricRail}>
+              <div className={styles.metric}><strong>{DATASET_CATALOG.length}</strong><span>資料源</span></div>
+              <div className={styles.metric}><strong>{connectedCount}</strong><span>已串接/匯入</span></div>
+              <div className={styles.metric}><strong>{totalFieldCount}</strong><span>標準欄位</span></div>
+              <div className={styles.metric}><strong>{avgCompleteness}%</strong><span>平均健康度</span></div>
+              <div className={styles.metric}><strong>{filteredDatasets.length}</strong><span>符合篩選</span></div>
+            </div>
+
+            <section className={styles.detail}>
+              <div className={styles.previewColumn}>
+                <DatasetPreview
+                  dataset={selectedDataset}
+                  activeTab={activeDetailTab}
+                  setActiveTab={setActiveDetailTab}
+                />
+              </div>
+
+              <aside className={styles.accessColumn}>
+                <div className={styles.sectionHead}>
+                  <div>
+                    <h2 className={styles.sectionTitle}>來源與取用</h2>
+                    <p className={styles.sectionHint}>正式、待串接與模擬狀態分開標示</p>
+                  </div>
+                  <Table2 size={18} color="#65736d" />
+                </div>
+                <AccessPanel dataset={selectedDataset} compareIds={compareIds} toggleCompare={toggleCompare} />
+              </aside>
+            </section>
+          </div>
+        </div>
 
         {compareIds.length > 0 && (
           <div className={styles.compareTray}>
             <div>
-              <strong>比較 {compareIds.length}/3</strong>
+              <strong>比較清單 {compareIds.length}/3</strong>
               <div className={styles.compareNames}>
                 {compareDatasets.map(dataset => (
                   <span key={dataset.id} className={styles.compareName}>{dataset.shortName} {dataset.name}</span>
                 ))}
               </div>
+              {compareIds.length < 2 && (
+                <p className={styles.compareHint}>再加入 1 個資料源即可開始比較</p>
+              )}
             </div>
             <div className={styles.actionRow} style={{ display: 'flex' }}>
-              <button className={styles.actionButton} type="button" onClick={() => setCompareOpen(true)}>
+              <button
+                className={styles.actionButton}
+                type="button"
+                disabled={compareIds.length < 2}
+                onClick={() => setCompareOpen(true)}
+              >
                 <ArrowRightLeft size={15} /> 開始比較
               </button>
-              <button className={styles.actionButton} type="button" onClick={() => setCompareIds([])}>
+              <button
+                className={styles.actionButton}
+                type="button"
+                onClick={() => {
+                  setCompareIds([]);
+                  setCompareOpen(false);
+                }}
+              >
                 <X size={15} /> 清除
               </button>
             </div>
           </div>
         )}
 
-        {compareOpen && (
+        {compareOpen && compareDatasets.length > 1 && (
           <CompareDrawer datasets={compareDatasets} onClose={() => setCompareOpen(false)} />
         )}
       </div>

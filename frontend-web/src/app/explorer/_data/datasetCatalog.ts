@@ -8,6 +8,13 @@ export type DatasetCategory =
 export type DatasetStatus = 'live' | 'historical' | 'imported' | 'pending' | 'mock';
 export type ProcessingState = 'done' | 'partial' | 'pending' | 'na';
 
+/** 資料來源在桃園的實際 / 概略點位（用於空間資料預覽地圖） */
+export interface DatasetSite {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
 export interface DatasetCatalogItem {
   id: string;
   shortName: string;
@@ -31,6 +38,9 @@ export interface DatasetCatalogItem {
   apiPath?: string;
   mapLink?: string;
   accessNote: string;
+  /** 空間資料預覽用點位；sitesNote 有值代表為概略示意座標 */
+  sites: DatasetSite[];
+  sitesNote?: string;
   quality: {
     completeness: number;
     freshness: number;
@@ -90,6 +100,23 @@ export const FIELD_GROUPS = [
   '網格',
 ];
 
+/** 桃園各行政區中心，用於「全域網格」類資料集的涵蓋範圍示意 */
+export const TAOYUAN_DISTRICT_CENTROIDS: DatasetSite[] = [
+  { name: '桃園', lat: 24.9936, lng: 121.301 },
+  { name: '中壢', lat: 24.9539, lng: 121.2248 },
+  { name: '八德', lat: 24.944, lng: 121.297 },
+  { name: '龜山', lat: 25.0026, lng: 121.354 },
+  { name: '蘆竹', lat: 25.0442, lng: 121.2918 },
+  { name: '大園', lat: 25.0608, lng: 121.2006 },
+  { name: '大溪', lat: 24.8838, lng: 121.2681 },
+  { name: '平鎮', lat: 24.953, lng: 121.2017 },
+  { name: '楊梅', lat: 24.9175, lng: 121.146 },
+  { name: '龍潭', lat: 24.8635, lng: 121.2168 },
+  { name: '觀音', lat: 25.0354, lng: 121.0823 },
+  { name: '新屋', lat: 24.9697, lng: 121.1063 },
+  { name: '復興', lat: 24.8186, lng: 121.3496 },
+];
+
 export const DATASET_CATALOG: DatasetCatalogItem[] = [
   {
     id: 'moe',
@@ -114,6 +141,14 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     apiPath: '/api/moe',
     mapLink: '/map',
     accessNote: '可由即時 API 取用，歷史資料由後端資料庫查詢。',
+    sites: [
+      { name: '桃園', lat: 24.9936, lng: 121.301 },
+      { name: '中壢', lat: 24.9536, lng: 121.2265 },
+      { name: '平鎮', lat: 24.9533, lng: 121.2039 },
+      { name: '龍潭', lat: 24.8633, lng: 121.2164 },
+      { name: '大園', lat: 25.0608, lng: 121.2 },
+      { name: '觀音', lat: 25.0354, lng: 121.082 },
+    ],
     quality: {
       completeness: 96,
       freshness: 92,
@@ -151,6 +186,28 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     accent: '#5a93b8',
     apiPath: '/api/cwa',
     accessNote: '可依行政區查詢即時氣象，歷史資料由資料庫端點彙整。',
+    sites: [
+      { name: '八德', lat: 24.9287, lng: 121.2833 },
+      { name: '巴陵', lat: 24.8284, lng: 121.4089 },
+      { name: '復興', lat: 24.8202, lng: 121.3523 },
+      { name: '觀音農業', lat: 25.0271, lng: 121.1533 },
+      { name: '觀音海岸', lat: 25.0648, lng: 121.1149 },
+      { name: '龜山', lat: 25.0285, lng: 121.3866 },
+      { name: '龍潭', lat: 24.8701, lng: 121.2214 },
+      { name: '蘆竹', lat: 25.0843, lng: 121.2658 },
+      { name: '平鎮', lat: 24.8975, lng: 121.2146 },
+      { name: '三民', lat: 24.8929, lng: 121.325 },
+      { name: '桃園農業', lat: 24.9509, lng: 121.0306 },
+      { name: '新海', lat: 25.0061, lng: 121.0971 },
+      { name: '新屋', lat: 25.0067, lng: 121.0475 },
+      { name: '新屋農業', lat: 24.9085, lng: 121.1853 },
+      { name: '楊梅', lat: 24.9401, lng: 121.0872 },
+      { name: '楊梅農業', lat: 24.9677, lng: 121.1852 },
+      { name: '永安漁港', lat: 24.9661, lng: 121.0086 },
+      { name: '中壢', lat: 24.9777, lng: 121.2564 },
+      { name: '中壢農業', lat: 24.9859, lng: 121.2398 },
+      { name: '竹圍', lat: 25.1127, lng: 121.2398 },
+    ],
     quality: {
       completeness: 91,
       freshness: 90,
@@ -188,6 +245,12 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     accent: '#6a8d73',
     apiPath: '/api/explorer/history?days=7',
     accessNote: '目前透過歷史資料端點取用；若資料庫尚未匯入，需顯示待補齊狀態。',
+    sites: [
+      { name: '內壢', lat: 24.9677, lng: 121.259 },
+      { name: '新興國小', lat: 25.0083, lng: 121.265 },
+      { name: '華亞', lat: 25.0505, lng: 121.3713 },
+      { name: '觀音_S', lat: 25.0525, lng: 121.1181 },
+    ],
     quality: {
       completeness: 78,
       freshness: 62,
@@ -224,6 +287,13 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     completeness: 42,
     accent: '#7d8f50',
     accessNote: '第一版僅保留資料位置與狀態，不提供正式下載。',
+    sites: [
+      { name: '觀音', lat: 25.0354, lng: 121.0823 },
+      { name: '中壢', lat: 24.9539, lng: 121.2248 },
+      { name: '大園', lat: 25.0608, lng: 121.2006 },
+      { name: '蘆竹', lat: 25.0442, lng: 121.2918 },
+    ],
+    sitesNote: '尚未串接，座標以涵蓋行政區中心示意。',
     quality: {
       completeness: 42,
       freshness: 35,
@@ -260,6 +330,8 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     completeness: 48,
     accent: '#8a71b2',
     accessNote: '目前為介面占位資料，後續接入正式資料庫後開放查詢。',
+    sites: [{ name: '中央大學', lat: 24.9682, lng: 121.1959 }],
+    sitesNote: '介面展示資料，座標為研究站概略位置。',
     quality: {
       completeness: 48,
       freshness: 36,
@@ -297,6 +369,13 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     accent: '#c58a3a',
     mapLink: '/map',
     accessNote: '適合與測站資料比較空間關聯，下載功能待後端匯出端點完成。',
+    sites: [
+      { name: '觀音工業區', lat: 25.045, lng: 121.115 },
+      { name: '大園工業區', lat: 25.055, lng: 121.195 },
+      { name: '蘆竹南崁', lat: 25.048, lng: 121.293 },
+      { name: '中壢工業區', lat: 24.98, lng: 121.25 },
+    ],
+    sitesNote: '排放清冊點源位置示意（觀音、大園、蘆竹、中壢工業區）。',
     quality: {
       completeness: 86,
       freshness: 68,
@@ -334,6 +413,8 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     accent: '#b97841',
     mapLink: '/map',
     accessNote: '可作為 Geo-AI 模型空間特徵；下載端點可列為第二版。',
+    sites: TAOYUAN_DISTRICT_CENTROIDS,
+    sitesNote: '網格化排放資料，以桃園各行政區中心示意涵蓋範圍。',
     quality: {
       completeness: 88,
       freshness: 70,
@@ -371,6 +452,7 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     accent: '#6270b1',
     mapLink: '/events',
     accessNote: '可跳轉事件記錄查看 UAV 剖面圖；資料下載待匯出端點。',
+    sites: [{ name: '觀音（航次起降點）', lat: 25.0605, lng: 121.1287 }],
     quality: {
       completeness: 82,
       freshness: 76,
@@ -408,6 +490,7 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     accent: '#4d7c9f',
     mapLink: '/events',
     accessNote: '適合呈現污染擴散條件；第一版以 heatmap 預覽資料形態。',
+    sites: [{ name: 'TMA_328（觀音）', lat: 25.0528, lng: 121.1179 }],
     quality: {
       completeness: 84,
       freshness: 76,
@@ -444,6 +527,8 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
     completeness: 64,
     accent: '#587f62',
     accessNote: '此資料集用來呈現整合成果如何進入 Geo-AI 模型，第一版先標示為待建立。',
+    sites: TAOYUAN_DISTRICT_CENTROIDS,
+    sitesNote: '3 km × 3 km 模型網格（規劃中），以行政區中心示意涵蓋範圍。',
     quality: {
       completeness: 64,
       freshness: 46,

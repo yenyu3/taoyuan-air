@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AttributionControl, Map, useControl, type MapRef } from 'react-map-gl/mapbox';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { AmbientLight, DirectionalLight, LightingEffect, type Layer, type PickingInfo } from '@deck.gl/core';
-import { PolygonLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { LineLayer, PolygonLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import { LocateFixed, MoonStar, RotateCcw, Square, SunMedium } from 'lucide-react';
 import type { Map as MapboxMap } from 'mapbox-gl';
 import type { ExamPoint, GridCell, TEDSPoint } from '@shared/types';
@@ -27,6 +27,7 @@ interface PM25SceneMapProps {
   showMercuryLayer?: boolean;
   showParticleLayer?: boolean;
   autoCruise?: boolean;
+  professionalMode?: boolean;
   selectedGrid?: GridCell | null;
   onGridPress?: (grid: GridCell) => void;
   focusGrid?: GridCell | null;
@@ -65,6 +66,52 @@ interface DriftParticle {
   position: [number, number, number];
   color: [number, number, number, number];
   radius: number;
+}
+
+interface SourceLink {
+  point: RenderPoint;
+  source: [number, number, number];
+  target: [number, number, number];
+  distanceKm: number;
+  alignment: number;
+  label?: string;
+}
+
+interface DownwindMarker {
+  position: [number, number, number];
+  radiusM: number;
+  alpha: number;
+  label?: string;
+}
+
+interface WindArrow {
+  polygon: [number, number, number][];
+  color: [number, number, number, number];
+}
+
+/** 整個研究區的濃度量體外框（單一連續方塊，取代逐格堆疊）。 */
+interface VolumeBox {
+  minLng: number;
+  maxLng: number;
+  minLat: number;
+  maxLat: number;
+  centerLng: number;
+  centerLat: number;
+  meanWindDir: number;
+  meanWindSpeed: number;
+  peak: number;
+}
+
+interface VolumeSlice {
+  grid: GridCell;
+  altitudeM: number;
+  ratio: number;
+}
+
+interface VolumeWall {
+  polygon: [number, number, number][];
+  ratio: number;
+  edge: number;
 }
 
 /** 高污染網格上空的飄浮微粒：數量 ∝ 濃度，沿風向漂移並緩慢上升後淡出重生。 */
@@ -107,10 +154,258 @@ function buildParticles(gridCells: GridCell[], time: number): DriftParticle[] {
   return out;
 }
 
+function polygonForGrid(grid: GridCell): [number, number][] {
+  if (grid.polygonCoords.length >= 3) {
+    return grid.polygonCoords.map((coord) => [coord.longitude, coord.latitude]);
+  }
+  return hexAround(grid.centerLatLng);
+}
+
+function windVector(windDir: number): { dx: number; dy: number } {
+  const rad = ((windDir + 180) * Math.PI) / 180;
+  return { dx: Math.sin(rad), dy: Math.cos(rad) };
+}
+
+function projectedKm(from: GridCell['centerLatLng'], to: GridCell['centerLatLng']) {
+  const latKm = (to.latitude - from.latitude) * 111;
+  const lonKm = (to.longitude - from.longitude) * 111 * Math.cos((from.latitude * Math.PI) / 180);
+  return { x: lonKm, y: latKm, distance: Math.hypot(lonKm, latKm) };
+}
+
+function buildSourceLinks(selectedGrid: GridCell | null | undefined, points: RenderPoint[]): SourceLink[] {
+  if (!selectedGrid || points.length === 0) return [];
+
+  const { dx, dy } = windVector(selectedGrid.meteo.windDir);
+  return points
+    .map((point) => {
+      const vector = projectedKm(selectedGrid.centerLatLng, point.latLng);
+      const alignment = vector.distance > 0 ? -((vector.x / vector.distance) * dx + (vector.y / vector.distance) * dy) : 0;
+      return {
+        point,
+        source: [
+          point.latLng.longitude,
+          point.latLng.latitude,
+          point.layerKind === 'mercury'
+            ? 180
+            : Math.max(120, 'heightM' in point && point.heightM ? point.heightM : 90),
+        ] as [number, number, number],
+        target: [
+          selectedGrid.centerLatLng.longitude,
+          selectedGrid.centerLatLng.latitude,
+          180,
+        ] as [number, number, number],
+        distanceKm: vector.distance,
+        alignment,
+      };
+    })
+    .filter((link) => link.distanceKm <= 14 && link.alignment > 0.25)
+    .sort((a, b) => (b.alignment / Math.max(1.4, b.distanceKm)) - (a.alignment / Math.max(1.4, a.distanceKm)))
+    .slice(0, 5)
+    .map((link, index) => ({ ...link, label: index === 0 ? '上風來源' : undefined }));
+}
+
+function buildDownwindMarkers(selectedGrid: GridCell | null | undefined, tick: number): DownwindMarker[] {
+  if (!selectedGrid) return [];
+
+  const { dx, dy } = windVector(selectedGrid.meteo.windDir);
+  const lonScale = 1 / Math.max(0.2, Math.cos((selectedGrid.centerLatLng.latitude * Math.PI) / 180));
+  const pulse = 0.5 + 0.5 * Math.sin((tick / 38) * Math.PI * 2);
+
+  return [1, 2, 3].map((step) => ({
+    position: [
+      selectedGrid.centerLatLng.longitude + dx * step * 0.012 * lonScale,
+      selectedGrid.centerLatLng.latitude + dy * step * 0.012,
+      90 + step * 34,
+    ],
+    radiusM: 520 + step * 270 + pulse * 120,
+    alpha: Math.round(58 - step * 9 + pulse * 18),
+    label: step === 2 ? '下風影響' : undefined,
+  }));
+}
+
+function scaledGridPolygon(grid: GridCell, scale: number, altitudeM: number): [number, number, number][] {
+  const source =
+    grid.polygonCoords.length >= 3
+      ? grid.polygonCoords.map((coord) => [coord.longitude, coord.latitude] as [number, number])
+      : hexAround(grid.centerLatLng);
+  const { longitude: cx, latitude: cy } = grid.centerLatLng;
+
+  return source.map(([longitude, latitude]) => [
+    cx + (longitude - cx) * scale,
+    cy + (latitude - cy) * scale,
+    altitudeM,
+  ]);
+}
+
+/** 濃度量體：以整區網格外框做一塊連續的懸浮方塊。 */
+const SLAB_BASE_M = 80;
+const SLAB_THICKNESS_M = 920;
+const SLAB_LAYERS = 13;
+const WIND_ALTITUDE_M = SLAB_BASE_M + SLAB_THICKNESS_M + 90;
+
+function computeVolumeBox(gridCells: GridCell[]): VolumeBox | null {
+  const finite = gridCells.filter((grid) => Number.isFinite(grid.values.value));
+  const strong = finite.filter((grid) => grid.values.value >= 10);
+  const pool = strong.length >= 3 ? strong : finite;
+  if (pool.length < 3) return null;
+
+  let minLng = Infinity;
+  let maxLng = -Infinity;
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let windX = 0;
+  let windY = 0;
+  let speed = 0;
+  let peak = 0;
+
+  pool.forEach((grid) => {
+    const { longitude, latitude } = grid.centerLatLng;
+    minLng = Math.min(minLng, longitude);
+    maxLng = Math.max(maxLng, longitude);
+    minLat = Math.min(minLat, latitude);
+    maxLat = Math.max(maxLat, latitude);
+    const rad = (grid.meteo.windDir * Math.PI) / 180;
+    windX += Math.sin(rad);
+    windY += Math.cos(rad);
+    speed += grid.meteo.windSpeed;
+    peak = Math.max(peak, grid.values.value);
+  });
+
+  const padLng = (maxLng - minLng) * 0.05 + 0.003;
+  const padLat = (maxLat - minLat) * 0.05 + 0.003;
+
+  return {
+    minLng: minLng - padLng,
+    maxLng: maxLng + padLng,
+    minLat: minLat - padLat,
+    maxLat: maxLat + padLat,
+    centerLng: (minLng + maxLng) / 2,
+    centerLat: (minLat + maxLat) / 2,
+    meanWindDir: (Math.atan2(windX, windY) * 180) / Math.PI,
+    meanWindSpeed: speed / pool.length,
+    peak,
+  };
+}
+
+/** 垂直色階：ratio 0 = 量體底部（暖／洋紅核心），1 = 頂部（冷色淡出）。 */
+function verticalRampRgb(ratio: number, peak: number): [number, number, number] {
+  const hot = Math.max(120, peak * 1.8);
+  return getPm25Rgb(6 + (1 - ratio) * hot);
+}
+
+function buildVolumeSlices(gridCells: GridCell[], box: VolumeBox | null): VolumeSlice[] {
+  if (!box) return [];
+  const cells = gridCells.filter((grid) => Number.isFinite(grid.values.value) && grid.values.value >= 6);
+  const slices: VolumeSlice[] = [];
+
+  for (let layer = 0; layer < SLAB_LAYERS; layer += 1) {
+    const ratio = layer / (SLAB_LAYERS - 1);
+    const altitudeM = SLAB_BASE_M + ratio * SLAB_THICKNESS_M;
+    cells.forEach((grid) => {
+      slices.push({ grid, altitudeM, ratio });
+    });
+  }
+
+  return slices;
+}
+
+function buildVolumeWalls(box: VolumeBox | null): VolumeWall[] {
+  if (!box) return [];
+  const walls: VolumeWall[] = [];
+  const { centerLng: cx, centerLat: cy } = box;
+  const corners: [number, number][] = [
+    [box.minLng, box.minLat],
+    [box.maxLng, box.minLat],
+    [box.maxLng, box.maxLat],
+    [box.minLng, box.maxLat],
+  ];
+  const strips = 12;
+  // 牆面向外微張（上寬下窄），讓每個梯形在平面上有面積可三角化才畫得出來。
+  const flare = 0.05;
+  const at = (lng: number, lat: number, r: number, z: number): [number, number, number] => [
+    cx + (lng - cx) * r,
+    cy + (lat - cy) * r,
+    z,
+  ];
+
+  for (let edge = 0; edge < 4; edge += 1) {
+    const [ax, ay] = corners[edge];
+    const [bx, by] = corners[(edge + 1) % 4];
+    for (let s = 0; s < strips; s += 1) {
+      const t0 = s / strips;
+      const t1 = (s + 1) / strips;
+      const r0 = 1 + flare * t0;
+      const r1 = 1 + flare * t1;
+      const z0 = SLAB_BASE_M + t0 * SLAB_THICKNESS_M;
+      const z1 = SLAB_BASE_M + t1 * SLAB_THICKNESS_M;
+      walls.push({
+        polygon: [
+          at(ax, ay, r0, z0),
+          at(bx, by, r0, z0),
+          at(bx, by, r1, z1),
+          at(ax, ay, r1, z1),
+        ],
+        ratio: (t0 + t1) / 2,
+        edge,
+      });
+    }
+  }
+
+  return walls;
+}
+
+function buildWindArrows(box: VolumeBox | null, tick: number): WindArrow[] {
+  if (!box) return [];
+  const arrows: WindArrow[] = [];
+  const phase = fract(tick / 46);
+  const cols = 7;
+  const rows = 5;
+  const { dx, dy } = windVector(box.meanWindDir);
+  const px = -dy;
+  const py = dx;
+  const lonScale = 1 / Math.max(0.2, Math.cos((box.centerLat * Math.PI) / 180));
+  const spanLng = box.maxLng - box.minLng;
+  const spanLat = box.maxLat - box.minLat;
+  const length = Math.min(spanLng, spanLat) * 0.11;
+  const width = length * 0.32;
+  const alpha = Math.round(150 + Math.sin(phase * Math.PI) * 80);
+
+  for (let c = 0; c < cols; c += 1) {
+    for (let r = 0; r < rows; r += 1) {
+      const baseLng = box.minLng - spanLng * 0.14 + spanLng * 1.28 * (c / (cols - 1));
+      const baseLat = box.minLat - spanLat * 0.14 + spanLat * 1.28 * (r / (rows - 1));
+      const drift = (phase - 0.5) * length * 2;
+      const cx = baseLng + dx * drift * lonScale;
+      const cy = baseLat + dy * drift;
+      const point = (forward: number, side: number): [number, number, number] => [
+        cx + (dx * forward + px * side) * lonScale,
+        cy + dy * forward + py * side,
+        WIND_ALTITUDE_M,
+      ];
+
+      arrows.push({
+        polygon: [
+          point(length * 0.5, 0),
+          point(length * 0.1, width),
+          point(length * 0.1, width * 0.4),
+          point(-length * 0.5, width * 0.4),
+          point(-length * 0.5, -width * 0.4),
+          point(length * 0.1, -width * 0.4),
+          point(length * 0.1, -width),
+        ],
+        color: [141, 235, 233, alpha],
+      });
+    }
+  }
+
+  return arrows;
+}
+
 const VIEWS: Record<CameraMode, { pitch: number; bearing: number; zoom: number }> = {
   top: { pitch: 0, bearing: 0, zoom: 10.4 },
   tilt: { pitch: 52, bearing: -18, zoom: 10.5 },
 };
+const PROFESSIONAL_VIEW = { pitch: 62, bearing: -32, zoom: 10.8 };
 
 const LIGHT_CYCLE: LightPreset[] = ['day', 'dusk', 'night'];
 const LIGHT_LABEL: Record<LightPreset, string> = { day: '日光', dusk: '黃昏', night: '夜晚' };
@@ -191,6 +486,7 @@ export default function PM25SceneMap({
   showMercuryLayer = true,
   showParticleLayer = true,
   autoCruise = true,
+  professionalMode = false,
   selectedGrid,
   onGridPress,
   focusGrid,
@@ -217,8 +513,20 @@ export default function PM25SceneMap({
     [gridCells],
   );
 
-  const particlesActive = showParticleLayer && showPm25GridLayer && cameraMode === 'tilt';
-  const animateScene = particlesActive || hotspots.length > 0;
+  const volumeBox = useMemo(
+    () => (professionalMode && showPm25GridLayer ? computeVolumeBox(gridCells) : null),
+    [gridCells, professionalMode, showPm25GridLayer],
+  );
+
+  const volumePeak = volumeBox?.peak ?? 0;
+
+  const particlesActive = showParticleLayer && showPm25GridLayer && cameraMode === 'tilt' && !professionalMode;
+  // 只有真的有在動的內容（微粒、熱點光束、風場箭頭、下風脈動）才啟動重繪迴圈。
+  const animateScene =
+    particlesActive ||
+    hotspots.length > 0 ||
+    Boolean(volumeBox) ||
+    Boolean(selectedGrid && showPm25GridLayer);
 
   useEffect(() => {
     if (!animateScene) return;
@@ -243,6 +551,37 @@ export default function PM25SceneMap({
     [chimneyPoints, mercuryPoints, showChimneyLayer, showMercuryLayer],
   );
 
+  const sourceLinks = useMemo(
+    () => buildSourceLinks(selectedGrid, visiblePoints),
+    [selectedGrid, visiblePoints],
+  );
+
+  const sourceLinkIds = useMemo(
+    () => new Set(sourceLinks.map((link) => link.point.id)),
+    [sourceLinks],
+  );
+
+  // 用實際命中的來源點 id 集合做 updateTrigger，避免切換到「上風來源數相同但點不同」的網格時高亮沒更新。
+  const sourceLinkKey = useMemo(
+    () => sourceLinks.map((link) => link.point.id).join('|'),
+    [sourceLinks],
+  );
+
+  const downwindMarkers = useMemo(
+    () => buildDownwindMarkers(selectedGrid, tick),
+    [selectedGrid, tick],
+  );
+
+  const volumeSlices = useMemo(
+    () => (volumeBox ? buildVolumeSlices(gridCells, volumeBox) : []),
+    [gridCells, volumeBox],
+  );
+
+  const volumeWalls = useMemo(
+    () => (volumeBox ? buildVolumeWalls(volumeBox) : []),
+    [volumeBox],
+  );
+
   const moveCamera = useCallback((mode: CameraMode) => {
     const view = VIEWS[mode];
     mapRef.current?.getMap().easeTo({
@@ -255,7 +594,7 @@ export default function PM25SceneMap({
   }, []);
 
   const resetCamera = useCallback(() => {
-    const view = VIEWS[cameraModeRef.current];
+    const view = professionalMode ? PROFESSIONAL_VIEW : VIEWS[cameraModeRef.current];
     mapRef.current?.getMap().easeTo({
       center: [MAP_CENTER.longitude, MAP_CENTER.latitude],
       pitch: view.pitch,
@@ -263,11 +602,11 @@ export default function PM25SceneMap({
       zoom: view.zoom,
       duration: 850,
     });
-  }, []);
+  }, [professionalMode]);
 
   const locateSelected = useCallback(() => {
     if (!selectedGrid) return;
-    const view = VIEWS[cameraModeRef.current];
+    const view = professionalMode ? PROFESSIONAL_VIEW : VIEWS[cameraModeRef.current];
     mapRef.current?.getMap().flyTo({
       center: [selectedGrid.centerLatLng.longitude, selectedGrid.centerLatLng.latitude],
       zoom: 13.4,
@@ -275,7 +614,7 @@ export default function PM25SceneMap({
       duration: 900,
       essential: true,
     });
-  }, [selectedGrid]);
+  }, [professionalMode, selectedGrid]);
 
   const cycleLight = useCallback(() => {
     setLightPreset((current) => {
@@ -293,7 +632,7 @@ export default function PM25SceneMap({
 
   useEffect(() => {
     if (!focusGrid) return;
-    const view = VIEWS[cameraModeRef.current];
+    const view = professionalMode ? PROFESSIONAL_VIEW : VIEWS[cameraModeRef.current];
     mapRef.current?.getMap().flyTo({
       center: [focusGrid.centerLatLng.longitude, focusGrid.centerLatLng.latitude],
       zoom: 12.6,
@@ -302,7 +641,18 @@ export default function PM25SceneMap({
       curve: 1.42,
       essential: true,
     });
-  }, [focusGrid]);
+  }, [focusGrid, professionalMode]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const target = professionalMode ? PROFESSIONAL_VIEW : VIEWS[cameraModeRef.current];
+    mapRef.current?.getMap().easeTo({
+      pitch: target.pitch,
+      bearing: target.bearing,
+      zoom: target.zoom,
+      duration: 900,
+    });
+  }, [professionalMode, ready]);
 
   useEffect(() => {
     const node = containerRef.current;
@@ -361,7 +711,7 @@ export default function PM25SceneMap({
     };
   }, [autoCruise, ready]);
 
-  const elevationScale = cameraMode === 'top' ? 0.02 : 1;
+  const elevationScale = cameraMode === 'top' && !professionalMode ? 0.01 : 1;
 
   const staticLayers = useMemo<Layer[]>(() => {
     const deckLayers: Layer[] = [];
@@ -371,11 +721,11 @@ export default function PM25SceneMap({
         new PolygonLayer<GridCell>({
           id: 'pm25-hex',
           data: gridCells,
-          getPolygon: (grid) => hexAround(grid.centerLatLng),
+          getPolygon: polygonForGrid,
           getFillColor: (grid) => {
             const [r, g, b] = getPm25Rgb(grid.values.value);
             const dimmed = selectedGridId !== null && grid.gridId !== selectedGridId;
-            return [r, g, b, dimmed ? 58 : 186];
+            return [r, g, b, professionalMode ? (dimmed ? 20 : 55) : dimmed ? 42 : 138];
           },
           getLineColor: (grid) => {
             const highlight = grid.gridId === selectedGridId;
@@ -384,7 +734,8 @@ export default function PM25SceneMap({
           getLineWidth: (grid) => (grid.gridId === selectedGridId ? 22 : 5),
           getElevation: (grid) => {
             const value = Number.isFinite(grid.values.value) ? Math.max(0, Math.min(160, grid.values.value)) : 0;
-            return Math.max(40, value * 13);
+            const excess = Math.max(0, value - 15);
+            return professionalMode ? 2 : 24 + excess * 5.4;
           },
           elevationScale,
           extruded: true,
@@ -398,7 +749,8 @@ export default function PM25SceneMap({
           transitions: { elevationScale: 480, getElevation: 360, getFillColor: 220 },
           updateTriggers: {
             elevationScale: cameraMode,
-            getFillColor: selectedGridId,
+            getElevation: professionalMode,
+            getFillColor: [selectedGridId, professionalMode],
             getLineColor: selectedGridId,
             getLineWidth: selectedGridId,
           },
@@ -421,8 +773,15 @@ export default function PM25SceneMap({
           point.latLng.latitude,
           point.layerKind === 'mercury' ? 140 : 90,
         ],
-        getRadius: (point) => (point.layerKind === 'mercury' ? 90 : 55),
-        getFillColor: (point) => (point.layerKind === 'mercury' ? [124, 90, 166, 224] : [47, 107, 85, 214]),
+        getRadius: (point) => {
+          const related = sourceLinkIds.has(point.id);
+          const base = point.layerKind === 'mercury' ? 90 : 55;
+          return related ? base * 1.65 : base;
+        },
+        getFillColor: (point) => {
+          if (sourceLinkIds.has(point.id)) return [190, 82, 58, 238];
+          return point.layerKind === 'mercury' ? [124, 90, 166, 205] : [47, 107, 85, 196];
+        },
         getLineColor: [255, 255, 255, 232],
         getLineWidth: 2,
         radiusUnits: 'meters',
@@ -431,23 +790,87 @@ export default function PM25SceneMap({
         stroked: true,
         filled: true,
         pickable: true,
+        updateTriggers: {
+          getRadius: sourceLinkKey,
+          getFillColor: sourceLinkKey,
+        },
       }),
     );
 
+    if (volumeBox && volumeWalls.length > 0) {
+      deckLayers.push(
+        new PolygonLayer<VolumeWall>({
+          id: 'pm25-professional-volume-walls',
+          data: volumeWalls,
+          getPolygon: (wall) => wall.polygon,
+          getFillColor: (wall) => {
+            const [r, g, b] = verticalRampRgb(wall.ratio, volumePeak);
+            return [r, g, b, Math.round(88 + (1 - wall.ratio) * 96)];
+          },
+          getLineColor: (wall) => [235, 250, 255, wall.ratio > 0.94 || wall.ratio < 0.06 ? 150 : 40],
+          getLineWidth: 1,
+          lineWidthUnits: 'pixels',
+          stroked: true,
+          filled: true,
+          extruded: false,
+          pickable: false,
+          updateTriggers: {
+            getPolygon: volumeWalls.length,
+            getFillColor: [volumeWalls.length, volumePeak],
+          },
+        }),
+      );
+    }
+
+    if (volumeBox && volumeSlices.length > 0) {
+      deckLayers.push(
+        new PolygonLayer<VolumeSlice>({
+          id: 'pm25-professional-volume',
+          data: volumeSlices,
+          getPolygon: (slice) => scaledGridPolygon(slice.grid, 1, slice.altitudeM),
+          getFillColor: (slice) => {
+            const isCap = slice.ratio > 0.9;
+            const isFloor = slice.ratio < 0.08;
+            const [hr, hg, hb] = getPm25Rgb(slice.grid.values.value);
+            const [vr, vg, vb] = verticalRampRgb(slice.ratio, volumePeak);
+            const w = isCap ? 0.2 : 0.68;
+            const alpha = isCap ? 74 : isFloor ? 58 : Math.round(14 + (1 - slice.ratio) * 12);
+            return [
+              Math.round(hr * (1 - w) + vr * w),
+              Math.round(hg * (1 - w) + vg * w),
+              Math.round(hb * (1 - w) + vb * w),
+              alpha,
+            ];
+          },
+          getLineColor: [255, 255, 255, 18],
+          getLineWidth: 1,
+          lineWidthUnits: 'pixels',
+          stroked: true,
+          filled: true,
+          extruded: false,
+          pickable: false,
+          updateTriggers: {
+            getPolygon: volumeSlices.length,
+            getFillColor: [volumeSlices.length, volumePeak],
+          },
+        }),
+      );
+    }
+
     return deckLayers;
-  }, [cameraMode, elevationScale, gridCells, onGridPress, selectedGridId, showPm25GridLayer, visiblePoints]);
+  }, [cameraMode, elevationScale, gridCells, onGridPress, professionalMode, selectedGridId, showPm25GridLayer, sourceLinkIds, sourceLinkKey, visiblePoints, volumeBox, volumePeak, volumeSlices, volumeWalls]);
 
   const animatedLayers = useMemo<Layer[]>(() => {
     const deckLayers: Layer[] = [];
 
-    if (showPm25GridLayer && hotspots.length > 0) {
+    if (showPm25GridLayer && hotspots.length > 0 && !professionalMode) {
       const beamPulse = 0.5 + 0.5 * Math.sin((tick / 20) * Math.PI);
       deckLayers.push(
         new PolygonLayer<GridCell>({
           id: 'pm25-hotspot-beams',
           data: hotspots,
-          getPolygon: (grid) => hexAround(grid.centerLatLng, HEX_RADIUS_DEG * 0.34),
-          getElevation: (grid) => Math.min(160, grid.values.value) * 20,
+          getPolygon: (grid) => hexAround(grid.centerLatLng, HEX_RADIUS_DEG * 0.3),
+          getElevation: (grid) => 220 + Math.min(160, grid.values.value) * 7.5,
           elevationScale,
           extruded: true,
           filled: true,
@@ -482,6 +905,102 @@ export default function PM25SceneMap({
       );
     }
 
+    if (volumeBox) {
+      deckLayers.push(
+        new PolygonLayer<WindArrow>({
+          id: 'professional-wind-arrows',
+          data: buildWindArrows(volumeBox, tick),
+          getPolygon: (arrow) => arrow.polygon,
+          getFillColor: (arrow) => arrow.color,
+          getLineColor: [220, 250, 255, 190],
+          getLineWidth: 1.2,
+          lineWidthUnits: 'pixels',
+          stroked: true,
+          filled: true,
+          extruded: false,
+          pickable: false,
+          updateTriggers: {
+            getPolygon: tick,
+            getFillColor: tick,
+          },
+        }),
+      );
+    }
+
+    if (selectedGrid && showPm25GridLayer) {
+      deckLayers.push(
+        new ScatterplotLayer<DownwindMarker>({
+          id: 'pm25-downwind-zone',
+          data: downwindMarkers,
+          getPosition: (marker) => marker.position,
+          getRadius: (marker) => marker.radiusM,
+          getFillColor: (marker) => {
+            const [r, g, b] = getPm25Rgb(selectedGrid.values.value);
+            return [r, g, b, marker.alpha];
+          },
+          radiusUnits: 'meters',
+          stroked: true,
+          getLineColor: [255, 255, 255, 88],
+          getLineWidth: 1.2,
+          lineWidthUnits: 'pixels',
+          billboard: false,
+          pickable: false,
+          updateTriggers: { getPosition: tick, getRadius: tick, getFillColor: tick },
+        }),
+      );
+    }
+
+    if (sourceLinks.length > 0) {
+      deckLayers.push(
+        new LineLayer<SourceLink>({
+          id: 'upwind-source-links',
+          data: sourceLinks,
+          getSourcePosition: (link) => link.source,
+          getTargetPosition: (link) => link.target,
+          getColor: (link) => [
+            link.point.layerKind === 'mercury' ? 144 : 45,
+            link.point.layerKind === 'mercury' ? 82 : 116,
+            link.point.layerKind === 'mercury' ? 178 : 94,
+            Math.round(120 + link.alignment * 110),
+          ],
+          getWidth: (link) => Math.max(1.8, 5.6 - link.distanceKm * 0.22),
+          widthUnits: 'pixels',
+          pickable: false,
+        }),
+        new TextLayer<SourceLink>({
+          id: 'upwind-source-labels',
+          data: sourceLinks.filter((link) => link.label),
+          getPosition: (link) => link.source,
+          getText: (link) => link.label ?? '',
+          getSize: 13,
+          getColor: [38, 46, 39, 225],
+          getBackgroundColor: [255, 255, 255, 210],
+          background: true,
+          backgroundPadding: [6, 4],
+          billboard: true,
+          pickable: false,
+        }),
+      );
+    }
+
+    if (downwindMarkers.some((marker) => marker.label)) {
+      deckLayers.push(
+        new TextLayer<DownwindMarker>({
+          id: 'downwind-zone-label',
+          data: downwindMarkers.filter((marker) => marker.label),
+          getPosition: (marker) => marker.position,
+          getText: (marker) => marker.label ?? '',
+          getSize: 13,
+          getColor: [38, 46, 39, 225],
+          getBackgroundColor: [255, 255, 255, 210],
+          background: true,
+          backgroundPadding: [6, 4],
+          billboard: true,
+          pickable: false,
+        }),
+      );
+    }
+
     if (particlesActive) {
       deckLayers.push(
         new ScatterplotLayer<DriftParticle>({
@@ -501,7 +1020,7 @@ export default function PM25SceneMap({
     }
 
     return deckLayers;
-  }, [cameraMode, elevationScale, gridCells, hotspots, particlesActive, showPm25GridLayer, tick]);
+  }, [cameraMode, downwindMarkers, elevationScale, gridCells, hotspots, particlesActive, professionalMode, selectedGrid, showPm25GridLayer, sourceLinks, tick, volumeBox]);
 
   const layers = useMemo(() => [...staticLayers, ...animatedLayers], [staticLayers, animatedLayers]);
 
@@ -519,16 +1038,25 @@ export default function PM25SceneMap({
   }
 
   return (
-    <div className={ready ? `${styles.mapShell} ${styles.mapShellReady}` : styles.mapShell} ref={containerRef}>
+    <div
+      className={[
+        styles.mapShell,
+        ready ? styles.mapShellReady : '',
+        selectedGrid ? styles.mapShellDiagnostic : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      ref={containerRef}
+    >
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
         initialViewState={{
           longitude: MAP_CENTER.longitude,
           latitude: MAP_CENTER.latitude,
-          zoom: VIEWS.tilt.zoom,
-          pitch: VIEWS.tilt.pitch,
-          bearing: VIEWS.tilt.bearing,
+          zoom: professionalMode ? PROFESSIONAL_VIEW.zoom : VIEWS.tilt.zoom,
+          pitch: professionalMode ? PROFESSIONAL_VIEW.pitch : VIEWS.tilt.pitch,
+          bearing: professionalMode ? PROFESSIONAL_VIEW.bearing : VIEWS.tilt.bearing,
         }}
         maxPitch={80}
         mapStyle={MAP_STYLE}
@@ -536,7 +1064,7 @@ export default function PM25SceneMap({
         onError={() => setReady(true)}
         attributionControl={false}
       >
-        <AttributionControl compact position="bottom-right" />
+        <AttributionControl compact position="bottom-left" />
         <DeckGLOverlay effects={DECK_EFFECTS} layers={layers} getTooltip={deckTooltip} />
       </Map>
 
@@ -587,6 +1115,43 @@ export default function PM25SceneMap({
           <LocateFixed size={17} />
         </button>
       </div>
+
+      {professionalMode && (
+        <div className={styles.professionalBadge} aria-live="polite">
+          <strong>專業視角</strong>
+          <span>風場箭頭動畫 / PM2.5 厚度層</span>
+        </div>
+      )}
+
+      {selectedGrid && (
+        <div className={styles.diagnosticPanel} aria-live="polite">
+          <div className={styles.diagnosticHeader}>
+            <span>3D 診斷</span>
+            <strong>{getGridLocationName(selectedGrid)}</strong>
+          </div>
+          <div className={styles.diagnosticGrid}>
+            <div>
+              <span>PM2.5</span>
+              <strong>{Math.round(selectedGrid.values.value)}</strong>
+            </div>
+            <div>
+              <span>風速</span>
+              <strong>{selectedGrid.meteo.windSpeed.toFixed(1)} m/s</strong>
+            </div>
+            <div>
+              <span>風向</span>
+              <strong>{Math.round(selectedGrid.meteo.windDir)} deg</strong>
+            </div>
+            <div>
+              <span>上風來源</span>
+              <strong>{sourceLinks.length}</strong>
+            </div>
+          </div>
+          <p className={styles.diagnosticNote}>
+            已淡化非選取網格，線段標示可能上風來源，半透明圈標示下風影響帶。
+          </p>
+        </div>
+      )}
     </div>
   );
 }

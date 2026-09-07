@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Box, ChevronLeft, Layers, SlidersHorizontal } from 'lucide-react';
+import { Box, ChevronLeft, Layers, SlidersHorizontal, ScanEye } from 'lucide-react';
 import { Chip, ChipGroup } from '@/components/controls/ControlKit';
 import { SecLabel } from './MapWidgets';
 import { getPm25CssColor, getPm25Status } from '../_lib/mapColors';
@@ -10,7 +10,7 @@ import type { Pm25GridStats } from '../_lib/mapStats';
 import styles from '../map.module.css';
 
 export type MapMode = 'NOW' | 'FORECAST';
-export type MapViewMode = '2d' | '3d';
+export type MapViewMode = '2d' | '3d' | 'professional';
 
 export interface LayerToggleItem {
   key: string;
@@ -66,7 +66,7 @@ export function CommandPanel({
   const statusBg = getPm25CssColor(stats.maximum, 0.14);
   const subLine =
     mode === 'NOW'
-      ? `${effectiveViewMode === '3d' ? '3D 濃度地景' : '2D 網格監測'} · 更新 ${formatTime(stats.lastUpdated)}`
+      ? `${effectiveViewMode === 'professional' ? '專業視角' : effectiveViewMode === '3d' ? '3D 濃度地景' : '2D 網格監測'} · 更新 ${formatTime(stats.lastUpdated)}`
       : `2D 預報網格 · ${forecastLabel ?? '未來趨勢'}`;
 
   const statCells = [
@@ -106,14 +106,24 @@ export function CommandPanel({
           {search}
 
           {mode === 'NOW' && (
-            <ChipGroup>
-              <Chip active={viewMode === '2d'} variant="solid" onClick={() => onViewModeChange('2d')}>
-                <Layers size={14} /> 2D 網格
-              </Chip>
-              <Chip active={viewMode === '3d'} variant="solid" onClick={() => onViewModeChange('3d')}>
-                <Box size={14} /> 3D 濃度
-              </Chip>
-            </ChipGroup>
+            <div className={styles.viewSeg}>
+              {([
+                { key: '2d', label: '2D 網格', Icon: Layers },
+                { key: '3d', label: '3D 濃度', Icon: Box },
+                { key: 'professional', label: '專業視角', Icon: ScanEye },
+              ] as const).map(({ key, label, Icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={viewMode === key}
+                  onClick={() => onViewModeChange(key)}
+                  className={viewMode === key ? `${styles.viewSegBtn} ${styles.viewSegBtnActive}` : styles.viewSegBtn}
+                >
+                  <Icon size={13} />
+                  {label}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -147,6 +157,7 @@ export function CommandPanel({
 
         <div className={styles.section}>
           <SecLabel title="圖層" />
+          <div className={styles.layerList}>
           {layers.map((layer) => (
             <button
               key={layer.key}
@@ -181,6 +192,7 @@ export function CommandPanel({
               </span>
             </button>
           ))}
+          </div>
         </div>
       </div>
     </div>

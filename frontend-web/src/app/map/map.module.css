@@ -61,8 +61,8 @@
 .commandScroll {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px;
+  gap: 10px;
+  padding: 12px;
   overflow-y: auto;
   min-height: 0;
 }
@@ -119,7 +119,43 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+}
+
+/* 視角切換：固定三欄，永遠單行不換行 */
+.viewSeg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.viewSegBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 4px;
+  border-radius: 9px;
+  border: 1.5px solid rgba(106, 141, 115, 0.28);
+  background: transparent;
+  color: var(--map-fg-dim);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.viewSegBtn:hover:not(.viewSegBtnActive) {
+  border-color: rgba(106, 141, 115, 0.5);
+  background: rgba(106, 141, 115, 0.06);
+}
+
+.viewSegBtnActive {
+  background: var(--map-accent);
+  border-color: var(--map-accent);
+  color: #fff;
 }
 
 .divider {
@@ -240,10 +276,10 @@
 }
 
 .summarySub {
-  margin-top: 4px;
+  margin-top: 3px;
   font-size: 11px;
   color: var(--map-fg-dim);
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .statusBadge {
@@ -257,26 +293,26 @@
 .statGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 
 .stat {
   border-radius: 10px;
   background: var(--map-subpanel);
   border: 1px solid var(--map-hairline-soft);
-  padding: 9px 9px 8px;
+  padding: 8px 8px 7px;
 }
 
 .statLabel {
   margin: 0;
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--map-fg-dim);
 }
 
 .statValue {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   color: var(--map-fg);
-  font-size: 20px;
+  font-size: 17px;
   line-height: 1;
   font-weight: 900;
 }
@@ -289,14 +325,20 @@
 }
 
 /* ── 圖層清單 ─────────────────────────────────────────────── */
+.layerList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .layerRow {
   width: 100%;
-  min-height: 42px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 6px 9px;
   border-radius: 10px;
   border: 1px solid var(--map-glass-border);
   background: rgba(255, 255, 255, 0.55);
@@ -333,15 +375,15 @@
 
 .layerLabel {
   display: block;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
   line-height: 1.15;
 }
 
 .layerDetail {
   display: block;
-  margin-top: 3px;
-  font-size: 10.5px;
+  margin-top: 2px;
+  font-size: 10px;
   color: var(--map-fg-dim);
   line-height: 1.2;
 }

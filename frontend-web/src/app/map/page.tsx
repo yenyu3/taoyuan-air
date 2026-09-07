@@ -226,6 +226,8 @@ export default function MapPage() {
   );
 
   const effectiveMapViewMode: MapViewMode = isForecast ? '2d' : mapViewMode;
+  const renderSceneMap = effectiveMapViewMode === '3d' || effectiveMapViewMode === 'professional';
+  const professionalMode = effectiveMapViewMode === 'professional';
 
   // 鍵盤：Esc 關抽屜、2/3 切 2D/3D（即時）、空白鍵播放/暫停預報。
   useEffect(() => {
@@ -236,6 +238,7 @@ export default function MapPage() {
       if (event.key === 'Escape') setShowSheet(false);
       if (!isForecast && event.key === '2') setMapViewMode('2d');
       if (!isForecast && event.key === '3') setMapViewMode('3d');
+      if (!isForecast && event.key === '4') setMapViewMode('professional');
       // Space on a focused control (chip / layer toggle) already activates it — don't also toggle playback.
       if (isForecast && event.key === ' ' && tag !== 'BUTTON') {
         event.preventDefault();
@@ -247,7 +250,7 @@ export default function MapPage() {
   }, [isForecast, setMapViewMode]);
 
   const showWindToggle = mode === 'NOW' && effectiveMapViewMode === '2d' && MAPBOX_ENABLED;
-  const show3dEffectToggles = mode === 'NOW' && effectiveMapViewMode === '3d' && MAPBOX_ENABLED;
+  const show3dEffectToggles = mode === 'NOW' && renderSceneMap && MAPBOX_ENABLED;
 
   const layers: LayerToggleItem[] = [
     {
@@ -338,7 +341,7 @@ export default function MapPage() {
           </div>
         )}
 
-        {effectiveMapViewMode === '3d' && (
+        {renderSceneMap && (
           <div className={styles.mapFill}>
             <PM25SceneMap
               gridCells={activeGrid}
@@ -349,6 +352,7 @@ export default function MapPage() {
               showMercuryLayer={showMercuryLayer}
               showParticleLayer={showParticleLayer}
               autoCruise={autoCruise}
+              professionalMode={professionalMode}
               selectedGrid={resolvedSelectedGrid}
               onGridPress={handleGridPress}
               focusGrid={focusedGrid}

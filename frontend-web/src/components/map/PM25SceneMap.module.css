@@ -34,13 +34,13 @@
   display: block;
 }
 
-.mapShell :global(.mapboxgl-ctrl-bottom-right) {
-  right: 8px;
+.mapShell :global(.mapboxgl-ctrl-bottom-left) {
+  left: 8px;
   bottom: 8px;
 }
 
 .mapShell :global(.mapboxgl-ctrl-attrib.mapboxgl-compact) {
-  transform-origin: bottom right;
+  transform-origin: bottom left;
   transform: scale(0.72);
   opacity: 0.46;
   transition: opacity 160ms ease;
@@ -116,6 +116,120 @@
   cursor: default;
 }
 
+.diagnosticPanel {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 5;
+  width: min(340px, calc(100vw - 40px));
+  padding: 14px;
+  border: 1px solid rgba(106, 141, 115, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.93);
+  color: #2d3129;
+  box-shadow: 0 12px 30px rgba(31, 46, 37, 0.12);
+  backdrop-filter: blur(18px) saturate(1.05);
+}
+
+.professionalBadge {
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 420px);
+  min-height: 34px;
+  padding: 8px 13px;
+  border: 1px solid rgba(91, 213, 240, 0.28);
+  border-radius: 999px;
+  background: rgba(15, 28, 32, 0.74);
+  color: #e9fbff;
+  box-shadow: 0 14px 34px rgba(15, 28, 32, 0.22);
+  transform: translateX(-50%);
+  backdrop-filter: blur(16px) saturate(1.1);
+}
+
+.professionalBadge strong {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.professionalBadge span {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(233, 251, 255, 0.82);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diagnosticHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.diagnosticHeader span {
+  color: #5d6f49;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.diagnosticHeader strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #2d3129;
+  font-size: 14px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diagnosticGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.diagnosticGrid div {
+  min-width: 0;
+  padding: 8px 7px;
+  border: 1px solid rgba(106, 141, 115, 0.1);
+  border-radius: 8px;
+  background: rgba(244, 247, 240, 0.9);
+}
+
+.diagnosticGrid span {
+  display: block;
+  color: #5d6f49;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.diagnosticGrid strong {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: #2d3129;
+  font-size: 13px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diagnosticNote {
+  margin: 10px 0 0;
+  color: #5d6f49;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
 .tokenMissing {
   position: absolute;
   inset: 0;
@@ -152,5 +266,28 @@
 @media (max-width: 720px) {
   .hud {
     top: 92px;
+  }
+
+  .professionalBadge {
+    top: 144px;
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    justify-content: center;
+  }
+
+  .diagnosticPanel {
+    right: 12px;
+    bottom: 12px;
+    width: min(320px, calc(100vw - 24px));
+    padding: 12px;
+  }
+
+  /* 手機上診斷面板幾乎滿版，把地圖出處往上抬，避免蓋住 Mapbox 版權標示。 */
+  .mapShellDiagnostic :global(.mapboxgl-ctrl-bottom-left) {
+    bottom: 128px;
+  }
+
+  .diagnosticGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

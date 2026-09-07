@@ -307,10 +307,10 @@ export default function WindLidarPanel({
   return (
     <div
       style={{
-        background: C.glass,
-        border: '1px solid rgba(106, 141, 115, 0.08)',
-        borderRadius: 16,
-        boxShadow: C.glassShadow,
+        background: 'var(--section-tint)',
+        border: 'none',
+        borderRadius: 12,
+        boxShadow: 'none',
         padding: '4px 8px 8px',
         overflow: 'hidden',
       }}

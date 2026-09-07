@@ -14,7 +14,6 @@ import {
 import {
   ArrowRightLeft,
   Check,
-  Database,
   Download,
   ExternalLink,
   FileSearch,
@@ -490,17 +489,6 @@ export default function ExplorerPage() {
     <main className={styles.page}>
       <div className={styles.shell}>
         <header className={styles.topBar}>
-          <div className={styles.pageHeading}>
-            <span className={styles.pageHeadingIcon}>
-              <Database size={18} color="#6a8d73" strokeWidth={2} />
-            </span>
-            <div>
-              <h1 className={styles.pageTitle}>資料整合</h1>
-              <p className={styles.pageSubtitle}>
-                將空品、氣象、排放源與垂直觀測資料整理成可查詢、可比較、可取用的資料資產。
-              </p>
-            </div>
-          </div>
           <label className={styles.searchWrap}>
             <Search size={17} color="#65736d" />
             <input
@@ -538,7 +526,7 @@ export default function ExplorerPage() {
         </div>
 
         <section className={styles.workspace}>
-          <div className={styles.column}>
+          <div className={`${styles.column} ${styles.cabinetColumn}`}>
             <div className={styles.sectionHead}>
               <div>
                 <h2 className={styles.sectionTitle}>資料檔案櫃</h2>
@@ -546,6 +534,7 @@ export default function ExplorerPage() {
               </div>
               <Layers3 size={18} color="#65736d" />
             </div>
+            <div className={styles.cabinetShell}>
             <div className={styles.cabinet}>
               {DATASET_CATALOG.map(dataset => {
                 const matched = filteredDatasets.some(item => item.id === dataset.id);
@@ -583,6 +572,11 @@ export default function ExplorerPage() {
                   </button>
                 );
               })}
+            </div>
+            <div className={styles.cabinetFront} aria-hidden="true">
+              <span>{DATASET_CATALOG.length} 份資料夾</span>
+              <span className={styles.cabinetHandle} />
+            </div>
             </div>
           </div>
 

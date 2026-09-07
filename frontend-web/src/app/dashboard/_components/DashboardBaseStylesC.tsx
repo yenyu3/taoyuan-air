@@ -142,9 +142,9 @@ export function DashboardBaseStylesC() {
         width: ${GAUGE_SIZE - 46}px;
         height: ${GAUGE_SIZE - 46}px;
         border-radius: 50%;
-        background: ${C.glass};
-        border: 1px solid ${C.glassInner};
-        box-shadow: 0 3px 12px ${C.glassShadow};
+        background: transparent;
+        border: none;
+        box-shadow: none;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -304,8 +304,8 @@ export function DashboardBaseStylesC() {
         display: flex;
         align-items: center;
         gap: 14px;
-        border-radius: 12px;
-        padding: 14px 16px;
+        border-radius: 10px;
+        padding: 13px 14px;
         min-width: 0;
       }
 
@@ -335,7 +335,7 @@ export function DashboardBaseStylesC() {
 
       .insight-card {
         background: ${C.blueLt};
-        border: 1px solid ${C.blueBorder};
+        border: none;
       }
 
       .insight-icon {

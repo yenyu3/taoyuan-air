@@ -30,17 +30,19 @@ const C = {
   hint:         '#8fa96f',
 };
 
+/* 低調版卡片：維持分區，但不浮空（無投影） */
 const card: React.CSSProperties = {
-  backgroundColor: C.glass,
-  border: `1px solid ${C.glassBorder}`,
-  borderRadius: 20,
-  boxShadow: C.glassShadow,
+  backgroundColor: 'var(--card-quiet-bg)',
+  border: 'var(--card-quiet-border)',
+  borderRadius: 16,
+  boxShadow: 'none',
 };
 
+/* 卡片內再分區的更淡層 */
 const softPanel: React.CSSProperties = {
-  backgroundColor: 'rgba(255,255,255,0.42)',
-  border: '1px solid rgba(106, 141, 115, 0.14)',
-  borderRadius: 14,
+  backgroundColor: 'var(--subpanel-bg)',
+  border: 'var(--subpanel-border)',
+  borderRadius: 12,
 };
 
 const divider: React.CSSProperties = {
@@ -360,7 +362,7 @@ export default function AlertsPage() {
             <div style={{ flex: isMobile ? 'none' : 1.7, width: isMobile ? '100%' : undefined, display: 'flex', flexDirection: 'column', gap: 0 }}>
               <ColumnHeader title="分析結果" action={<DownloadReportButton onClick={handleDownloadHealthReport} />} />
 
-              <div style={{ ...card, padding: isMobile ? 18 : 24, borderRadius: 18 }}>
+              <div style={{ ...card, padding: isMobile ? 20 : 28 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>
                   <div>
                     <p style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 6 }}>個人健康摘要</p>
@@ -597,7 +599,7 @@ export default function AlertsPage() {
             <div style={{ flex: isMobile ? 'none' : 1.7, width: isMobile ? '100%' : undefined, display: 'flex', flexDirection: 'column', gap: 0 }}>
               <ColumnHeader title="治理分析結果" action={<DownloadReportButton onClick={handleDownloadGovReport} />} />
 
-              <div style={{ ...card, padding: isMobile ? 18 : 24, borderRadius: 18 }}>
+              <div style={{ ...card, padding: isMobile ? 20 : 28 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>
                   <div>
                     <p style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 6 }}>管制決策摘要</p>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { Check, ChevronRight, LogOut, Settings, Trash2 } from 'lucide-react';
-import { C, INIT, NAV, card, type Section } from './_components/SettingsParts';
+import { C, INIT, NAV, card, floatPanel, type Section } from './_components/SettingsParts';
 import { SettingsSections } from './_components/SettingsSections';
 
 /* ─── Design tokens ──────────────────────────────────────────── */
@@ -420,8 +420,8 @@ export default function SettingsPage() {
           onClick={(e) => { if (e.target === e.currentTarget) setShowDeleteModal(false); }}
         >
           <div style={{
-            ...card,
-            padding: 32, maxWidth: 420, width: '100%',
+            ...floatPanel,
+            padding: 32, maxWidth: 420,
             display: 'flex', flexDirection: 'column', gap: 20,
           }}>
             {/* 警示圖示 */}

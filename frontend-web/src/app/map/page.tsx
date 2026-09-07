@@ -310,7 +310,7 @@ export default function MapPage() {
       </div>
 
       <div style={{ position: 'absolute', top: 20, left: 20, zIndex: Z, display: 'flex', flexDirection: 'column', gap: 10, width: 330, maxWidth: 'calc(100vw - 40px)' }}>
-        <div style={{ display: 'flex', backgroundColor: 'rgba(255,255,255,0.94)', borderRadius: 999, padding: 4, boxShadow: '0 8px 26px rgba(31,46,37,0.12)', border: `1px solid ${palette.borderSoft}`, alignSelf: 'flex-start' }}>
+        <div style={{ display: 'flex', backgroundColor: 'rgba(255,255,255,0.94)', borderRadius: 999, padding: 4, boxShadow: '0 6px 16px rgba(31,46,37,0.10)', border: `1px solid ${palette.borderSoft}`, alignSelf: 'flex-start' }}>
           {([
             { key: 'NOW' as const, label: '即時監測' },
             { key: 'FORECAST' as const, label: 'PM2.5 預報' },
@@ -337,7 +337,7 @@ export default function MapPage() {
         </div>
 
         <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 999, padding: '10px 14px', boxShadow: '0 8px 26px rgba(31,46,37,0.12)', border: `1px solid ${palette.borderSoft}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 999, padding: '10px 14px', boxShadow: '0 6px 16px rgba(31,46,37,0.10)', border: `1px solid ${palette.borderSoft}` }}>
             <Search size={16} color={palette.textSecondary} />
             <input
               value={search}
@@ -418,7 +418,7 @@ export default function MapPage() {
       </div>
 
       <div style={{ position: 'absolute', left: 20, bottom: 20, zIndex: Z, width: 318, maxWidth: 'calc(100vw - 40px)' }}>
-        <div style={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: '16px', border: `1px solid ${palette.borderSoft}`, boxShadow: '0 14px 42px rgba(31,46,37,0.15)', backdropFilter: 'blur(18px)' }}>
+        <div style={{ backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 14, padding: '16px', border: `1px solid ${palette.borderSoft}`, boxShadow: 'var(--panel-float-shadow)', backdropFilter: 'blur(18px)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
             <div>
               <div style={{ marginBottom: 5 }}><SecLabel title={mode === 'NOW' ? 'PM2.5 即時濃度' : 'PM2.5 預報濃度'} /></div>
@@ -465,7 +465,7 @@ export default function MapPage() {
       </div>
 
       {showSheet && selectedGrid && (
-        <aside style={{ position: 'absolute', top: 20, right: 20, width: 356, maxWidth: 'calc(100vw - 40px)', maxHeight: 'calc(100vh - 120px)', zIndex: 1210, backgroundColor: 'rgba(255,255,255,0.98)', border: `1px solid ${palette.borderSoft}`, borderRadius: 16, boxShadow: '0 16px 48px rgba(31,46,37,0.18)', backdropFilter: 'blur(20px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <aside style={{ position: 'absolute', top: 20, right: 20, width: 356, maxWidth: 'calc(100vw - 40px)', maxHeight: 'calc(100vh - 120px)', zIndex: 1210, backgroundColor: 'rgba(255,255,255,0.96)', border: `1px solid ${palette.borderSoft}`, borderRadius: 14, boxShadow: 'var(--panel-float-shadow)', backdropFilter: 'blur(20px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '16px 18px 14px', borderBottom: `1px solid ${palette.borderSoft}`, flexShrink: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
               <div>

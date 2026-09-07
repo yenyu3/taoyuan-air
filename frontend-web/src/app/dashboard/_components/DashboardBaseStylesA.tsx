@@ -48,21 +48,30 @@ export function DashboardBaseStylesA() {
         white-space: nowrap;
       }
 
+      /* 去卡片化：主面板不再浮空，改為與頁面同底的內容區 */
       .dashboard-panel {
         height: auto;
         min-height: 0;
         min-width: 0;
         max-width: 100%;
         overflow: hidden;
-        align-self: start;    
+        align-self: start;
         margin-top: 14px;
-        background: rgba(255, 255, 255, 0.97);
-        border: 1px solid rgba(106, 141, 115, 0.08);
-        border-radius: 16px;
-        box-shadow: 0 4px 32px rgba(106, 141, 115, 0.08);
-        padding: 22px 32px 20px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 22px 24px 20px;
         display: flex;
         flex-direction: column;
+      }
+
+      /* 左側地圖與右側資訊之間的分隔改用細線 */
+      @media (min-width: 1281px) {
+        .dashboard-panel {
+          border-left: 1px solid var(--hairline);
+          padding-left: 32px;
+        }
       }
 
       .district-heading {

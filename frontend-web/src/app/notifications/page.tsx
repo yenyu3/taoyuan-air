@@ -28,11 +28,12 @@ const C = {
   hint:           '#8fa96f',
 };
 
+/* 低調版卡片：維持分區，但不浮空（無投影） */
 const card: React.CSSProperties = {
-  backgroundColor: C.glass,
-  border: `1px solid ${C.glassBorder}`,
-  borderRadius: 20,
-  boxShadow: C.glassShadow,
+  backgroundColor: 'var(--card-quiet-bg)',
+  border: 'var(--card-quiet-border)',
+  borderRadius: 14,
+  boxShadow: 'none',
 };
 
 /* ─── Data ───────────────────────────────────────────────────── */
@@ -329,8 +330,8 @@ export default function NotificationsPage() {
                             padding: isMobile ? '14px 16px' : '18px 22px',
                             cursor: 'pointer',
                             display: 'flex', alignItems: 'flex-start', gap: isMobile ? 12 : 16,
-                            transition: 'box-shadow 0.15s',
-                            opacity: unread ? 1 : 0.80,
+                            transition: 'border-color 0.15s',
+                            opacity: unread ? 1 : 0.72,
                           }}
                         >
                           {/* icon with unread badge */}

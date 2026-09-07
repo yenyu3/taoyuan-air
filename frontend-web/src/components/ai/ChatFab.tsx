@@ -12,7 +12,7 @@ const PANEL_WIDTH = 380;
 const PANEL_HEIGHT = 560;
 const PANEL_GAP = 12;
 const VIEWPORT_MARGIN = 16;
-const MOBILE_BOTTOM_MARGIN = 88;
+const MOBILE_BOTTOM_MARGIN = 20;
 
 type Position = { x: number; y: number };
 type PanelMetrics = Position & { width: number; height: number };

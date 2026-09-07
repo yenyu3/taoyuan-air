@@ -6,6 +6,27 @@
   --app-surface-bg:
     linear-gradient(180deg, rgba(250, 250, 246, 0.94), rgba(239, 242, 233, 0.94)),
     var(--app-bg-gradient);
+
+  /* ── 去卡片化共用 token ──────────────────────────────
+     頁面內容以留白與細線分段，不再用浮空卡片。
+     只有真正「浮在內容之上」的元素（地圖控制面板、
+     下拉、Modal、抽屜、AI 對話框）才保留陰影。 */
+  --hairline: rgba(106, 141, 115, 0.16);
+  --hairline-soft: rgba(106, 141, 115, 0.12);
+  --section-tint: rgba(255, 255, 255, 0.34);
+  --radius-soft: 12px;
+
+  /* 低調版卡片：保留分區感，但不浮空（無投影）。
+     用於資料整合類頁面：治理 / 健康 / 系統通知 / 設定 / 資料整合。 */
+  --card-quiet-bg: rgba(255, 255, 255, 0.42);
+  --card-quiet-border: 1px solid rgba(106, 141, 115, 0.18);
+  --card-quiet-radius: 14px;
+  /* 卡片內再分區用的更淡層 */
+  --subpanel-bg: rgba(255, 255, 255, 0.34);
+  --subpanel-border: 1px solid rgba(106, 141, 115, 0.14);
+  --panel-float-bg: rgba(255, 255, 255, 0.92);
+  --panel-float-border: rgba(106, 141, 115, 0.14);
+  --panel-float-shadow: 0 12px 30px rgba(31, 46, 37, 0.10);
 }
 
 *, *::before, *::after {

@@ -8,16 +8,17 @@ import {
   type ParameterId,
 } from './uavConfig';
 import type { ParamStats } from './UAVProfileChart';
+import { ControlLabel, ControlSubLabel, ChipGroup, Chip } from '@/components/controls/ControlKit';
 
 interface Props {
   selected: ParameterId[];
   onChange: (params: ParameterId[]) => void;
-  /** Stats from the last successful chart fetch — used to show ranges on active buttons */
+  /** Stats from the last successful chart fetch — used for the range tooltip */
   paramStats?: Record<string, ParamStats>;
   /**
    * Set of parameter IDs confirmed to have data in the current flight.
-   * null = still prefetching (show all buttons to avoid flash).
-   * When provided, buttons for parameters NOT in the set are hidden.
+   * null = still prefetching (show all chips to avoid flash).
+   * When provided, chips for parameters NOT in the set are hidden.
    */
   availableParams: Set<ParameterId> | null;
 }
@@ -38,76 +39,59 @@ const byCategory = CATEGORY_ORDER.reduce<Record<CategoryId, ParameterId[]>>(
   { meteorology: [], aerosol: [], gas: [] }
 );
 
-function RangeLabel({
-  paramId,
-  stats,
-  active,
-  unit,
-}: {
-  paramId: ParameterId;
-  stats: Record<string, ParamStats> | undefined;
-  active: boolean;
-  unit: string;
-}) {
-  if (!active || !stats) {
-    return <span className="uav-param-range uav-param-unit-line">{unit}</span>;
-  }
-
-  const s = stats[paramId];
-  if (!s) return <span className="uav-param-range uav-param-unit-line">{unit}</span>;
-
-  const text = s.hasData
-    ? `${s.min.toFixed(1)}~${s.max.toFixed(1)} ${unit}`
-    : '無資料';
-
-  return (
-    <span
-      className="uav-param-range"
-      style={{ opacity: active ? 0.85 : 0 }}
-      aria-label={s.hasData ? `數值範圍 ${text}` : '無資料'}
-    >
-      {text}
-    </span>
-  );
+function rangeTitle(
+  id: ParameterId,
+  stats: Record<string, ParamStats> | undefined,
+  unit: string,
+): string {
+  const label = PARAMETER_CONFIG[id].label;
+  const s = stats?.[id];
+  if (!s) return `${label}（${unit}）`;
+  if (!s.hasData) return `${label}：此航次無資料`;
+  return `${label}：${s.min.toFixed(1)}~${s.max.toFixed(1)} ${unit}`;
 }
 
 export function UAVParameterSelector({ selected, onChange, paramStats, availableParams }: Props) {
   function toggle(id: ParameterId) {
-    if (selected.includes(id)) {
-      onChange(selected.filter((p) => p !== id));
-    } else {
-      onChange([...selected, id]);
-    }
+    onChange(
+      selected.includes(id) ? selected.filter((p) => p !== id) : [...selected, id]
+    );
   }
 
   return (
-    <div className="uav-param-selector">
-      <span className="uav-param-label">顯示參數</span>
-      {CATEGORY_ORDER.map((cat) => (
-        <div key={cat} className="uav-param-group">
-          <span className="uav-param-category">{CATEGORY_LABELS[cat]}</span>
-          {byCategory[cat].map((id) => {
-            // availableParams === null means still loading → show all buttons.
-            // Once loaded, hide buttons for parameters with no data.
-            if (availableParams !== null && !availableParams.has(id)) return null;
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 16px' }}>
+      <ControlLabel>顯示參數</ControlLabel>
+      {CATEGORY_ORDER.map((cat) => {
+        const ids = byCategory[cat].filter(
+          // availableParams === null → still loading, show everything
+          (id) => availableParams === null || availableParams.has(id)
+        );
+        if (ids.length === 0) return null;
 
-            const cfg = PARAMETER_CONFIG[id];
-            const active = selected.includes(id);
-            return (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => toggle(id)}
-                className={`uav-param-btn${active ? ' active' : ''}`}
-              >
-                <span className="uav-param-btn-text">{cfg.label}</span>
-                <RangeLabel paramId={id} stats={paramStats} active={active} unit={cfg.unit} />
-              </button>
-            );
-          })}
-        </div>
-      ))}
+        return (
+          <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <ControlSubLabel>{CATEGORY_LABELS[cat]}</ControlSubLabel>
+            <ChipGroup>
+              {ids.map((id) => {
+                const cfg = PARAMETER_CONFIG[id];
+                const active = selected.includes(id);
+                return (
+                  <Chip
+                    key={id}
+                    active={active}
+                    variant="soft"
+                    dot={cfg.color}
+                    onClick={() => toggle(id)}
+                    title={rangeTitle(id, paramStats, cfg.unit)}
+                  >
+                    {cfg.label}
+                  </Chip>
+                );
+              })}
+            </ChipGroup>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -200,7 +200,7 @@ export default function WindLidarPage() {
       return (
         <div style={{ padding: '40px 24px', textAlign: 'center',
           color: C.hint, fontSize: 14, fontWeight: 600,
-          background: C.glass, borderRadius: 16, boxShadow: C.glassShadow }}>
+          background: 'var(--section-tint)', borderRadius: 12, boxShadow: 'none' }}>
           目前無可用測站資料
         </div>
       );
@@ -210,7 +210,7 @@ export default function WindLidarPage() {
       return (
         <div style={{ padding: '60px 24px', textAlign: 'center',
           color: C.hint, fontSize: 14, fontWeight: 600,
-          background: C.glass, borderRadius: 16, boxShadow: C.glassShadow }}>
+          background: 'var(--section-tint)', borderRadius: 12, boxShadow: 'none' }}>
           載入中…
         </div>
       );
@@ -221,10 +221,10 @@ export default function WindLidarPage() {
         <div style={{ padding: '40px 24px', textAlign: 'center',
           color: dataError === '所選日期無資料' ? C.hint : '#c0392b',
           background: dataError === '所選日期無資料'
-            ? C.glass
+            ? 'var(--section-tint)'
             : 'rgba(192,57,43,0.07)',
-          borderRadius: 16, fontSize: 14, fontWeight: 600,
-          boxShadow: C.glassShadow }}>
+          borderRadius: 12, fontSize: 14, fontWeight: 600,
+          boxShadow: 'none' }}>
           {dataError === '所選日期無資料' ? '所選日期無資料' : `⚠ ${dataError}`}
         </div>
       );
@@ -238,7 +238,7 @@ export default function WindLidarPage() {
       return (
         <div style={{ padding: '40px 24px', textAlign: 'center',
           color: C.hint, fontSize: 14, fontWeight: 600,
-          background: C.glass, borderRadius: 16, boxShadow: C.glassShadow }}>
+          background: 'var(--section-tint)', borderRadius: 12, boxShadow: 'none' }}>
           請至少勾選一個面板
         </div>
       );

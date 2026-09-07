@@ -18,11 +18,22 @@ export const C = {
   hint:          '#8fa96f',
 };
 
+/* 低調版卡片：維持分區，但不浮空（無投影） */
 export const card: React.CSSProperties = {
-  backgroundColor: C.glass,
-  border: `1px solid ${C.glassBorder}`,
-  borderRadius: 20,
-  boxShadow: C.glassShadow,
+  backgroundColor: 'var(--card-quiet-bg)',
+  border: 'var(--card-quiet-border)',
+  borderRadius: 14,
+  boxShadow: 'none',
+  width: '100%',
+  boxSizing: 'border-box',
+};
+
+/* 真正浮在內容之上的元素（Modal / 抽屜）才用這個 */
+export const floatPanel: React.CSSProperties = {
+  backgroundColor: 'var(--panel-float-bg)',
+  border: '1px solid var(--panel-float-border)',
+  borderRadius: 18,
+  boxShadow: 'var(--panel-float-shadow)',
   width: '100%',
   boxSizing: 'border-box',
 };

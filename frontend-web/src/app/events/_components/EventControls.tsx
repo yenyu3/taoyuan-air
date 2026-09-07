@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronDown, Plane, Wind } from 'lucide-react';
-import type { FlightSummary } from '@/lib/uavApi';
+import React from 'react';
+import { Plane, Wind } from 'lucide-react';
 import { C, type ActiveView } from '../_lib/eventsConfig';
 
 export function ViewSwitcher({
@@ -31,11 +30,11 @@ export function ViewSwitcher({
         display: 'flex',
         gap: 8,
         padding: '6px',
-        margin: '40px 0px 8px 36px',
-        background: 'rgba(255,255,255,0.70)',
+        margin: '24px 0 12px 40px',
+        background: 'rgba(255,255,255,0.5)',
         borderRadius: 999,
         border: `1px solid ${C.blueBorder}`,
-        boxShadow: C.glassShadow,
+        boxShadow: 'none',
         width: 'fit-content',
       }}
     >
@@ -68,94 +67,3 @@ export function ViewSwitcher({
     </div>
   );
 }
-
-/* ──────────────────────────────────────────────────────────── */
-/*  Flight selector dropdown                                     */
-/* ──────────────────────────────────────────────────────────── */
-export function FlightDropdown({
-  flights,
-  selected,
-  onSelect,
-}: {
-  flights: FlightSummary[];
-  selected: string;
-  onSelect: (id: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const current = flights.find((f) => f.flight_id === selected);
-
-  return (
-    <div style={{ position: 'relative' }}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '10px 20px', borderRadius: 999, cursor: 'pointer',
-          background: C.glass,
-          border: `1px solid ${C.blueBorder}`,
-          boxShadow: C.glassShadow,
-          fontSize: 14, fontWeight: 700, color: C.blue,
-          transition: 'all 0.15s',
-        }}
-      >
-        <Plane size={16} strokeWidth={2} />
-        {current
-          ? `${current.flight_id} — ${current.site_name ?? ''}`
-          : '選擇飛行任務'}
-        <ChevronDown
-          size={15}
-          strokeWidth={2.5}
-          style={{ transition: 'transform 0.15s', transform: open ? 'rotate(180deg)' : 'none' }}
-        />
-      </button>
-
-      {open && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 300,
-            background: '#fff',
-            border: `1px solid ${C.blueBorder}`,
-            borderRadius: 14, boxShadow: '0 8px 32px rgba(62, 81, 66, 0.18)',
-            minWidth: 280, overflow: 'hidden',
-          }}
-        >
-          {flights.map((f, i) => (
-            <button
-              key={f.flight_id}
-              onClick={() => { onSelect(f.flight_id); setOpen(false); }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                width: '100%', textAlign: 'left',
-                padding: '12px 18px',
-                border: 'none', cursor: 'pointer',
-                fontSize: 13, fontWeight: selected === f.flight_id ? 700 : 500,
-                color: selected === f.flight_id ? C.blue : C.text,
-                background: selected === f.flight_id ? C.blueAlpha : 'transparent',
-                borderBottom: i < flights.length - 1 ? '1px solid rgba(62, 81, 66, 0.08)' : 'none',
-                transition: 'background-color 0.12s',
-              }}
-            >
-              <div
-                style={{
-                  width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                  background: selected === f.flight_id ? C.blue : 'rgba(62, 81, 66, 0.4)',
-                }}
-              />
-              <span style={{ flex: 1 }}>
-                {f.flight_id}
-                <span style={{ marginLeft: 8, fontSize: 12, color: C.hint, fontWeight: 500 }}>
-                  {f.site_name} · {f.flight_direction}
-                </span>
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────── */
-/*  Page                                                         */
-/* ──────────────────────────────────────────────────────────── */

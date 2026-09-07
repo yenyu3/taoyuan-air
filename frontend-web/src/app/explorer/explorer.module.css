@@ -941,7 +941,7 @@
   letter-spacing: 0;
 }
 
-.folder:nth-child(2n)::before {
+.folder:nth-of-type(2n)::before {
   left: auto;
   right: 18px;
 }
@@ -989,6 +989,419 @@
   padding-right: 4px;
 }
 
+/* Interactive cabinet motion: stacked folders, side index tabs, and extracted document preview. */
+.cabinetColumn {
+  overflow: visible;
+}
+
+.cabinetShell {
+  position: relative;
+  padding-right: 30px;
+  overflow: visible;
+}
+
+.cabinet {
+  max-height: min(72vh, 704px);
+  min-height: 610px;
+  padding: 48px 18px 88px 12px;
+  overflow-y: auto;
+  overflow-x: visible;
+  border-color: rgba(67, 83, 70, 0.20);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.34), transparent 30%, rgba(75, 91, 77, 0.07)),
+    linear-gradient(180deg, rgba(238, 241, 232, 0.74), rgba(224, 232, 212, 0.66));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.70),
+    inset 0 -1px 0 rgba(67, 83, 70, 0.10);
+  scrollbar-width: thin;
+}
+
+.cabinet::after {
+  content: "";
+  position: sticky;
+  left: 0;
+  bottom: -88px;
+  z-index: 3;
+  display: block;
+  width: 100%;
+  height: 62px;
+  margin-top: -62px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(224, 232, 212, 0.92));
+}
+
+.cabinetPocket {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 26px;
+  z-index: 1;
+  height: 46px;
+  border: 1px solid rgba(82, 103, 87, 0.28);
+  border-top-width: 2px;
+  border-radius: 0 0 9px 9px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.50), transparent 38%, rgba(62, 81, 66, 0.08)),
+    linear-gradient(180deg, #e8eddd, #dce5cf);
+  box-shadow:
+    0 12px 24px rgba(62, 81, 66, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.cabinetFront {
+  left: 22px;
+  right: 52px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.cabinetFront span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cabinetIndexRail {
+  position: absolute;
+  top: 84px;
+  right: 4px;
+  z-index: 8;
+  width: 58px;
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.cabinetIndexTab {
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid rgba(25, 31, 27, 0.58);
+  border-radius: 10px 10px 10px 3px;
+  color: #ffffff;
+  background: rgba(31, 36, 32, 0.96);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.1;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateY(calc(var(--index) * 34px));
+  box-shadow: 0 8px 16px rgba(31, 42, 37, 0.14);
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.cabinetIndexTab::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: -1px;
+  width: 20px;
+  height: 100%;
+  border-radius: 8px 0 0 8px;
+  background: inherit;
+  clip-path: polygon(45% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.cabinetIndexTab:hover,
+.cabinetIndexTabActive {
+  background: color-mix(in srgb, var(--selected-accent, #4f8d7a) 72%, #18201b);
+  transform: translate(-4px, calc(var(--index) * 34px));
+}
+
+.folder {
+  z-index: calc(2 + var(--stack-index));
+  width: calc(100% - 8px);
+  min-height: 84px;
+  margin-bottom: -15px;
+  padding: 19px 16px 12px;
+  border-color: rgba(54, 67, 57, 0.28);
+  color: #17221c;
+  transform:
+    translateX(var(--pull, 0))
+    translateY(var(--lift, 0))
+    rotate(var(--tilt, 0deg));
+  will-change: transform;
+}
+
+.folder:nth-child(3n + 1) {
+  --tilt: -0.35deg;
+}
+
+.folder:nth-child(3n + 2) {
+  --tilt: 0.28deg;
+}
+
+.folder:nth-child(3n) {
+  --tilt: -0.12deg;
+}
+
+.folder::before {
+  z-index: 2;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.folder:hover:not(.folderActive),
+.folder:hover:not(.folderActive)::before {
+  --lift: -7px;
+}
+
+.folderActive {
+  --lift: -24px;
+  --pull: 13px;
+  z-index: 60;
+}
+
+.folderActive::before {
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.previewColumn {
+  position: relative;
+  overflow: hidden;
+}
+
+.extractedFolderMark {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.fileSpread {
+  position: relative;
+  height: 124px;
+  margin: 0 0 16px;
+  pointer-events: none;
+  animation: fileSpreadIn 360ms ease both;
+}
+
+.fileSheetBack,
+.fileSheetMain,
+.filePhotoCard {
+  position: absolute;
+  display: block;
+  border: 1px solid rgba(79, 99, 84, 0.16);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 18px 34px rgba(62, 81, 66, 0.12);
+}
+
+.fileSheetBack {
+  left: 60px;
+  top: 28px;
+  width: min(360px, 68%);
+  height: 70px;
+  transform: rotate(-7deg);
+  background: #f4f4ee;
+}
+
+.fileSheetMain {
+  left: 24px;
+  top: 22px;
+  width: min(420px, 72%);
+  min-height: 78px;
+  padding: 17px 20px;
+  transform: rotate(-3deg);
+  border-left: 4px solid var(--accent);
+}
+
+.fileSheetAgency,
+.fileSheetTitle,
+.fileSheetMeta {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSheetAgency {
+  color: #65736d;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.fileSheetTitle {
+  margin-top: 5px;
+  color: #1f2a25;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.fileSheetMeta {
+  margin-top: 6px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.filePhotoCard {
+  right: 34px;
+  top: 34px;
+  width: 86px;
+  height: 74px;
+  padding: 8px;
+  transform: rotate(7deg);
+}
+
+.filePhotoCard span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 34% 34%, rgba(255, 255, 255, 0.82) 0 8%, transparent 9%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 42%, #ffffff), #dfe9cf 50%, #f4d58e);
+}
+
+@keyframes fileSpreadIn {
+  from {
+    opacity: 0;
+    transform: translate(-18px, 28px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* Requested explorer refinements: no search, calmer summary, full-height cabinet, no floating side tabs. */
+.topBar {
+  display: none;
+}
+
+.metricRail {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  padding: 16px 0 18px;
+  border-top: 1px solid rgba(106, 141, 115, 0.12);
+  border-bottom: 1px solid rgba(106, 141, 115, 0.14);
+}
+
+.metric {
+  min-height: 58px;
+  justify-content: center;
+  padding: 4px 18px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.metric + .metric {
+  border-left: 1px solid rgba(106, 141, 115, 0.16);
+}
+
+.metric strong {
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.metric span {
+  font-size: 13px;
+  color: #65736d;
+}
+
+.tabs {
+  width: fit-content;
+  max-width: 100%;
+  gap: 0;
+  margin: 16px 0 22px;
+  padding: 4px;
+  border: 1px solid rgba(106, 141, 115, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.tab {
+  min-height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+}
+
+.tab:hover:not(.tabActive) {
+  border-color: transparent;
+  background: rgba(106, 141, 115, 0.08);
+}
+
+.tabActive,
+.tabActive:hover {
+  color: #ffffff;
+  background: #6a8d73;
+  box-shadow: 0 6px 14px rgba(106, 141, 115, 0.14);
+}
+
+.cabinetShell {
+  max-height: none;
+  overflow: visible;
+  flex: 0 0 auto;
+  padding-right: 0;
+}
+
+.cabinet {
+  max-height: none;
+  min-height: 0;
+  padding: 48px 16px 82px 12px;
+  overflow: visible;
+}
+
+.cabinet::after {
+  display: none;
+}
+
+.cabinetIndexRail {
+  display: none;
+}
+
+.folder {
+  --tilt: 0deg;
+  min-height: 80px;
+  margin-bottom: -12px;
+  color: #17221c;
+  transform:
+    translateX(var(--pull, 0))
+    translateY(var(--lift, 0));
+}
+
+.folder:nth-child(3n + 1),
+.folder:nth-child(3n + 2),
+.folder:nth-child(3n) {
+  --tilt: 0deg;
+}
+
+.folder:hover:not(.folderActive) {
+  color: #17221c;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 50%),
+    #fffef8;
+}
+
+.folder:hover:not(.folderActive)::before {
+  color: #ffffff;
+  background: color-mix(in srgb, var(--accent) 92%, #ffffff);
+}
+
+.folderName,
+.folder:hover .folderName {
+  color: #17221c;
+}
+
+.folderDetail,
+.folder:hover .folderDetail {
+  color: #4f5d55;
+}
+
+.folderActive {
+  --pull: 9px;
+  --lift: -18px;
+}
+
 @media (max-width: 1180px) {
   .workspace {
     grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
@@ -1023,27 +1436,21 @@
   .cabinetShell {
     max-height: none;
     border-radius: 12px;
+    padding-right: 24px;
   }
 
   .cabinet {
-    min-height: 244px;
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 20px;
-    padding: 38px 14px 56px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    display: block;
+    min-height: 360px;
+    max-height: 390px;
+    padding: 44px 12px 82px 8px;
+    overflow-x: visible;
+    overflow-y: auto;
     background:
-      repeating-linear-gradient(
-        90deg,
-        transparent 0,
-        transparent 262px,
-        rgba(92, 115, 98, 0.10) 263px,
-        rgba(255, 255, 255, 0.40) 264px
-      );
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 20px, #000 calc(100% - 20px), transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0, #000 20px, #000 calc(100% - 20px), transparent 100%);
+      linear-gradient(90deg, rgba(255, 255, 255, 0.34), transparent 30%, rgba(75, 91, 77, 0.07)),
+      linear-gradient(180deg, rgba(238, 241, 232, 0.74), rgba(224, 232, 212, 0.66));
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   .cabinetShell::after {
@@ -1051,14 +1458,35 @@
   }
 
   .cabinetFront {
-    display: none;
+    display: flex;
+    right: 44px;
+  }
+
+  .cabinetIndexRail {
+    top: 78px;
+    right: 0;
+    width: 48px;
+    gap: 7px;
+  }
+
+  .cabinetIndexTab {
+    min-height: 25px;
+    padding: 0 6px;
+    font-size: 9px;
+    transform: translateY(calc(var(--index) * 30px));
+  }
+
+  .cabinetIndexTab:hover,
+  .cabinetIndexTabActive {
+    transform: translate(-3px, calc(var(--index) * 30px));
   }
 
   .folder {
-    width: 260px;
-    flex: 0 0 260px;
-    margin: 0;
-    min-height: 116px;
+    width: calc(100% - 6px);
+    flex: none;
+    min-height: 84px;
+    margin: 0 auto -26px;
+    padding: 18px 14px 48px;
   }
 
   .folder:first-child {
@@ -1066,12 +1494,42 @@
   }
 
   .folderActive {
-    --slide: 0;
-    transform: translateY(-4px);
+    --pull: 8px;
+    --lift: 0px;
+    margin-bottom: -26px;
+    z-index: calc(2 + var(--stack-index));
+    transform:
+      translateX(var(--pull, 0))
+      translateY(var(--lift, 0));
   }
 
   .folderMeta {
-    gap: 48px;
+    gap: 10px;
+  }
+
+  .folderPercent {
+    font-size: 17px;
+  }
+
+  .fileSpread {
+    height: 104px;
+    margin-bottom: 12px;
+  }
+
+  .fileSheetBack {
+    left: 44px;
+    width: 64%;
+  }
+
+  .fileSheetMain {
+    left: 0;
+    width: 78%;
+  }
+
+  .filePhotoCard {
+    right: 0;
+    width: 70px;
+    height: 64px;
   }
 
   .visualGrid {
@@ -1130,5 +1588,235 @@
   .folder:hover,
   .folderActive {
     transform: none;
+  }
+}
+
+/* Final overrides for the integrated folder-cabinet direction. */
+.topBar {
+  display: none;
+}
+
+.metricRail {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  margin: 0 0 14px;
+  padding: 12px 0 16px;
+}
+
+.metric {
+  border-radius: 0;
+}
+
+.tabs {
+  margin-top: 0;
+}
+
+.cabinetIndexRail {
+  display: none;
+}
+
+.cabinetShell {
+  padding-right: 0;
+}
+
+.cabinet {
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  padding: 40px 16px 72px 12px;
+}
+
+.cabinet::after {
+  display: none;
+}
+
+.folder,
+.folder:nth-child(3n + 1),
+.folder:nth-child(3n + 2),
+.folder:nth-child(3n) {
+  --tilt: 0deg;
+}
+
+.folder {
+  min-height: 66px;
+  /* 交疊檔案堆：往上疊進上一張的空白下緣（交疊量 26px）；
+     內容只佔卡片上半，下方 padding 留 48px 空白緩衝
+     ＝ 交疊量(26) + 下一張頁籤(18) + 餘裕，內容與頁籤永遠不被蓋住 */
+  margin-bottom: -26px;
+  padding-top: 16px;
+  padding-bottom: 48px;
+  border-radius: 10px 10px 8px 8px;
+  transform:
+    translateX(var(--pull, 0))
+    translateY(var(--lift, 0));
+}
+
+/* 最後一張沒有下一張要疊上來，收掉多餘空白 */
+.folder:last-of-type {
+  margin-bottom: 0;
+  padding-bottom: 14px;
+}
+
+.folder::before {
+  content: attr(data-short);
+  display: inline-flex;
+  top: -18px;
+  left: 16px;
+  bottom: auto;
+  margin-bottom: 0;
+  min-width: 76px;
+  max-width: 45%;
+  height: 22px;
+  padding: 0 11px;
+  border: 1.5px solid rgba(82, 103, 87, 0.30);
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 8px 8px 0 0;
+  color: #ffffff;
+  background: color-mix(in srgb, var(--accent) 92%, #ffffff);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* 頁籤一律靠左：不再左右錯位，右側百分比不會再被蓋住 */
+.folder:nth-of-type(2n)::before {
+  left: 16px;
+  right: auto;
+}
+
+.folder:hover:not(.folderActive) {
+  color: #17221c;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 50%),
+    #fffef8;
+}
+
+.folder:hover:not(.folderActive)::before,
+.folderActive::before {
+  color: #ffffff;
+  background: color-mix(in srgb, var(--accent) 92%, #ffffff);
+}
+
+.folderName,
+.folder:hover .folderName {
+  color: #17221c;
+}
+
+.folderDetail,
+.folder:hover .folderDetail {
+  color: #4f5d55;
+}
+
+/* 選中：一樣疊在檔案堆裡，只用右移 + 底色 + 頁籤填色來強調；
+   z-index 回到自然堆疊，讓下一張資料夾照常疊在選中卡的空白下緣上（頁籤不被蓋） */
+.folderActive {
+  --pull: 8px;
+  --lift: 0px;
+  margin-bottom: -26px;
+  z-index: calc(2 + var(--stack-index));
+}
+
+.folderName {
+  font-size: 13px;
+}
+
+.folderDetail {
+  margin-top: 3px;
+  font-size: 10px;
+}
+
+.folderPercent {
+  font-size: 18px;
+}
+
+.statusRow {
+  display: none;
+}
+
+.statusPill {
+  min-height: 19px;
+  padding: 2px 6px;
+  font-size: 9px;
+}
+
+@media (max-width: 820px) {
+  .metricRail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 0;
+  }
+
+  .metric {
+    min-height: 46px;
+    justify-content: flex-start;
+    padding: 6px 10px;
+  }
+
+  .metric + .metric {
+    border-left: 0;
+  }
+
+  .metric:nth-child(2n) {
+    border-left: 1px solid rgba(106, 141, 115, 0.14);
+  }
+
+  .metric strong {
+    font-size: 22px;
+  }
+
+  .metric span {
+    font-size: 11px;
+  }
+
+  .tabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tab {
+    padding: 6px 8px;
+  }
+
+  .cabinet {
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+    padding: 44px 12px 82px 8px;
+  }
+
+  .cabinetFront {
+    display: flex;
+    right: 24px;
+  }
+
+  .folder {
+    width: calc(100% - 8px);
+    min-height: 72px;
+    margin-bottom: -26px;
+    padding-bottom: 46px;
+  }
+
+  .folderActive {
+    margin-bottom: -26px;
+    z-index: calc(2 + var(--stack-index));
+  }
+}
+
+@media (max-width: 560px) {
+  .metricRail {
+    grid-template-columns: 1fr;
+  }
+
+  .metric:nth-child(2n) {
+    border-left: 0;
+  }
+
+  .metric + .metric {
+    border-top: 1px solid rgba(106, 141, 115, 0.12);
   }
 }

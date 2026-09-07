@@ -17,8 +17,8 @@ import {
   Download,
   ExternalLink,
   FileSearch,
+  FolderOpen,
   Layers3,
-  Search,
   Table2,
   X,
 } from 'lucide-react';
@@ -51,6 +51,10 @@ const CATEGORY_ORDER: ActiveCategory[] = [
   'vertical',
   'model-feature',
 ];
+
+const CABINET_INDEX_ITEMS = CATEGORY_ORDER.filter(
+  (category): category is DatasetCategory => category !== 'all'
+);
 
 const PROCESSING_ITEMS: Array<{
   key: keyof DatasetCatalogItem['processing'];
@@ -284,6 +288,22 @@ function DatasetPreview({
 }) {
   return (
     <>
+      <div
+        key={dataset.id}
+        className={styles.fileSpread}
+        style={{ '--accent': dataset.accent } as React.CSSProperties}
+        aria-hidden="true"
+      >
+        <span className={styles.fileSheetBack} />
+        <span className={styles.fileSheetMain}>
+          <span className={styles.fileSheetAgency}>{dataset.sourceAgency}</span>
+          <span className={styles.fileSheetTitle}>{dataset.name}</span>
+          <span className={styles.fileSheetMeta}>{dataset.shortName} · {dataset.completeness}%</span>
+        </span>
+        <span className={styles.filePhotoCard}>
+          <span />
+        </span>
+      </div>
       <div className={styles.detailTabs}>
         {DETAIL_TABS.map(tab => (
           <button
@@ -447,7 +467,6 @@ function CompareDrawer({
 }
 
 export default function ExplorerPage() {
-  const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<ActiveCategory>('all');
   const [selectedDatasetId, setSelectedDatasetId] = useState(DATASET_CATALOG[0].id);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>('overview');
@@ -455,8 +474,8 @@ export default function ExplorerPage() {
   const [compareOpen, setCompareOpen] = useState(false);
 
   const filteredDatasets = useMemo(
-    () => DATASET_CATALOG.filter(dataset => matchesDataset(dataset, query, activeCategory)),
-    [query, activeCategory]
+    () => DATASET_CATALOG.filter(dataset => matchesDataset(dataset, '', activeCategory)),
+    [activeCategory]
   );
 
   const effectiveSelectedDatasetId = filteredDatasets.some(dataset => dataset.id === selectedDatasetId)
@@ -485,25 +504,16 @@ export default function ExplorerPage() {
     setActiveDetailTab('overview');
   };
 
+  const selectCategory = (category: ActiveCategory) => {
+    setActiveCategory(category);
+    if (category === 'all') return;
+    const firstInCategory = DATASET_CATALOG.find(dataset => dataset.category === category);
+    if (firstInCategory) selectDataset(firstInCategory.id);
+  };
+
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
-        <header className={styles.topBar}>
-          <label className={styles.searchWrap}>
-            <Search size={17} color="#65736d" />
-            <input
-              value={query}
-              onChange={event => setQuery(event.target.value)}
-              placeholder="搜尋來源、欄位、行政區..."
-            />
-            {query && (
-              <button className={styles.iconButton} type="button" aria-label="清除搜尋" onClick={() => setQuery('')}>
-                <X size={16} />
-              </button>
-            )}
-          </label>
-        </header>
-
         <div className={styles.metricRail}>
           <div className={styles.metric}><strong>{DATASET_CATALOG.length}</strong><span>資料源</span></div>
           <div className={styles.metric}><strong>{connectedCount}</strong><span>已串接/匯入</span></div>
@@ -518,7 +528,7 @@ export default function ExplorerPage() {
               key={category}
               type="button"
               className={`${styles.tab} ${activeCategory === category ? styles.tabActive : ''}`}
-              onClick={() => setActiveCategory(category)}
+              onClick={() => selectCategory(category)}
             >
               {CATEGORY_LABELS[category]}
             </button>
@@ -534,9 +544,35 @@ export default function ExplorerPage() {
               </div>
               <Layers3 size={18} color="#65736d" />
             </div>
-            <div className={styles.cabinetShell}>
-            <div className={styles.cabinet}>
-              {DATASET_CATALOG.map(dataset => {
+            <div
+              className={styles.cabinetShell}
+              style={{ '--selected-accent': selectedDataset.accent } as React.CSSProperties}
+            >
+              <div className={styles.cabinetIndexRail} aria-label="資料分類索引">
+                {CABINET_INDEX_ITEMS.map((category, index) => (
+                  <button
+                    key={category}
+                    type="button"
+                    className={[
+                      styles.cabinetIndexTab,
+                      selectedDataset.category === category ? styles.cabinetIndexTabActive : '',
+                    ].join(' ')}
+                    style={{ '--index': index } as React.CSSProperties}
+                    onClick={() => selectCategory(category)}
+                    aria-pressed={selectedDataset.category === category}
+                  >
+                    {CATEGORY_LABELS[category]}
+                  </button>
+                ))}
+              </div>
+            <div
+              className={styles.cabinet}
+              style={{
+                '--selected-accent': selectedDataset.accent,
+              } as React.CSSProperties}
+            >
+              <div className={styles.cabinetPocket} aria-hidden="true" />
+              {DATASET_CATALOG.map((dataset, index) => {
                 const matched = filteredDatasets.some(item => item.id === dataset.id);
                 const active = selectedDataset.id === dataset.id;
                 const compareSelected = compareIds.includes(dataset.id);
@@ -550,7 +586,10 @@ export default function ExplorerPage() {
                       active ? styles.folderActive : '',
                       !matched ? styles.folderDimmed : '',
                     ].join(' ')}
-                    style={{ '--accent': dataset.accent } as React.CSSProperties}
+                    style={{
+                      '--accent': dataset.accent,
+                      '--stack-index': index,
+                    } as React.CSSProperties}
                     onClick={() => selectDataset(dataset.id)}
                     aria-pressed={active}
                   >
@@ -559,7 +598,6 @@ export default function ExplorerPage() {
                         <span className={styles.folderName}>{dataset.name}</span>
                         <span className={styles.folderDetail}>{CATEGORY_LABELS[dataset.category]} · {dataset.recordCountLabel}</span>
                       </span>
-                      <span className={styles.folderPercent}>{dataset.completeness}%</span>
                     </span>
                     <span className={styles.statusRow}>
                       {dataset.statuses.map(status => (
@@ -580,7 +618,11 @@ export default function ExplorerPage() {
             </div>
           </div>
 
-          <div className={styles.column}>
+          <div className={`${styles.column} ${styles.previewColumn}`}>
+            <div className={styles.extractedFolderMark} style={{ '--accent': selectedDataset.accent } as React.CSSProperties}>
+              <FolderOpen size={17} />
+              <span>{selectedDataset.shortName}</span>
+            </div>
             <DatasetPreview
               dataset={selectedDataset}
               activeTab={activeDetailTab}

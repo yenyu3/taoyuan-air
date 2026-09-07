@@ -1,0 +1,111 @@
+.mapShell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #eef1ea;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.mapShellReady {
+  opacity: 1;
+}
+
+.mapShell > div:first-child {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.mapShell :global(.mapboxgl-map),
+.mapShell :global(.mapboxgl-canvas),
+.mapShell :global(.mapboxgl-canvas-container) {
+  width: 100%;
+  height: 100%;
+  background: #eef1ea;
+}
+
+.mapShell :global(.mapboxgl-canvas) {
+  display: block;
+}
+
+.mapShell :global(.mapboxgl-ctrl-bottom-right) {
+  right: 8px;
+  bottom: 8px;
+}
+
+.mapShell :global(.mapboxgl-ctrl-attrib.mapboxgl-compact) {
+  transform-origin: bottom right;
+  transform: scale(0.72);
+  opacity: 0.46;
+  transition: opacity 0.16s ease;
+}
+
+.mapShell :global(.mapboxgl-ctrl-attrib.mapboxgl-compact:hover),
+.mapShell :global(.mapboxgl-ctrl-attrib.mapboxgl-compact:focus-within) {
+  opacity: 1;
+}
+
+.mapShell :global(.deck-tooltip) {
+  max-width: 240px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(22, 28, 24, 0.9);
+  color: #f6f9f5;
+  font-family: 'Noto Sans TC', system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-line;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+}
+
+.hud {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(106, 141, 115, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 30px rgba(31, 46, 37, 0.1);
+  backdrop-filter: blur(18px) saturate(1.05);
+}
+
+.hudBtn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #5d6f49;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.hudBtn:hover:not(:disabled) {
+  color: #fff;
+  background: #2d3129;
+  transform: translateY(-1px);
+}
+
+.hudBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (max-width: 720px) {
+  .hud {
+    top: 92px;
+  }
+}

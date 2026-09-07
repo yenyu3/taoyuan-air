@@ -49,6 +49,7 @@ CONF_COLOR = {'high': '#2e9e5b', 'medium': '#f4c430', 'low': '#d1495b'}
 
 def pm25_stations():
     df = pd.read_parquet(EXPORTS / 'pm25_hourly.parquet')
+    df['station_id'] = df['station_id'].astype(str)
     g = df.groupby('station_id').agg(
         n=('monitor_date', 'size'),
         latitude=('latitude', 'first'),
@@ -60,6 +61,7 @@ def pm25_stations():
 
 def cwa_stations():
     df = pd.read_parquet(EXPORTS / 'temperature_hourly.parquet')
+    df['station_id'] = df['station_id'].astype(str)
     g = df.groupby('station_id').agg(
         n=('monitor_date', 'size'),
         latitude=('latitude', 'first'),

@@ -154,7 +154,7 @@ export default function NotificationsPage() {
 
   return (
     <>
-    <div style={{ minHeight: '100vh', background: 'var(--app-bg-gradient)', paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', paddingBottom: 100 }}>
       <div style={{ padding: isMobile ? '20px 16px 32px' : '28px 40px 32px' }}>
 
         {/* ── Page header ──────────────────────────────────── */}

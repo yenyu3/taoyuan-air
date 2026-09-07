@@ -55,7 +55,7 @@ export function DashboardBaseStylesA() {
         max-width: 100%;
         overflow: hidden;
         align-self: start;    
-        margin-top: 20px;
+        margin-top: 14px;
         background: rgba(255, 255, 255, 0.97);
         border: 1px solid rgba(106, 141, 115, 0.08);
         border-radius: 16px;

@@ -9,13 +9,14 @@ const PUBLIC_PATHS = new Set(['/', '/dashboard', '/map', '/alerts', '/notificati
 export function RoleRouteGuard() {
   const pathname = usePathname();
   const router = useRouter();
-  const { role } = useLoginButton();
+  const { role, hydrated } = useLoginButton();
 
   useEffect(() => {
+    if (!hydrated) return;
     if (role === 'public' && !PUBLIC_PATHS.has(pathname)) {
       router.replace('/dashboard');
     }
-  }, [pathname, role, router]);
+  }, [hydrated, pathname, role, router]);
 
   return null;
 }

@@ -1,30 +1,131 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useStore } from '@shared/store';
-import { getExamPoints, getGrid, setScenario, getTEDSPoints } from '@shared/api/index';
-import { palette } from '@shared/constants/theme';
+import { Box, Layers, Search, X } from 'lucide-react';
+import { getExamPoints, getGrid, getTEDSPoints, setScenario } from '@shared/api/index';
 import { DISTRICTS } from '@shared/constants/districts';
-import { ExamPoint, GridCell, TEDSPoint } from '@shared/types';
-import { CardAQIGauge, CardPollutantArc, getAQIBadgeBg, getAQIColor, getPollutantColor, pollutantMeta } from './_lib/airQuality';
+import { palette } from '@shared/constants/theme';
+import { useStore } from '@shared/store';
+import type { ExamPoint, GridCell, TEDSPoint } from '@shared/types';
+import { CardAQIGauge, CardPollutantArc, getAQIBadgeBg, getPollutantColor } from './_lib/airQuality';
 import { generateDemoExamPoints, generateDemoTEDSPoints } from './_lib/demoData';
-import { formatTime, getGridLocationName, getNearestGridToDistrict, normalizeSearchText, withDistrict, type SearchResult } from './_lib/search';
+import { getPm25CssColor, getPm25Status } from './_lib/mapColors';
+import {
+  formatTime,
+  getGridLocationName,
+  getNearestGridToDistrict,
+  normalizeSearchText,
+  type SearchResult,
+  withDistrict,
+} from './_lib/search';
 import { SENSITIVE_GROUPS } from './_data/sensitiveGroups';
 import { IconCompass, IconHumidity, IconTemp, IconWind, SecLabel } from './_components/MapWidgets';
 import { MapLoadingOverlay } from './_components/MapLoadingOverlay';
 
 const LeafletMap = dynamic(() => import('@/components/map/LeafletMap'), { ssr: false });
 const TGOSMap = dynamic(() => import('@/components/map/TGOSMap'), { ssr: false });
+const PM25DeckMap = dynamic(() => import('@/components/map/PM25DeckMap'), { ssr: false });
 
-// ── Pollutant metadata ───────────────────────────────────────────
+type MapViewMode = '2d' | '3d';
+type LayerKey = 'pm25' | 'chimney' | 'mercury';
+
+const Z = 1100;
+const PM25_UNIT = 'μg/m³';
+
+function compactCount(value: number) {
+  return new Intl.NumberFormat('zh-TW', { notation: value >= 1000 ? 'compact' : 'standard' }).format(value);
+}
+
+function ToggleRow({
+  label,
+  detail,
+  checked,
+  color,
+  onClick,
+}: {
+  label: string;
+  detail: string;
+  checked: boolean;
+  color: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onClick}
+      style={{
+        width: '100%',
+        minHeight: 42,
+        border: `1px solid ${checked ? `${color}66` : palette.borderSoft}`,
+        borderRadius: 10,
+        background: checked ? `${color}12` : 'rgba(248, 249, 250, 0.78)',
+        color: palette.textMain,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+        padding: '8px 10px',
+        cursor: 'pointer',
+      }}
+      title={detail}
+    >
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <span
+          aria-hidden="true"
+          style={{
+            width: 9,
+            height: 9,
+            borderRadius: '50%',
+            background: checked ? color : '#bcc7b8',
+            boxShadow: checked ? `0 0 0 4px ${color}18` : 'none',
+            flexShrink: 0,
+          }}
+        />
+        <span style={{ minWidth: 0, textAlign: 'left' }}>
+          <span style={{ display: 'block', fontSize: 12, fontWeight: 800, lineHeight: 1.15 }}>{label}</span>
+          <span style={{ display: 'block', marginTop: 3, fontSize: 10.5, color: palette.textSecondary, lineHeight: 1.2 }}>
+            {detail}
+          </span>
+        </span>
+      </span>
+      <span
+        aria-hidden="true"
+        style={{
+          width: 34,
+          height: 20,
+          borderRadius: 999,
+          background: checked ? color : 'rgba(106,141,115,0.18)',
+          padding: 2,
+          flexShrink: 0,
+          transition: 'background 160ms ease',
+        }}
+      >
+        <span
+          style={{
+            display: 'block',
+            width: 16,
+            height: 16,
+            borderRadius: '50%',
+            background: '#fff',
+            boxShadow: '0 1px 4px rgba(31,46,37,0.22)',
+            transform: checked ? 'translateX(14px)' : 'translateX(0)',
+            transition: 'transform 160ms ease',
+          }}
+        />
+      </span>
+    </button>
+  );
+}
+
 export default function MapPage() {
   const store = useStore();
   const { mode, setMode, setGridCells, setSelectedGridId, selectedScenario, isLoading, setIsLoading } = store;
   const gridCells: GridCell[] = store.gridCells;
-  // 保留原 mapMode 狀態設計（目前固定僅使用 2D 地圖）
-  // const [mapMode, setMapMode] = useState<'2D' | 'Satellite'>('2D');
-  const mapMode = '2D' as const;
+
+  const [mapViewMode, setMapViewMode] = useState<MapViewMode>('2d');
   const [selectedGrid, setSelectedGrid] = useState<GridCell | null>(null);
   const [showSheet, setShowSheet] = useState(false);
   const [search, setSearch] = useState('');
@@ -33,25 +134,9 @@ export default function MapPage() {
   const [focusedGrid, setFocusedGrid] = useState<GridCell | null>(null);
   const [tedsPoints, setTedsPoints] = useState<TEDSPoint[]>([]);
   const [examPoints, setExamPoints] = useState<ExamPoint[]>([]);
-  const [tedsPointsNotice, setTedsPointsNotice] = useState('');
-  const [examPointsNotice, setExamPointsNotice] = useState('');
   const [showChimneyLayer, setShowChimneyLayer] = useState(true);
   const [showMercuryLayer, setShowMercuryLayer] = useState(true);
-  const [showPm25GridLayer, setShowPm25GridLayer] = useState(false);
-  const [activeLayerInfo, setActiveLayerInfo] = useState<'chimney' | 'mercury' | 'pm25'>('pm25');
-  const Z = 1100;
-
-  const layerStates = {
-    chimney: showChimneyLayer,
-    mercury: showMercuryLayer,
-    pm25: showPm25GridLayer,
-  } as const;
-
-  const toggleLayer = (layer: 'chimney' | 'mercury' | 'pm25') => {
-    if (layer === 'chimney') setShowChimneyLayer((prev) => !prev);
-    if (layer === 'mercury') setShowMercuryLayer((prev) => !prev);
-    if (layer === 'pm25') setShowPm25GridLayer((prev) => !prev);
-  };
+  const [showPm25GridLayer, setShowPm25GridLayer] = useState(true);
 
   useEffect(() => {
     setIsLoading(true);
@@ -62,56 +147,29 @@ export default function MapPage() {
       .finally(() => setIsLoading(false));
 
     getTEDSPoints()
-      .then((points) => {
-        if (points.length > 0) {
-          setTedsPoints(points);
-          setTedsPointsNotice('');
-          return;
-        }
-
-        const demoPoints = generateDemoTEDSPoints();
-        setTedsPoints(demoPoints);
-        setTedsPointsNotice(`TEDS 後端目前沒有回傳點位，已自動切換展示資料。`);
-      })
-      .catch((error) => {
-        console.error(error);
-        const demoPoints = generateDemoTEDSPoints();
-        setTedsPoints(demoPoints);
-        setTedsPointsNotice(`TEDS 後端暫時離線，已切換展示資料。`);
+      .then((points) => setTedsPoints(points.length > 0 ? points : generateDemoTEDSPoints()))
+      .catch(() => {
+        setTedsPoints(generateDemoTEDSPoints());
       });
 
     getExamPoints()
-      .then((points) => {
-        if (points.length > 0) {
-          setExamPoints(points);
-          setExamPointsNotice('');
-          return;
-        }
-
-        const demoPoints = generateDemoExamPoints(19);
-        setExamPoints(demoPoints);
-        setExamPointsNotice('汞排放點後端目前沒有回傳點位，已自動切換展示資料（19 筆）。');
-      })
-      .catch((error) => {
-        console.error(error);
-        const demoPoints = generateDemoExamPoints(19);
-        setExamPoints(demoPoints);
-        setExamPointsNotice('汞排放點後端暫時離線，已切換展示資料。');
+      .then((points) => setExamPoints(points.length > 0 ? points : generateDemoExamPoints(19)))
+      .catch(() => {
+        setExamPoints(generateDemoExamPoints(19));
       });
   }, [selectedScenario, setGridCells, setIsLoading]);
 
-  const handleGridPress = (grid: GridCell) => {
+  const handleGridPress = useCallback((grid: GridCell) => {
     setSelectedGrid(withDistrict(grid));
     setSelectedGridId(grid.gridId);
     setShowSheet(true);
-  };
+  }, [setSelectedGridId]);
 
   const searchResults = useMemo<SearchResult[]>(() => {
     const query = normalizeSearchText(search);
     if (!query || gridCells.length === 0) return [];
 
     const results: SearchResult[] = [];
-    const usedGridIds = new Set<string>();
     const matchedDistricts = DISTRICTS.filter((district) => {
       const normalizedDistrict = normalizeSearchText(district);
       const normalizedShort = normalizeSearchText(district.replace(/區$/, ''));
@@ -121,29 +179,25 @@ export default function MapPage() {
     matchedDistricts.forEach((district) => {
       const grid = getNearestGridToDistrict(gridCells, district);
       if (!grid) return;
-      usedGridIds.add(grid.gridId);
       results.push({
         key: `district-${district}`,
         label: district,
-        detail: `前往 ${district} 附近網格 ${grid.gridId}`,
+        detail: `定位到 ${district} 附近 PM2.5 網格`,
         grid: withDistrict(grid),
       });
     });
 
-    // 保留舊搜尋邏輯（地點 alias + 網格 ID），目前依需求先註解僅保留行政區搜尋。
-    // gridCells
-    //   .filter((grid) => normalizeSearchText(grid.gridId).includes(query) && !usedGridIds.has(grid.gridId))
-    //   .slice(0, 4)
-    //   .forEach((grid) => {
-    //     const location = getGridLocationName(grid);
-    //     usedGridIds.add(grid.gridId);
-    //     results.push({
-    //       key: `grid-${grid.gridId}`,
-    //       label: grid.gridId,
-    //       detail: `${location} ｜ ${Math.round(grid.values.value)} ${grid.values.unit}`,
-    //       grid: withDistrict(grid),
-    //     });
-    //   });
+    gridCells
+      .filter((grid) => normalizeSearchText(grid.gridId).includes(query))
+      .slice(0, 4)
+      .forEach((grid) => {
+        results.push({
+          key: `grid-${grid.gridId}`,
+          label: grid.gridId,
+          detail: `${getGridLocationName(grid)} · ${Math.round(grid.values.value)} ${PM25_UNIT}`,
+          grid: withDistrict(grid),
+        });
+      });
 
     return results.slice(0, 6);
   }, [gridCells, search]);
@@ -161,405 +215,324 @@ export default function MapPage() {
       selectSearchResult(searchResults[0]);
       return;
     }
-    if (search.trim()) setSearchMessage('找不到符合的行政區');
+    if (search.trim()) setSearchMessage('找不到相符的行政區或網格');
   };
 
-  const selectedMeta = pollutantMeta.PM25;
-  const gridValues   = useMemo(() => gridCells.map((g) => g.values.value), [gridCells]);
-  const gridAverage  = gridValues.length ? Math.round(gridValues.reduce((s, v) => s + v, 0) / gridValues.length) : 0;
-  const gridMaximum  = gridValues.length ? Math.round(Math.max(...gridValues)) : 0;
+  const gridValues = useMemo(() => gridCells.map((grid) => grid.values.value), [gridCells]);
+  const gridAverage = gridValues.length ? Math.round(gridValues.reduce((sum, value) => sum + value, 0) / gridValues.length) : 0;
+  const gridMaximum = gridValues.length ? Math.round(Math.max(...gridValues)) : 0;
+  const highRiskCount = gridValues.filter((value) => value > 54).length;
+  const lastUpdated = gridCells[0]?.updatedAt;
   const visibleEmissionPoints = useMemo(
     () => [
       ...(showChimneyLayer ? tedsPoints : []),
       ...(showMercuryLayer ? examPoints : []),
     ],
-    [showChimneyLayer, showMercuryLayer, tedsPoints, examPoints],
+    [examPoints, showChimneyLayer, showMercuryLayer, tedsPoints],
   );
 
-  const aqi       = selectedGrid?.health.aqi ?? 0;
-  const aqiBadge  = getAQIBadgeBg(aqi);
+  const aqi = selectedGrid?.health.aqi ?? 0;
+  const aqiBadge = getAQIBadgeBg(aqi);
   const pollValue = selectedGrid ? Math.round(selectedGrid.values.value) : 0;
-  const pollColor = selectedGrid ? getPollutantColor(selectedGrid.values.value, selectedMeta.arcStandard) : '#76c476';
+  const pollColor = selectedGrid ? getPollutantColor(selectedGrid.values.value, 15.4) : '#76c476';
+  const effectiveMapViewMode: MapViewMode = mode === 'FORECAST' ? '2d' : mapViewMode;
+  const activeMapSource = mode === 'FORECAST' ? 'TGOS' : effectiveMapViewMode === '3d' ? 'Mapbox + deck.gl' : 'Esri';
+
+  const layerSummary: Array<{
+    key: LayerKey;
+    label: string;
+    detail: string;
+    checked: boolean;
+    color: string;
+    onClick: () => void;
+  }> = [
+    {
+      key: 'pm25',
+      label: 'PM2.5 網格濃度',
+      detail: `${gridCells.length} 格 · 主圖層`,
+      checked: showPm25GridLayer,
+      color: palette.primaryDeep,
+      onClick: () => setShowPm25GridLayer((value) => !value),
+    },
+    {
+      key: 'chimney',
+      label: '點煙囪',
+      detail: `${compactCount(tedsPoints.length)} 點 · 固定污染源`,
+      checked: showChimneyLayer,
+      color: '#2f6b55',
+      onClick: () => setShowChimneyLayer((value) => !value),
+    },
+    {
+      key: 'mercury',
+      label: '汞排放點',
+      detail: `${compactCount(examPoints.length)} 點 · 輔助判讀`,
+      checked: showMercuryLayer,
+      color: '#7c5aa6',
+      onClick: () => setShowMercuryLayer((value) => !value),
+    },
+  ];
 
   return (
-    <>
-    <div style={{ position: 'relative', height: 'calc(100vh - 80px)', background: 'var(--app-bg-gradient)', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        {mode === 'NOW' && effectiveMapViewMode === '2d' && (
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <LeafletMap
+            gridCells={showPm25GridLayer ? gridCells : []}
+            tedsPoints={visibleEmissionPoints}
+            mapMode="2D"
+            onGridPress={handleGridPress}
+            focusGrid={focusedGrid}
+          />
+        </div>
+        )}
 
-      {/* ── Top-left controls: mode toggle + search ─────── */}
-      <div style={{ position: 'absolute', top: 20, left: 20, zIndex: Z, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {/* Mode toggle */}
-        <div style={{ display: 'flex', backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 25, padding: 4, boxShadow: '0 2px 12px rgba(58,30,45,0.12)', border: `1px solid ${palette.borderSoft}`, alignSelf: 'flex-start' }}>
-          {(['NOW', 'FORECAST'] as const).map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{
-              padding: '7px 20px', borderRadius: 20, border: 'none', cursor: 'pointer',
-              backgroundColor: mode === m ? palette.primaryDeep : 'transparent',
-              color: mode === m ? '#fff' : palette.textSecondary,
-              fontSize: 13, fontWeight: 700, transition: 'all 0.18s',
-            }}>
-              {m === 'NOW' ? '即時監測' : '預報模式'}
+        {mode === 'NOW' && effectiveMapViewMode === '3d' && (
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <PM25DeckMap
+            gridCells={gridCells}
+            chimneyPoints={tedsPoints}
+            mercuryPoints={examPoints}
+            showPm25GridLayer={showPm25GridLayer}
+            showChimneyLayer={showChimneyLayer}
+            showMercuryLayer={showMercuryLayer}
+            onGridPress={handleGridPress}
+            focusGrid={focusedGrid}
+          />
+        </div>
+        )}
+
+        {mode === 'FORECAST' && (
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <TGOSMap gridCells={showPm25GridLayer ? gridCells : []} onGridPress={handleGridPress} focusGrid={focusedGrid} />
+        </div>
+        )}
+      </div>
+
+      <div style={{ position: 'absolute', top: 20, left: 20, zIndex: Z, display: 'flex', flexDirection: 'column', gap: 10, width: 330, maxWidth: 'calc(100vw - 40px)' }}>
+        <div style={{ display: 'flex', backgroundColor: 'rgba(255,255,255,0.94)', borderRadius: 999, padding: 4, boxShadow: '0 8px 26px rgba(31,46,37,0.12)', border: `1px solid ${palette.borderSoft}`, alignSelf: 'flex-start' }}>
+          {([
+            { key: 'NOW' as const, label: '即時監測' },
+            { key: 'FORECAST' as const, label: 'PM2.5 預報' },
+          ]).map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setMode(item.key)}
+              style={{
+                padding: '8px 18px',
+                borderRadius: 999,
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: mode === item.key ? palette.primaryDeep : 'transparent',
+                color: mode === item.key ? '#fff' : palette.textSecondary,
+                fontSize: 13,
+                fontWeight: 800,
+                transition: 'all 0.18s ease',
+              }}
+            >
+              {item.label}
             </button>
           ))}
         </div>
 
-        {/* Search bar */}
-        <div style={{ position: 'relative', width: 300 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-            backgroundColor: 'rgba(255,255,255,0.97)', borderRadius: 25,
-            padding: '9px 16px',
-            boxShadow: '0 2px 12px rgba(58,30,45,0.12)', border: `1px solid ${palette.borderSoft}`,
-          }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={palette.textSecondary} strokeWidth="2.2" strokeLinecap="round" style={{ flexShrink: 0 }}>
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 999, padding: '10px 14px', boxShadow: '0 8px 26px rgba(31,46,37,0.12)', border: `1px solid ${palette.borderSoft}` }}>
+            <Search size={16} color={palette.textSecondary} />
             <input
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
+              onChange={(event) => {
+                setSearch(event.target.value);
                 setSearchMessage('');
               }}
               onFocus={() => setSearchFocused(true)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
                   submitSearch();
                 }
-                if (e.key === 'Escape') setSearchFocused(false);
+                if (event.key === 'Escape') setSearchFocused(false);
               }}
-              placeholder="搜尋行政區"
-              style={{
-                flex: 1, minWidth: 0, border: 'none', background: 'transparent',
-                fontSize: 13, color: palette.textMain, outline: 'none',
-              }}
+              placeholder="搜尋行政區或網格"
+              style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', fontSize: 13, color: palette.textMain, outline: 'none' }}
             />
             {search && (
-              <button onClick={() => {
-                setSearch('');
-                setSearchMessage('');
-                setSearchFocused(false);
-              }} style={{
-                border: 'none', background: 'transparent', cursor: 'pointer',
-                color: palette.textSecondary, fontSize: 16, lineHeight: 1, padding: 0, flexShrink: 0,
-              }}>×</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setSearchMessage('');
+                  setSearchFocused(false);
+                }}
+                aria-label="清除搜尋"
+                style={{ width: 24, height: 24, border: 'none', borderRadius: '50%', background: 'transparent', color: palette.textSecondary, cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+              >
+                <X size={15} />
+              </button>
             )}
           </div>
 
-          {(searchFocused && search.trim()) && (
-            <div style={{
-              position: 'absolute', top: 48, left: 0, right: 0,
-              background: 'rgba(255,255,255,0.98)', border: `1px solid ${palette.borderSoft}`,
-              borderRadius: 14, boxShadow: '0 12px 32px rgba(58,30,45,0.16)',
-              overflow: 'hidden', backdropFilter: 'blur(18px)',
-            }}>
+          {searchFocused && search.trim() && (
+            <div style={{ position: 'absolute', top: 50, left: 0, right: 0, background: 'rgba(255,255,255,0.98)', border: `1px solid ${palette.borderSoft}`, borderRadius: 14, boxShadow: '0 16px 36px rgba(31,46,37,0.16)', overflow: 'hidden', backdropFilter: 'blur(18px)' }}>
               {searchResults.length > 0 ? searchResults.map((result) => (
                 <button
                   key={result.key}
-                  onMouseDown={(e) => e.preventDefault()}
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectSearchResult(result)}
-                  style={{
-                    width: '100%', border: 'none', background: 'transparent',
-                    display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-                    gap: 3, padding: '10px 14px', cursor: 'pointer', textAlign: 'left',
-                    borderBottom: `1px solid ${palette.borderSoft}`,
-                  }}
+                  style={{ width: '100%', border: 'none', background: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3, padding: '11px 14px', cursor: 'pointer', textAlign: 'left', borderBottom: `1px solid ${palette.borderSoft}` }}
                 >
                   <span style={{ fontSize: 13, fontWeight: 800, color: palette.textMain }}>{result.label}</span>
                   <span style={{ fontSize: 11, color: palette.textSecondary }}>{result.detail}</span>
                 </button>
               )) : (
-                <div style={{ padding: '12px 14px', fontSize: 12, color: palette.textSecondary }}>
-                  找不到符合的行政區
-                </div>
+                <div style={{ padding: '12px 14px', fontSize: 12, color: palette.textSecondary }}>找不到相符的行政區或網格</div>
               )}
             </div>
           )}
 
-          {searchMessage && (
-            <div style={{ marginTop: 6, paddingLeft: 14, fontSize: 11, fontWeight: 700, color: '#9F1239' }}>
-              {searchMessage}
-            </div>
-          )}
-
-          {(tedsPointsNotice || examPointsNotice) && (
-            <div style={{ marginTop: 8, marginLeft: 4, padding: '8px 12px', maxWidth: 340, borderRadius: 12, background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(154,102,27,0.22)', boxShadow: '0 8px 24px rgba(58,30,45,0.12)', color: '#7C4A03', fontSize: 12, fontWeight: 700 }}>
-              {tedsPointsNotice && <div>{tedsPointsNotice}</div>}
-              {examPointsNotice && <div style={{ marginTop: tedsPointsNotice ? 4 : 0 }}>{examPointsNotice}</div>}
-            </div>
-          )}
+          {searchMessage && <div style={{ marginTop: 6, paddingLeft: 14, fontSize: 11, fontWeight: 800, color: palette.accentRed }}>{searchMessage}</div>}
         </div>
-      </div>
 
-      {/* ── Map ──────────────────────────────────────────────── */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-        <div style={{ position: 'absolute', inset: 0, display: mode === 'FORECAST' ? 'none' : 'block' }}>
-          <LeafletMap
-            gridCells={showPm25GridLayer ? gridCells : []}
-            tedsPoints={visibleEmissionPoints}
-            mapMode={mapMode}
-            onGridPress={handleGridPress}
-            focusGrid={focusedGrid}
-          />
-        </div>
-        <div style={{ position: 'absolute', inset: 0, display: mode === 'FORECAST' ? 'block' : 'none' }}>
-          <TGOSMap gridCells={gridCells} onGridPress={handleGridPress} focusGrid={focusedGrid} />
-        </div>
-      </div>
-
-      {/* ── Legend panel (bottom-left) ────────────────────── */}
-      <div style={{ position: 'absolute', left: 20, bottom: 20, zIndex: Z }}>
-        <div style={{
-          width: 296, backgroundColor: 'rgba(255,255,255,0.97)', borderRadius: 16,
-          padding: '16px 16px 14px', border: `1px solid ${palette.borderSoft}`,
-          boxShadow: '0 8px 32px rgba(62, 81, 66, 0.14)', backdropFilter: 'blur(18px)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <SecLabel title="圖層控制" />
-            <span style={{ padding: '3px 9px', borderRadius: 999, background: 'rgba(106, 141, 115, 0.10)', color: palette.primaryDeep, fontSize: 11, fontWeight: 700 }}>
-              {mode === 'NOW' ? '即時' : '預報'}
-            </span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 10 }}>
-            {[
-              { key: 'chimney' as const, label: '點煙囪' },
-              { key: 'mercury' as const, label: '汞排放' },
-              { key: 'pm25' as const, label: 'PM2.5' },
-            ].map((tab) => {
-              const on = activeLayerInfo === tab.key;
-              const visible = layerStates[tab.key];
+        {mode === 'NOW' && (
+          <div style={{ display: 'flex', alignSelf: 'flex-start', gap: 5, padding: 5, borderRadius: 999, background: 'rgba(255,255,255,0.90)', border: `1px solid ${palette.borderSoft}`, boxShadow: '0 8px 22px rgba(31,46,37,0.10)' }}>
+            {([
+              { key: '2d' as const, label: '2D 網格', icon: <Layers size={15} /> },
+              { key: '3d' as const, label: '3D 濃度', icon: <Box size={15} /> },
+            ]).map((item) => {
+              const active = mapViewMode === item.key;
               return (
-                <div
-                  key={tab.key}
-                  role="button"
-                  onClick={() => setActiveLayerInfo(tab.key)}
-                  style={{
-                    border: `1px solid ${on ? palette.primaryDeep : palette.borderSoft}`,
-                    background: on ? 'rgba(106, 141, 115, 0.12)' : 'rgba(248,249,250,0.78)',
-                    color: on ? palette.primaryDeep : palette.textSecondary,
-                    borderRadius: 9,
-                    cursor: 'pointer',
-                    padding: '6px 6px',
-                  }}
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setMapViewMode(item.key)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 999, border: 'none', background: active ? '#2d3129' : 'transparent', color: active ? '#fff' : palette.textSecondary, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
                 >
-                  <div style={{ fontSize: 11, fontWeight: 800, textAlign: 'center', marginBottom: 4 }}>{tab.label}</div>
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      toggleLayer(tab.key);
-                    }}
-                    style={{
-                      width: '100%',
-                      border: `1px solid ${visible ? '#6a8d7366' : palette.borderSoft}`,
-                      borderRadius: 7,
-                      background: visible ? 'rgba(106, 141, 115, 0.12)' : '#fff',
-                      color: visible ? palette.primaryDeep : palette.textSecondary,
-                      padding: '3px 0',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {visible ? '已開啟' : '已關閉'}
-                  </button>
-                </div>
+                  {item.icon}
+                  {item.label}
+                </button>
               );
             })}
           </div>
+        )}
+      </div>
 
-          {activeLayerInfo === 'chimney' && (
-            <div style={{ borderRadius: 10, background: 'rgba(205, 213, 180, 0.18)', border: `1px solid ${palette.borderSoft}`, padding: '10px 11px', marginBottom: 8 }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: palette.textMain }}>點源煙囪說明</p>
-              <p style={{ margin: '6px 0 0', fontSize: 11, lineHeight: 1.6, color: palette.textSecondary }}>
-                來源：2021年TEDS點源工廠排放資料。顯示工業排放點位置與煙囪資訊。
-              </p>
-              <p style={{ margin: '6px 0 0', fontSize: 11, color: palette.primaryDeep, fontWeight: 700 }}>目前顯示：{showChimneyLayer ? `${tedsPoints.length} 筆` : '已關閉'}</p>
-            </div>
-          )}
-
-          {activeLayerInfo === 'mercury' && (
-            <div style={{ borderRadius: 10, background: 'rgba(205, 213, 180, 0.24)', border: `1px solid ${palette.borderSoft}`, padding: '10px 11px', marginBottom: 8 }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: palette.textMain }}>汞排放點說明</p>
-              <p style={{ margin: '6px 0 0', fontSize: 11, lineHeight: 1.6, color: palette.textSecondary }}>
-                來源：環境部固定污染源排放檢測資料（HG 汞及其化合物）。顯示排放煙道位置與煙道資訊。
-              </p>
-              <p style={{ margin: '6px 0 0', fontSize: 11, color: '#8fa96f', fontWeight: 700 }}>目前顯示：{showMercuryLayer ? `${examPoints.length} 筆` : '已關閉'}</p>
-            </div>
-          )}
-
-          {activeLayerInfo === 'pm25' && (
-            <>
-              
-              <p style={{ margin: '0 0 12px', fontSize: 12, lineHeight: 1.65, color: palette.textSecondary }}>{selectedMeta.description}</p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-                {[{ label: '桃園平均', value: gridAverage }, { label: '最高網格', value: gridMaximum }].map(({ label, value }) => (
-                  <div key={label} style={{ borderRadius: 10, background: 'rgba(205, 213, 180, 0.26)', padding: '9px 12px' }}>
-                    <p style={{ margin: 0, fontSize: 11, color: palette.textSecondary }}>{label}</p>
-                    <p style={{ margin: '3px 0 0', fontSize: 20, fontWeight: 800, color: palette.textMain, lineHeight: 1 }}>
-                      {value}<span style={{ fontSize: 10, fontWeight: 500, color: palette.textSecondary, marginLeft: 3 }}>{selectedMeta.unit}</span>
-                    </p>
-                  </div>
-                ))}
+      <div style={{ position: 'absolute', left: 20, bottom: 20, zIndex: Z, width: 318, maxWidth: 'calc(100vw - 40px)' }}>
+        <div style={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: '16px', border: `1px solid ${palette.borderSoft}`, boxShadow: '0 14px 42px rgba(31,46,37,0.15)', backdropFilter: 'blur(18px)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+            <div>
+              <div style={{ marginBottom: 5 }}><SecLabel title={mode === 'NOW' ? 'PM2.5 即時濃度' : 'PM2.5 預報濃度'} /></div>
+              <div style={{ fontSize: 11, color: palette.textSecondary, lineHeight: 1.5 }}>
+                {mode === 'NOW' ? `${effectiveMapViewMode === '3d' ? '3D 濃度地景' : '2D 網格監測'} · 更新 ${formatTime(lastUpdated)}` : '2D 預報網格 · 未來趨勢'}
               </div>
-
-              {/* Color scale — matches getGridColor in LeafletMap */}
-              <div style={{ marginBottom: 5 }}><SecLabel title="濃度由低→高" /></div>
-              <div style={{ height: 7, borderRadius: 999, background: 'linear-gradient(to right, rgb(0,228,0), rgb(255,255,0), rgb(255,126,0), rgb(255,0,0), rgb(126,0,35))' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                {selectedMeta.range.map((r) => <span key={r} style={{ fontSize: 10, color: palette.textSecondary }}>{r}</span>)}
-              </div>
-            </>
-          )}
-
-          {activeLayerInfo !== 'pm25' && (
-            <div style={{ marginTop: 2, fontSize: 10.5, color: '#9a8b95' }}>
-              提示：此分頁為資料說明。
             </div>
-          )}
+            <span style={{ padding: '4px 9px', borderRadius: 999, background: getPm25CssColor(gridMaximum, 0.14), color: getPm25CssColor(gridMaximum, 1), fontSize: 11, fontWeight: 900, whiteSpace: 'nowrap' }}>
+              {getPm25Status(gridMaximum)}
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
+            {[
+              { label: '平均', value: gridAverage },
+              { label: '最高', value: gridMaximum },
+              { label: '高風險格', value: highRiskCount, unit: '格' },
+            ].map((item) => (
+              <div key={item.label} style={{ borderRadius: 10, background: 'rgba(244, 247, 240, 0.9)', border: `1px solid ${palette.borderSoft}`, padding: '9px 9px 8px' }}>
+                <p style={{ margin: 0, fontSize: 10.5, color: palette.textSecondary }}>{item.label}</p>
+                <p style={{ margin: '4px 0 0', color: palette.textMain, fontSize: 20, lineHeight: 1, fontWeight: 900 }}>
+                  {item.value}
+                  <span style={{ marginLeft: 3, color: palette.textSecondary, fontSize: 9.5, fontWeight: 700 }}>{item.unit || PM25_UNIT}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginBottom: 13 }}>
+            <div style={{ height: 9, borderRadius: 999, background: 'linear-gradient(to right, #2aa65a, #e8be42, #e67f30, #d6444c, #844090)', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.45)' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 10, color: palette.textSecondary }}>
+              <span>0</span><span>15</span><span>35</span><span>54</span><span>150+</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 8 }}>
+            {layerSummary.map(({ key, ...layer }) => <ToggleRow key={key} {...layer} />)}
+          </div>
         </div>
       </div>
 
-      {/* ── Layer switcher + attribution (bottom-right) ─────── */}
-      <div style={{ position: 'absolute', right: 20, bottom: 20, zIndex: Z, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-        {/*
-          保留地圖/衛星切換 UI（目前依需求暫停，只保留一般地圖）
-        <div style={{
-          backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 12, padding: 5,
-          boxShadow: '0 4px 16px rgba(58,30,45,0.13)', border: `1px solid ${palette.borderSoft}`,
-          display: 'flex', gap: 4,
-        }}>
-          {([
-            { mode: '2D' as const,        label: '地圖',   icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-            )},
-            { mode: 'Satellite' as const, label: '衛星',   icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            )},
-          ] as const).map(({ mode: m, label, icon }) => {
-            const on = mapMode === m;
-            return (
-              <button key={m} onClick={() => setMapMode(m)} style={{
-                width: 58, height: 50, borderRadius: 9, border: `1.5px solid ${on ? palette.primaryDeep : 'transparent'}`,
-                cursor: 'pointer', background: on ? 'rgba(106, 141, 115, 0.08)' : 'rgba(248,249,250,0.8)',
-                color: on ? palette.primaryDeep : palette.textSecondary,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
-                transition: 'all 0.18s',
-              }}>
-                {icon}
-                <span style={{ fontSize: 10, fontWeight: 700 }}>{label}</span>
-              </button>
-            );
-          })}
-        </div>
-        */}
-
-        {/* Attribution */}
-        <div style={{ backgroundColor: 'rgba(255,255,255,0.80)', padding: '4px 10px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontSize: 10, color: palette.textSecondary }}>地圖來源：</span>
-          <a href={mode === 'FORECAST' ? 'https://www.tgos.tw' : 'https://www.esri.com'} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: palette.primaryDeep, textDecoration: 'none', fontWeight: 600 }}>
-            {mode === 'FORECAST' ? 'TGOS 國土測繪' : 'Esri'}
-          </a>
-        </div>
+      <div style={{ position: 'absolute', right: 20, bottom: 20, zIndex: Z, backgroundColor: 'rgba(255,255,255,0.78)', padding: '4px 10px', borderRadius: 8, fontSize: 10, color: palette.textSecondary, boxShadow: '0 6px 16px rgba(31,46,37,0.08)' }}>
+        地圖資料：<span style={{ color: palette.primaryDeep, fontWeight: 800 }}>{activeMapSource}</span>
       </div>
 
-      {/* ── Grid detail card (right side) ────────────────────── */}
       {showSheet && selectedGrid && (
-        <aside style={{
-          position: 'absolute', top: 20, right: 20, width: 356,
-          maxHeight: 'calc(100vh - 120px)', zIndex: 1210,
-          backgroundColor: 'rgba(255,255,255,0.98)', border: `1px solid ${palette.borderSoft}`,
-          borderRadius: 16, boxShadow: '0 12px 48px rgba(58,30,45,0.18)',
-          backdropFilter: 'blur(20px)', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-        }}>
-
-          {/* Card header */}
-          <div style={{ padding: '15px 18px 14px', borderBottom: `1px solid ${palette.borderSoft}`, flexShrink: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <aside style={{ position: 'absolute', top: 20, right: 20, width: 356, maxWidth: 'calc(100vw - 40px)', maxHeight: 'calc(100vh - 120px)', zIndex: 1210, backgroundColor: 'rgba(255,255,255,0.98)', border: `1px solid ${palette.borderSoft}`, borderRadius: 16, boxShadow: '0 16px 48px rgba(31,46,37,0.18)', backdropFilter: 'blur(20px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '16px 18px 14px', borderBottom: `1px solid ${palette.borderSoft}`, flexShrink: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
               <div>
-                <p style={{ margin: 0, fontSize: 11, color: palette.textSecondary, fontWeight: 600 }}>點選網格</p>
-                <h2 style={{ margin: '2px 0 0', fontSize: 20, color: palette.textMain, fontWeight: 800 }}>
-                  {getGridLocationName(selectedGrid)}
-                </h2>
+                <p style={{ margin: 0, fontSize: 11, color: palette.textSecondary, fontWeight: 700 }}>PM2.5 網格</p>
+                <h2 style={{ margin: '3px 0 0', fontSize: 20, color: palette.textMain, fontWeight: 900 }}>{getGridLocationName(selectedGrid)}</h2>
               </div>
-              <button onClick={() => setShowSheet(false)} aria-label="關閉" style={{
-                width: 30, height: 30, borderRadius: 15, border: `1px solid ${palette.borderSoft}`,
-                background: '#f4f5f6', color: palette.textSecondary, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0,
-              }}>×</button>
+              <button
+                type="button"
+                onClick={() => setShowSheet(false)}
+                aria-label="關閉詳情"
+                style={{ width: 32, height: 32, borderRadius: '50%', border: `1px solid ${palette.borderSoft}`, background: '#f4f5f2', color: palette.textSecondary, cursor: 'pointer', display: 'grid', placeItems: 'center', flexShrink: 0 }}
+              >
+                <X size={16} />
+              </button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ padding: '4px 12px', borderRadius: 999, backgroundColor: aqiBadge.bg, color: aqiBadge.color, fontSize: 12, fontWeight: 800 }}>
-                {selectedGrid.health.level}
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ padding: '4px 12px', borderRadius: 999, backgroundColor: aqiBadge.bg, color: aqiBadge.color, fontSize: 12, fontWeight: 900 }}>{selectedGrid.health.level}</span>
               <span style={{ fontSize: 11, color: palette.textSecondary }}>更新 {formatTime(selectedGrid.updatedAt)}</span>
             </div>
           </div>
 
-          <div className="card-body" style={{ padding: '16px 18px', flex: 1, overflowY: 'auto', minHeight: 0 }}>
-
-            {/* AQI gauge + pollutant arc */}
+          <div style={{ padding: '16px 18px', flex: 1, overflowY: 'auto', minHeight: 0 }}>
             <div style={{ marginBottom: 16 }}>
-              <div style={{ marginBottom: 10 }}><SecLabel title="AQI 空氣品質指標" /></div>
+              <div style={{ marginBottom: 10 }}><SecLabel title="空氣品質摘要" /></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, alignItems: 'center' }}>
                 <div>
                   <CardAQIGauge key={`gauge-${aqi}`} aqi={aqi} />
-                  <p style={{ margin: '6px 0 0', fontSize: 10, color: palette.textSecondary, textAlign: 'center' }}>數值 0–200，越低越好</p>
+                  <p style={{ margin: '6px 0 0', fontSize: 10, color: palette.textSecondary, textAlign: 'center' }}>AQI 0-200 指標</p>
                 </div>
                 <div>
                   <CardPollutantArc
                     key={`arc-${pollValue}-PM25`}
                     value={pollValue}
-                    max={selectedMeta.arcMax}
-                    standard={selectedMeta.arcStandard}
+                    max={100}
+                    standard={15.4}
                     color={pollColor}
-                    unit={selectedMeta.unit}
-                    label={selectedMeta.label}
+                    unit={PM25_UNIT}
+                    label="PM2.5"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Health advisory + Sensitive groups */}
-            <div style={{ borderRadius: 12, border: `1px solid ${palette.borderSoft}`, padding: '12px 14px', marginBottom: 14, background: 'rgba(250,251,252,0.9)' }}>
+            <div style={{ borderRadius: 12, border: `1px solid ${palette.borderSoft}`, padding: '12px 14px', marginBottom: 14, background: 'rgba(250,251,248,0.92)' }}>
               <div style={{ marginBottom: 8 }}><SecLabel title="健康建議" /></div>
               <p style={{ margin: '0 0 10px', color: palette.textSecondary, fontSize: 12, lineHeight: 1.65 }}>{selectedGrid.health.summary}</p>
               <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 999, background: 'rgba(205, 213, 180, 0.35)', fontSize: 12, color: palette.textMain }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={palette.primaryDeep} strokeWidth="2.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                <span style={{ padding: '5px 10px', borderRadius: 999, background: 'rgba(205, 213, 180, 0.35)', fontSize: 12, color: palette.textMain }}>
                   戶外活動：{selectedGrid.health.outdoorActivity}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 999, fontSize: 12, color: palette.textMain, background: selectedGrid.health.maskRequired ? 'rgba(244,67,54,0.08)' : 'rgba(118,196,118,0.12)' }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={selectedGrid.health.maskRequired ? '#f44336' : '#2F6B3D'} strokeWidth="2.5" strokeLinecap="round">
-                    {selectedGrid.health.maskRequired
-                      ? <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                      : <polyline points="20 6 9 17 4 12"/>}
-                  </svg>
-                  {selectedGrid.health.maskRequired ? '建議配戴口罩' : '無需口罩'}
-                </div>
+                </span>
+                <span style={{ padding: '5px 10px', borderRadius: 999, fontSize: 12, color: palette.textMain, background: selectedGrid.health.maskRequired ? 'rgba(159,18,57,0.09)' : 'rgba(79,141,122,0.12)' }}>
+                  {selectedGrid.health.maskRequired ? '建議配戴口罩' : '一般族群可正常活動'}
+                </span>
               </div>
 
-              {/* Sensitive group icons */}
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${palette.borderSoft}` }}>
-                <div style={{ marginBottom: 10 }}><SecLabel title="需特別留意的族群" /></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ marginBottom: 10 }}><SecLabel title="敏感族群" /></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6 }}>
                   {SENSITIVE_GROUPS.map(({ key, label, icon }) => {
-                    const active = selectedGrid.health.sensitiveGroups.some((g) => g.includes(key));
-                    const iconColor = active ? getAQIColor(aqi) : '#c8bfcb';
+                    const active = selectedGrid.health.sensitiveGroups.some((group) => group.includes(key));
+                    const iconColor = active ? getPm25CssColor(selectedGrid.values.value, 1) : '#c2c7bd';
                     return (
-                      <div key={key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                        <div style={{
-                          width: 44, height: 44, borderRadius: 13,
-                          background: active ? `${iconColor}1a` : 'rgba(0,0,0,0.03)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: iconColor,
-                          boxShadow: active ? `0 2px 8px ${iconColor}30` : 'none',
-                          transition: 'all 0.22s',
-                        }}>
+                      <div key={key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flex: 1 }}>
+                        <div style={{ width: 42, height: 42, borderRadius: 12, background: active ? getPm25CssColor(selectedGrid.values.value, 0.13) : 'rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: iconColor }}>
                           {icon}
                         </div>
-                        <span style={{ fontSize: 10, color: iconColor, fontWeight: active ? 700 : 500, textAlign: 'center', lineHeight: 1.3 }}>
-                          {label}
-                        </span>
+                        <span style={{ fontSize: 10, color: iconColor, fontWeight: active ? 800 : 600, textAlign: 'center', lineHeight: 1.3 }}>{label}</span>
                       </div>
                     );
                   })}
@@ -567,19 +540,18 @@ export default function MapPage() {
               </div>
             </div>
 
-            {/* Weather */}
-            <div style={{ marginBottom: 8 }}><SecLabel title="當地氣象" /></div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7, marginBottom: 14 }}>
+            <div style={{ marginBottom: 8 }}><SecLabel title="氣象條件" /></div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7 }}>
               {[
-                { icon: <IconTemp />,                                            label: '溫度', value: `${selectedGrid.meteo.temp.toFixed(1)}°C` },
-                { icon: <IconHumidity />,                                        label: '濕度', value: `${selectedGrid.meteo.humidity.toFixed(0)}%` },
-                { icon: <IconWind />,                                            label: '風速', value: `${selectedGrid.meteo.windSpeed.toFixed(1)} m/s` },
-                { icon: <IconCompass deg={selectedGrid.meteo.windDir} />,        label: '風向', value: `${selectedGrid.meteo.windDir.toFixed(0)}°` },
+                { icon: <IconTemp />, label: '溫度', value: `${selectedGrid.meteo.temp.toFixed(1)}°C` },
+                { icon: <IconHumidity />, label: '濕度', value: `${selectedGrid.meteo.humidity.toFixed(0)}%` },
+                { icon: <IconWind />, label: '風速', value: `${selectedGrid.meteo.windSpeed.toFixed(1)} m/s` },
+                { icon: <IconCompass deg={selectedGrid.meteo.windDir} />, label: '風向', value: `${selectedGrid.meteo.windDir.toFixed(0)}°` },
               ].map(({ icon, label, value }) => (
-                <div key={label} style={{ borderRadius: 10, background: 'rgba(249,250,251,0.95)', padding: '9px 6px', textAlign: 'center', border: `1px solid ${palette.borderSoft}` }}>
+                <div key={label} style={{ borderRadius: 10, background: 'rgba(249,250,247,0.95)', padding: '9px 6px', textAlign: 'center', border: `1px solid ${palette.borderSoft}` }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4, color: palette.primaryDeep }}>{icon}</div>
                   <p style={{ margin: '0 0 2px', color: palette.textSecondary, fontSize: 10 }}>{label}</p>
-                  <p style={{ margin: 0, color: palette.textMain, fontSize: 11, fontWeight: 700 }}>{value}</p>
+                  <p style={{ margin: 0, color: palette.textMain, fontSize: 11, fontWeight: 800 }}>{value}</p>
                 </div>
               ))}
             </div>
@@ -589,6 +561,5 @@ export default function MapPage() {
 
       <MapLoadingOverlay isLoading={isLoading} />
     </div>
-    </>
   );
 }

@@ -2,6 +2,10 @@
 
 :root {
   --app-bg-gradient: linear-gradient(180deg, #f7f5ec 0%, #eef0dd 38%, #e3e8cd 68%, #d6dfc0 100%);
+  /* 全站統一頁底：在 app 漸層上再罩一層淺米色（原資料整合頁的底色） */
+  --app-surface-bg:
+    linear-gradient(180deg, rgba(250, 250, 246, 0.94), rgba(239, 242, 233, 0.94)),
+    var(--app-bg-gradient);
 }
 
 *, *::before, *::after {
@@ -11,7 +15,7 @@
 html, body {
   height: 100%;
   font-family: 'Noto Sans TC', 'Noto Sans', system-ui, sans-serif;
-  background: var(--app-bg-gradient);
+  background: var(--app-surface-bg);
   background-attachment: fixed;
   color: #2d3129;
   overscroll-behavior-x: none;

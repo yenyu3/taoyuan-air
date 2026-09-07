@@ -139,10 +139,11 @@ export default function DashboardPage() {
 
   const aiActivityAdvice = aiInsight?.activityAdvice;
   const aiTrendInsight = aiInsight?.trendInsight;
+  const fallbackActivityTitle = '敏感族群留意戶外活動';
   const fallbackActivityAdvice =
-    '空氣品質稍有影響，敏感族群建議減少長時間戶外劇烈活動，外出時可準備口罩並避免靠近車流密集道路；一般民眾仍可維持正常行程，但若傍晚交通尖峰或風速轉弱，建議縮短高強度運動時間並留意身體反應。';
+    '空氣品質稍有影響，敏感族群宜減少長時間戶外劇烈活動並備妥口罩，一般民眾可正常活動。';
   const fallbackTrendInsight =
-    '目前資料不足以判斷明確趨勢，建議持續關注後續變化；若晚間風速下降或周邊排放源增加，細懸浮微粒可能短暫累積。系統會優先觀察未來幾小時 PM2.5、臭氧與風場變化，外出安排可保留彈性並視情況調整活動強度。';
+    '目前資料不足以判斷明確趨勢，建議持續關注；若晚間風速轉弱或排放增加，PM2.5 可能短暫累積。';
 
   const pollutants = [
     { name: <>NO<sub className="text-xs">2</sub></>, sub: '二氧化氮', value: no2, unit: 'ppb' },
@@ -246,7 +247,10 @@ export default function DashboardPage() {
                   <span className="advice-icon" style={{ backgroundColor: `${activity.color}28` }}>
                     <ActivityIcon size={18} color={activity.color} />
                   </span>
-                  <p>{aiActivityAdvice?.summary ?? fallbackActivityAdvice}</p>
+                  <p className="insight-copy">
+                    <strong style={{ color: activity.color }}>{aiActivityAdvice?.title ?? fallbackActivityTitle}</strong>
+                    <span>{aiActivityAdvice?.summary ?? fallbackActivityAdvice}</span>
+                  </p>
                 </div>
               </div>
 

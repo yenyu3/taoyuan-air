@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ExamPoint, GridCell, TEDSPoint } from '@shared/types';
+import { getPm25CssColor } from '@/app/map/_lib/mapColors';
 
 interface LeafletMapProps {
   gridCells: GridCell[];
@@ -164,19 +165,7 @@ const getRuntimeWindyInit = () => new Function('return window.windyInit')() as W
 
 const createScriptLoadError = (src: string) => new Error(`Failed to load map script: ${src}`);
 
-const getGridColor = (value: number) => {
-  const stops = [[0,0,228,0],[50,255,255,0],[100,255,126,0],[150,255,0,0],[200,126,0,35]];
-  const clamped = Math.max(0, Math.min(200, value));
-  let lower = stops[0], upper = stops[stops.length - 1];
-  for (let i = 0; i < stops.length - 1; i++) {
-    if (clamped >= stops[i][0] && clamped <= stops[i + 1][0]) { lower = stops[i]; upper = stops[i + 1]; break; }
-  }
-  const ratio = (clamped - lower[0]) / (upper[0] - lower[0]);
-  const r = Math.round(lower[1] + (upper[1] - lower[1]) * ratio);
-  const g = Math.round(lower[2] + (upper[2] - lower[2]) * ratio);
-  const b = Math.round(lower[3] + (upper[3] - lower[3]) * ratio);
-  return `rgba(${r},${g},${b},0.4)`;
-};
+const getGridColor = (value: number) => getPm25CssColor(value, 0.4);
 
 export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress, focusGrid }: LeafletMapProps) {
   const [isDetailMode, setIsDetailMode] = useState(false);

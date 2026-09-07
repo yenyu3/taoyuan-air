@@ -367,7 +367,10 @@ export async function downloadHealthReport(input: HealthReportInput) {
       ['產出時間', now.toLocaleString('zh-TW', { hour12: false })],
       ['適用地區', '桃園市中壢區'],
       ['守護狀態', input.healthGuardEnabled ? '主動健康守護：啟用' : '主動健康守護：關閉'],
-      ['空品概況', input.summary[0] ? `${input.summary[0].value}（${input.summary[0].detail}）` : '—'],
+      [
+        input.summary[0]?.label ?? '今日建議',
+        input.summary[0] ? `${input.summary[0].value}（${input.summary[0].detail}）` : '—',
+      ],
     ],
     highlights: [
       { label: 'PM2.5 注意門檻', value: `${t.asthma} µg/m³` },

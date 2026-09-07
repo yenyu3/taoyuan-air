@@ -113,7 +113,6 @@ export const getTEDSPoints = async (): Promise<TEDSPoint[]> => {
     }
     return await response.json();
   } catch (error) {
-    console.error('TEDS Points API 連線失敗:', error);
     throw error;
   }
 };
@@ -243,7 +242,6 @@ export const getExamPoints = async (): Promise<ExamPoint[]> => {
     }
     return await response.json();
   } catch (error) {
-    console.error('Exam Points API 連線失敗:', error);
     throw error;
   }
 };

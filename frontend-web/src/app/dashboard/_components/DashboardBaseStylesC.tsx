@@ -328,15 +328,6 @@ export function DashboardBaseStylesC() {
         margin: 0;
       }
 
-      .advice-card p {
-        color: ${C.muted};
-        font-size: 13px;
-        line-height: 1.45;
-        font-weight: 700;
-        min-width: 0;
-        overflow-wrap: anywhere;
-      }
-
       .row-divider {
         width: 1px;
         align-self: stretch;

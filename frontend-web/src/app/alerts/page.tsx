@@ -230,7 +230,7 @@ export default function AlertsPage() {
   const getThresholdLabel = (type: string, value: number) => {
     if (type === 'asthma') return `${value} µg/m³`;
     if (type === 'activity') return value > 70 ? '劇烈運動' : value > 40 ? '中等運動' : '輕度運動';
-    if (type === 'urgency') return value < 30 ? '僅重要' : value < 70 ? '一般' : '全部';
+    if (type === 'urgency') return value < 30 ? '全部' : value < 70 ? '一般' : '僅緊急';
     return `${value}`;
   };
 
@@ -304,7 +304,7 @@ export default function AlertsPage() {
 
   return (
     <>
-    <div style={{ minHeight: '100vh', background: 'var(--app-bg-gradient)', paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', paddingBottom: 100 }}>
       <div style={{ padding: isMobile ? '20px 16px 28px' : '28px 40px 32px' }}>
 
         {/* ════════════════════════════════════════════════════

@@ -1,12 +1,16 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 export type DemoRole = 'public' | 'government';
+
+const STORAGE_KEY = 'taoyuan-air:demo-role-active';
 
 interface LoginButtonContextValue {
   isLoginButtonActive: boolean;
   role: DemoRole;
+  /** false until the persisted role has been read from storage after mount */
+  hydrated: boolean;
   toggleLoginButton: () => void;
 }
 
@@ -14,9 +18,31 @@ const LoginButtonContext = createContext<LoginButtonContextValue | null>(null);
 
 export function LoginButtonProvider({ children }: { children: React.ReactNode }) {
   const [isLoginButtonActive, setIsLoginButtonActive] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restore the demo role after mount so a refresh / deep link keeps the
+  // government-only pages (/explorer, /events) reachable.
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(STORAGE_KEY) === '1') {
+        setIsLoginButtonActive(true);
+      }
+    } catch {
+      /* localStorage unavailable */
+    }
+    setHydrated(true);
+  }, []);
 
   const toggleLoginButton = useCallback(() => {
-    setIsLoginButtonActive((current) => !current);
+    setIsLoginButtonActive((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
+      } catch {
+        /* localStorage unavailable */
+      }
+      return next;
+    });
   }, []);
 
   return (
@@ -24,6 +50,7 @@ export function LoginButtonProvider({ children }: { children: React.ReactNode })
       value={{
         isLoginButtonActive,
         role: isLoginButtonActive ? 'government' : 'public',
+        hydrated,
         toggleLoginButton,
       }}
     >

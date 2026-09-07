@@ -184,7 +184,7 @@ export default function SettingsPage() {
 
   return (
     <>
-    <div style={{ minHeight: '100vh', background: 'var(--app-bg-gradient)', paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', paddingBottom: 100 }}>
       <div style={{ padding: isMobile ? '20px 16px 80px' : '28px 40px 32px' }}>
 
         {/* ── Page header（只放標題 + 儲存按鈕）──────────────── */}

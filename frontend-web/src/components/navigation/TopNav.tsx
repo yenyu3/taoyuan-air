@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Bell, LogIn, LogOut, Menu, Settings, X } from 'lucide-react';
+import { Bell, Landmark, Menu, Settings, UserRound, X } from 'lucide-react';
 import { useLoginButton } from '@/lib/login-button-context';
 
 type NavItem = { href: string; label: string; public: boolean; govLabel?: string };
@@ -21,7 +21,7 @@ export function TopNav() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isLoginButtonActive, role, toggleLoginButton } = useLoginButton();
+  const { role, toggleLoginButton } = useLoginButton();
   const visibleNavItems = navItems.filter((item) => role === 'government' || item.public);
   const navLabel = (item: NavItem) =>
     role === 'government' && item.govLabel ? item.govLabel : item.label;
@@ -49,10 +49,10 @@ export function TopNav() {
       type="button"
       onClick={toggleLoginButton}
       className="top-nav-action-btn"
-      aria-label={isLoginButtonActive ? '登出' : '登入'}
-      title={isLoginButtonActive ? '政府模式：按下切回民眾模式' : '民眾模式：按下切到政府模式'}
+      aria-label={role === 'government' ? '政府模式' : '民眾模式'}
+      title={role === 'government' ? '政府模式：按下切到民眾模式' : '民眾模式：按下切到政府模式'}
     >
-      {isLoginButtonActive ? <LogOut size={17} /> : <LogIn size={17} />}
+      {role === 'government' ? <Landmark size={17} /> : <UserRound size={17} />}
     </button>
   );
 

@@ -14,6 +14,7 @@ import {
 import {
   ArrowRightLeft,
   Check,
+  Database,
   Download,
   ExternalLink,
   FileSearch,
@@ -394,7 +395,9 @@ function CompareDrawer({
   datasets: DatasetCatalogItem[];
   onClose: () => void;
 }) {
-  const sharedFields = FIELD_GROUPS.filter(field => datasets.every(dataset => dataset.parameters.includes(field)));
+  const sharedFields = datasets.length
+    ? FIELD_GROUPS.filter(field => datasets.every(dataset => dataset.parameters.includes(field)))
+    : [];
   const sharedRegions = datasets.length
     ? datasets[0].regions.filter(region => datasets.every(dataset => dataset.regions.includes(region)))
     : [];
@@ -457,7 +460,10 @@ export default function ExplorerPage() {
     [query, activeCategory]
   );
 
-  const selectedDataset = DATASET_CATALOG.find(dataset => dataset.id === selectedDatasetId) ?? DATASET_CATALOG[0];
+  const effectiveSelectedDatasetId = filteredDatasets.some(dataset => dataset.id === selectedDatasetId)
+    ? selectedDatasetId
+    : filteredDatasets[0]?.id ?? selectedDatasetId;
+  const selectedDataset = DATASET_CATALOG.find(dataset => dataset.id === effectiveSelectedDatasetId) ?? DATASET_CATALOG[0];
   const compareDatasets = DATASET_CATALOG.filter(dataset => compareIds.includes(dataset.id));
   const connectedCount = DATASET_CATALOG.filter(dataset =>
     !dataset.statuses.includes('pending') && !dataset.statuses.includes('mock')
@@ -483,13 +489,17 @@ export default function ExplorerPage() {
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
-        <div className={styles.topBar}>
-          <div>
-            <p className={styles.eyebrow}>Taoyuan Air Data Hub</p>
-            <h1 className={styles.title}>資料整合</h1>
-            <p className={styles.subtitle}>
-              將空品、氣象、排放源與垂直觀測資料整理成可查詢、可比較、可取用的資料資產。
-            </p>
+        <header className={styles.topBar}>
+          <div className={styles.pageHeading}>
+            <span className={styles.pageHeadingIcon}>
+              <Database size={18} color="#6a8d73" strokeWidth={2} />
+            </span>
+            <div>
+              <h1 className={styles.pageTitle}>資料整合</h1>
+              <p className={styles.pageSubtitle}>
+                將空品、氣象、排放源與垂直觀測資料整理成可查詢、可比較、可取用的資料資產。
+              </p>
+            </div>
           </div>
           <label className={styles.searchWrap}>
             <Search size={17} color="#65736d" />
@@ -504,7 +514,7 @@ export default function ExplorerPage() {
               </button>
             )}
           </label>
-        </div>
+        </header>
 
         <div className={styles.metricRail}>
           <div className={styles.metric}><strong>{DATASET_CATALOG.length}</strong><span>資料源</span></div>

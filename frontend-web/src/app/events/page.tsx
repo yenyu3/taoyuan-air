@@ -99,7 +99,7 @@ export default function EventsPage() {
 
   return (
     <>
-    <div style={{ minHeight: '100vh', background: 'var(--app-bg-gradient)', paddingBottom: 80 }}>
+    <div style={{ minHeight: '100vh', paddingBottom: 80 }}>
 
       {/* Tab switcher — 放在 header 最下方、控制列上方 */}
       <ViewSwitcher active={activeView} onChange={setActiveView} />

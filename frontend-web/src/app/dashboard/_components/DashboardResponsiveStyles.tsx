@@ -84,6 +84,7 @@ export function DashboardResponsiveStyles() {
           padding: 4px 0 12px;
         }
 
+        .advice-card,
         .insight-card {
           align-items: flex-start;
         }

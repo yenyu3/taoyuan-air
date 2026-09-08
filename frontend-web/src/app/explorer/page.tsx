@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRightLeft,
   ArrowUpRight,
@@ -31,14 +31,22 @@ const DatasetMap = dynamic(() => import('./_components/DatasetMap'), {
 });
 
 type ActiveCategory = DatasetCategory | 'all';
-type DetailTab = 'overview' | 'fields' | 'quality' | 'coverage';
+type DetailTab = 'overview' | 'fields' | 'quality' | 'coverage' | 'database';
 
 const DETAIL_TABS: Array<{ id: DetailTab; label: string }> = [
   { id: 'overview', label: '總覽' },
   { id: 'fields', label: '欄位' },
   { id: 'quality', label: '品質' },
   { id: 'coverage', label: '時空覆蓋' },
+  { id: 'database', label: '資料庫' },
 ];
+
+const AVAILABILITY_LABELS: Record<DatasetCatalogItem['dataAvailability'], string> = {
+  'public-download': '公開下載',
+  'public-query': '公開查詢',
+  internal: '內部資料',
+  planned: '規劃中',
+};
 
 const CATEGORY_ORDER: ActiveCategory[] = [
   'all',
@@ -215,12 +223,12 @@ function QualityTab({ dataset }: { dataset: DatasetCatalogItem }) {
   );
 }
 
-function CoverageTab({ dataset }: { dataset: DatasetCatalogItem }) {
+function CoverageTab({ dataset, liveLatestAt }: { dataset: DatasetCatalogItem; liveLatestAt?: string }) {
   const lines = [
     ['時間範圍', dataset.timeRange],
     ['時間解析度', dataset.temporalResolution],
     ['更新頻率', dataset.updateFrequency],
-    ['最新狀態', dataset.latestAt],
+    ['最新狀態', liveLatestAt ? `資料庫最新 ${liveLatestAt}` : dataset.latestAt],
     ['空間範圍', dataset.regions.join('、')],
     ['資料表', dataset.tableNames.join('、')],
   ];
@@ -240,14 +248,40 @@ function CoverageTab({ dataset }: { dataset: DatasetCatalogItem }) {
   );
 }
 
+function DatabaseTab({ dataset }: { dataset: DatasetCatalogItem }) {
+  const groups = [
+    ['核心資料表', dataset.databaseAssets.coreTables],
+    ['彙總視圖', dataset.databaseAssets.views],
+    ['品質檢查', dataset.databaseAssets.qualityChecks],
+    ['匯入腳本', dataset.databaseAssets.importScripts],
+    ['更新腳本', dataset.databaseAssets.updateScripts ?? []],
+  ];
+
+  return (
+    <div className={styles.naturalPanel}>
+      <p className={styles.panelLabel}>資料庫完整性</p>
+      <div className={styles.coverageLines}>
+        {groups.map(([label, values]) => (
+          <div key={label as string} className={styles.lineItem}>
+            <span>{label as string}</span>
+            <strong>{(values as string[]).length ? (values as string[]).join('、') : '未設定'}</strong>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function DatasetPreview({
   dataset,
   activeTab,
   setActiveTab,
+  liveLatestAt,
 }: {
   dataset: DatasetCatalogItem;
   activeTab: DetailTab;
   setActiveTab: (tab: DetailTab) => void;
+  liveLatestAt?: string;
 }) {
   return (
     <>
@@ -282,7 +316,8 @@ function DatasetPreview({
       {activeTab === 'overview' && <OverviewTab dataset={dataset} />}
       {activeTab === 'fields' && <FieldsTab dataset={dataset} />}
       {activeTab === 'quality' && <QualityTab dataset={dataset} />}
-      {activeTab === 'coverage' && <CoverageTab dataset={dataset} />}
+      {activeTab === 'coverage' && <CoverageTab dataset={dataset} liveLatestAt={liveLatestAt} />}
+      {activeTab === 'database' && <DatabaseTab dataset={dataset} />}
     </>
   );
 }
@@ -308,6 +343,7 @@ function AccessPanel({
           <div className={styles.sideLine}><span>來源單位</span><strong>{dataset.sourceAgency}</strong></div>
           <div className={styles.sideLine}><span>資料型態</span><strong>{dataset.sourceType}</strong></div>
           <div className={styles.sideLine}><span>更新頻率</span><strong>{dataset.updateFrequency}</strong></div>
+          <div className={styles.sideLine}><span>取得方式</span><strong>{AVAILABILITY_LABELS[dataset.dataAvailability]}</strong></div>
           <div className={styles.sideLine}><span>狀態</span><strong>{dataset.statuses.map(status => STATUS_LABELS[status]).join('、')}</strong></div>
         </div>
       </div>
@@ -354,14 +390,26 @@ function AccessPanel({
               <FileSearch size={15} /> API 待開放
             </button>
           )}
-          <button
-            className={styles.actionButton}
-            type="button"
-            disabled
-            title="資料匯出功能開發中"
-          >
-            <Download size={15} /> 下載待開放
-          </button>
+          {dataset.officialDownloadUrl ? (
+            <Link
+              className={styles.actionButton}
+              href={dataset.officialDownloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`前往官方資料頁：${dataset.officialDownloadLabel ?? dataset.officialDownloadUrl}`}
+            >
+              <Download size={15} /> 官方資料
+            </Link>
+          ) : (
+            <button
+              className={styles.actionButton}
+              type="button"
+              disabled
+              title={dataset.dataAvailability === 'internal' ? '此資料源為內部任務資料，尚未提供公開下載' : '資料匯出功能開發中'}
+            >
+              <Download size={15} /> 下載待開放
+            </button>
+          )}
           {dataset.mapLink ? (
             <Link
               className={styles.actionButton}
@@ -468,6 +516,38 @@ export default function ExplorerPage() {
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>('overview');
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  // 資料庫端點可回報最新時間時，覆蓋靜態 latestAt 文案（無法取得時維持靜態文案）。
+  const [liveLatestAt, setLiveLatestAt] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const SOURCE_TO_ID: Record<string, string> = {
+      環境部: 'moe',
+      桃園市環保局: 'tydep',
+      氣象署: 'cwa',
+    };
+
+    fetch('/api/explorer/history?latest_only=true')
+      .then(response => (response.ok ? response.json() : null))
+      .then((payload: { latestAt?: Record<string, string | null> } | null) => {
+        if (cancelled || !payload?.latestAt) return;
+        const mapped: Record<string, string> = {};
+        for (const [source, value] of Object.entries(payload.latestAt)) {
+          const datasetId = SOURCE_TO_ID[source];
+          if (datasetId && typeof value === 'string' && value.trim()) {
+            mapped[datasetId] = value;
+          }
+        }
+        if (Object.keys(mapped).length > 0) setLiveLatestAt(mapped);
+      })
+      .catch(() => {
+        /* 端點不可用時靜默退回靜態 latestAt 文案 */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredDatasets = useMemo(
     () => DATASET_CATALOG.filter(dataset => matchesDataset(dataset, '', activeCategory)),
@@ -483,8 +563,11 @@ export default function ExplorerPage() {
     !dataset.statuses.includes('pending') && !dataset.statuses.includes('mock')
   ).length;
   const totalFieldCount = new Set(DATASET_CATALOG.flatMap(dataset => dataset.parameters)).size;
+  const formalDatasets = DATASET_CATALOG.filter(dataset =>
+    !dataset.statuses.includes('pending') && !dataset.statuses.includes('mock')
+  );
   const avgCompleteness = Math.round(
-    DATASET_CATALOG.reduce((sum, dataset) => sum + dataset.completeness, 0) / DATASET_CATALOG.length
+    formalDatasets.reduce((sum, dataset) => sum + dataset.completeness, 0) / Math.max(1, formalDatasets.length)
   );
 
   const toggleCompare = (id: string) => {
@@ -612,7 +695,7 @@ export default function ExplorerPage() {
               <div className={styles.metric}><strong>{DATASET_CATALOG.length}</strong><span>資料源</span></div>
               <div className={styles.metric}><strong>{connectedCount}</strong><span>已串接/匯入</span></div>
               <div className={styles.metric}><strong>{totalFieldCount}</strong><span>標準欄位</span></div>
-              <div className={styles.metric}><strong>{avgCompleteness}%</strong><span>平均健康度</span></div>
+              <div className={styles.metric}><strong>{avgCompleteness}%</strong><span>正式資料健康度</span></div>
               <div className={styles.metric}><strong>{filteredDatasets.length}</strong><span>符合篩選</span></div>
             </div>
 
@@ -622,6 +705,7 @@ export default function ExplorerPage() {
                   dataset={selectedDataset}
                   activeTab={activeDetailTab}
                   setActiveTab={setActiveDetailTab}
+                  liveLatestAt={liveLatestAt[selectedDataset.id]}
                 />
               </div>
 

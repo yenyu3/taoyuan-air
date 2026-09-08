@@ -189,13 +189,18 @@ async def _fetch_cwa_history(db: AsyncSession, days: int) -> List[Dict[str, Any]
 @router.get("/history")
 async def get_history(
     days: int = Query(default=7, ge=1, le=90),
+    latest_only: bool = Query(
+        default=False,
+        description="只回傳各來源最新資料時間，略過歷史紀錄查詢（供資料整合頁 latestAt 使用）",
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        records = []
-        records.extend(await _fetch_air_history(db, "moe_hourly_data", "moe_stations", "環境部", days))
-        records.extend(await _fetch_air_history(db, "tydep_hourly_data", "tydep_stations", "桃園市環保局", days))
-        records.extend(await _fetch_cwa_history(db, days))
+        records: List[Dict[str, Any]] = []
+        if not latest_only:
+            records.extend(await _fetch_air_history(db, "moe_hourly_data", "moe_stations", "環境部", days))
+            records.extend(await _fetch_air_history(db, "tydep_hourly_data", "tydep_stations", "桃園市環保局", days))
+            records.extend(await _fetch_cwa_history(db, days))
 
         latest_at: Dict[str, Optional[str]] = {}
         for table, source in [

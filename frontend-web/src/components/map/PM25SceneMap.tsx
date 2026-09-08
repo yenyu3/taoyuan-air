@@ -17,6 +17,16 @@ type CameraMode = 'top' | 'tilt';
 type LightPreset = 'day' | 'dusk' | 'night';
 type EmissionPoint = TEDSPoint | ExamPoint;
 type RenderPoint = EmissionPoint & { layerKind: 'chimney' | 'mercury' };
+interface SourceHighlightPoint {
+  id: string;
+  name: string;
+  latLng: {
+    latitude: number;
+    longitude: number;
+  };
+  source: string;
+  color: string;
+}
 
 interface PM25SceneMapProps {
   gridCells: GridCell[];
@@ -31,6 +41,7 @@ interface PM25SceneMapProps {
   selectedGrid?: GridCell | null;
   onGridPress?: (grid: GridCell) => void;
   focusGrid?: GridCell | null;
+  sourceHighlightPoints?: SourceHighlightPoint[];
 }
 
 const MAP_CENTER = { longitude: 121.24, latitude: 24.97 };
@@ -40,6 +51,21 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 const PARTICLE_MIN_PM25 = 46;
 const PARTICLE_BUDGET = 2600;
 const HOTSPOT_COUNT = 6;
+
+function sourceHighlightBounds(points: SourceHighlightPoint[]) {
+  if (points.length === 0) return null;
+  let minLng = Infinity;
+  let minLat = Infinity;
+  let maxLng = -Infinity;
+  let maxLat = -Infinity;
+  points.forEach((point) => {
+    minLng = Math.min(minLng, point.latLng.longitude);
+    maxLng = Math.max(maxLng, point.latLng.longitude);
+    minLat = Math.min(minLat, point.latLng.latitude);
+    maxLat = Math.max(maxLat, point.latLng.latitude);
+  });
+  return [[minLng, minLat], [maxLng, maxLat]] as [[number, number], [number, number]];
+}
 
 /** 以網格中心產生六邊形頂點（經緯度），做出「六角濃度地景」而非方格拉高。 */
 const HEX_RADIUS_DEG = 0.0072;
@@ -441,6 +467,11 @@ const deckTooltip = ({ object, layer }: PickingInfo) => {
     return { text: `${kind}\n${point.name || point.id}${height}` };
   }
 
+  if (layer.id === 'source-highlight-points') {
+    const point = object as SourceHighlightPoint;
+    return { text: `${point.source}\n${point.name}` };
+  }
+
   return null;
 };
 
@@ -490,6 +521,7 @@ export default function PM25SceneMap({
   selectedGrid,
   onGridPress,
   focusGrid,
+  sourceHighlightPoints = [],
 }: PM25SceneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapRef>(null);
@@ -501,6 +533,10 @@ export default function PM25SceneMap({
   useEffect(() => {
     cameraModeRef.current = cameraMode;
   }, [cameraMode]);
+  const professionalModeRef = useRef(professionalMode);
+  useEffect(() => {
+    professionalModeRef.current = professionalMode;
+  }, [professionalMode]);
 
   const selectedGridId = selectedGrid?.gridId ?? null;
 
@@ -642,6 +678,21 @@ export default function PM25SceneMap({
       essential: true,
     });
   }, [focusGrid, professionalMode]);
+
+  // 只在 ready 或來源高亮點位改變時重新取景；切換 3D↔專業視角不應把鏡頭拉回高亮範圍
+  // （pitch 由下方專屬 effect 負責），故 professionalMode 以 ref 讀取、不列入相依。
+  useEffect(() => {
+    const bounds = sourceHighlightBounds(sourceHighlightPoints);
+    const map = mapRef.current?.getMap();
+    if (!bounds || !map || !ready) return;
+    map.fitBounds(bounds, {
+      padding: 96,
+      maxZoom: sourceHighlightPoints.length === 1 ? 13.2 : 11.6,
+      pitch: professionalModeRef.current ? PROFESSIONAL_VIEW.pitch : VIEWS[cameraModeRef.current].pitch,
+      duration: 950,
+      essential: true,
+    });
+  }, [ready, sourceHighlightPoints]);
 
   useEffect(() => {
     if (!ready) return;
@@ -797,6 +848,41 @@ export default function PM25SceneMap({
       }),
     );
 
+    if (sourceHighlightPoints.length > 0) {
+      deckLayers.push(
+        new ScatterplotLayer<SourceHighlightPoint>({
+          id: 'source-highlight-points',
+          data: sourceHighlightPoints,
+          getPosition: (point) => [point.latLng.longitude, point.latLng.latitude, 210],
+          getRadius: 150,
+          getFillColor: [190, 82, 58, 236],
+          getLineColor: [255, 255, 255, 245],
+          getLineWidth: 2.4,
+          radiusUnits: 'meters',
+          radiusMinPixels: 7,
+          radiusMaxPixels: 20,
+          stroked: true,
+          filled: true,
+          pickable: true,
+        }),
+        new TextLayer<SourceHighlightPoint>({
+          id: 'source-highlight-labels',
+          data: sourceHighlightPoints.slice(0, 80),
+          characterSet: 'auto',
+          getPosition: (point) => [point.latLng.longitude, point.latLng.latitude, 260],
+          getText: (point) => point.name,
+          getSize: 13,
+          getPixelOffset: [0, -18],
+          getColor: [45, 49, 41, 230],
+          getBackgroundColor: [255, 255, 255, 220],
+          background: true,
+          backgroundPadding: [6, 4],
+          billboard: true,
+          pickable: false,
+        }),
+      );
+    }
+
     if (volumeBox && volumeWalls.length > 0) {
       deckLayers.push(
         new PolygonLayer<VolumeWall>({
@@ -858,7 +944,7 @@ export default function PM25SceneMap({
     }
 
     return deckLayers;
-  }, [cameraMode, elevationScale, gridCells, onGridPress, professionalMode, selectedGridId, showPm25GridLayer, sourceLinkIds, sourceLinkKey, visiblePoints, volumeBox, volumePeak, volumeSlices, volumeWalls]);
+  }, [cameraMode, elevationScale, gridCells, onGridPress, professionalMode, selectedGridId, showPm25GridLayer, sourceHighlightPoints, sourceLinkIds, sourceLinkKey, visiblePoints, volumeBox, volumePeak, volumeSlices, volumeWalls]);
 
   const animatedLayers = useMemo<Layer[]>(() => {
     const deckLayers: Layer[] = [];
@@ -970,6 +1056,7 @@ export default function PM25SceneMap({
         new TextLayer<SourceLink>({
           id: 'upwind-source-labels',
           data: sourceLinks.filter((link) => link.label),
+          characterSet: 'auto',
           getPosition: (link) => link.source,
           getText: (link) => link.label ?? '',
           getSize: 13,
@@ -988,6 +1075,7 @@ export default function PM25SceneMap({
         new TextLayer<DownwindMarker>({
           id: 'downwind-zone-label',
           data: downwindMarkers.filter((marker) => marker.label),
+          characterSet: 'auto',
           getPosition: (marker) => marker.position,
           getText: (marker) => marker.label ?? '',
           getSize: 13,

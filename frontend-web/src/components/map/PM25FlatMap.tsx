@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AttributionControl, Map, useControl, type MapRef } from 'react-map-gl/mapbox';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { Layer, PickingInfo } from '@deck.gl/core';
-import { LineLayer, PolygonLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { LineLayer, PolygonLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import { LocateFixed, Maximize2 } from 'lucide-react';
 import type { ExamPoint, GridCell, TEDSPoint } from '@shared/types';
 import { getGridLocationName } from '@/app/map/_lib/search';
@@ -15,6 +15,16 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 type EmissionPoint = TEDSPoint | ExamPoint;
 type RenderPoint = EmissionPoint & { layerKind: 'chimney' | 'mercury' };
+interface SourceHighlightPoint {
+  id: string;
+  name: string;
+  latLng: {
+    latitude: number;
+    longitude: number;
+  };
+  source: string;
+  color: string;
+}
 
 interface PM25FlatMapProps {
   gridCells: GridCell[];
@@ -27,12 +37,28 @@ interface PM25FlatMapProps {
   selectedGrid?: GridCell | null;
   onGridPress?: (grid: GridCell) => void;
   focusGrid?: GridCell | null;
+  sourceHighlightPoints?: SourceHighlightPoint[];
 }
 
 const MAP_CENTER = { longitude: 121.22, latitude: 24.99 };
 const INITIAL_ZOOM = 10.5;
 const MAP_STYLE = 'mapbox://styles/mapbox/light-v11';
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+function sourceHighlightBounds(points: SourceHighlightPoint[]) {
+  if (points.length === 0) return null;
+  let minLng = Infinity;
+  let minLat = Infinity;
+  let maxLng = -Infinity;
+  let maxLat = -Infinity;
+  points.forEach((point) => {
+    minLng = Math.min(minLng, point.latLng.longitude);
+    maxLng = Math.max(maxLng, point.latLng.longitude);
+    minLat = Math.min(minLat, point.latLng.latitude);
+    maxLat = Math.max(maxLat, point.latLng.latitude);
+  });
+  return [[minLng, minLat], [maxLng, maxLat]] as [[number, number], [number, number]];
+}
 
 function DeckGLOverlay(props: ConstructorParameters<typeof MapboxOverlay>[0]) {
   const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay(props));
@@ -55,6 +81,11 @@ const deckTooltip = ({ object, layer }: PickingInfo) => {
     const kind = point.layerKind === 'mercury' ? '汞排放點' : '點煙囪';
     const height = 'heightM' in point && point.heightM ? `\n煙囪高度 ${Math.round(point.heightM)} m` : '';
     return { text: `${kind}\n${point.name || point.id}${height}` };
+  }
+
+  if (layer.id === 'source-highlight-points') {
+    const point = object as SourceHighlightPoint;
+    return { text: `${point.source}\n${point.name}` };
   }
 
   return null;
@@ -105,6 +136,7 @@ export default function PM25FlatMap({
   selectedGrid,
   onGridPress,
   focusGrid,
+  sourceHighlightPoints = [],
 }: PM25FlatMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapRef>(null);
@@ -168,6 +200,18 @@ export default function PM25FlatMap({
       essential: true,
     });
   }, [focusGrid]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const bounds = sourceHighlightBounds(sourceHighlightPoints);
+    const map = mapRef.current?.getMap();
+    if (!bounds || !map) return;
+    map.fitBounds(bounds, {
+      padding: 84,
+      maxZoom: sourceHighlightPoints.length === 1 ? 13.4 : 11.8,
+      duration: 900,
+    });
+  }, [ready, sourceHighlightPoints]);
 
   const resetView = useCallback(() => {
     mapRef.current?.getMap().easeTo({
@@ -289,8 +333,43 @@ export default function PM25FlatMap({
       }),
     );
 
+    if (sourceHighlightPoints.length > 0) {
+      deckLayers.push(
+        new ScatterplotLayer<SourceHighlightPoint>({
+          id: 'source-highlight-points',
+          data: sourceHighlightPoints,
+          getPosition: (point) => [point.latLng.longitude, point.latLng.latitude],
+          getRadius: 130,
+          getFillColor: [190, 82, 58, 230],
+          getLineColor: [255, 255, 255, 245],
+          getLineWidth: 2,
+          radiusUnits: 'meters',
+          radiusMinPixels: 7,
+          radiusMaxPixels: 18,
+          stroked: true,
+          filled: true,
+          pickable: true,
+        }),
+        new TextLayer<SourceHighlightPoint>({
+          id: 'source-highlight-labels',
+          data: sourceHighlightPoints.slice(0, 80),
+          characterSet: 'auto',
+          getPosition: (point) => [point.latLng.longitude, point.latLng.latitude],
+          getText: (point) => point.name,
+          getSize: 12,
+          getPixelOffset: [0, -18],
+          getColor: [45, 49, 41, 230],
+          getBackgroundColor: [255, 255, 255, 220],
+          background: true,
+          backgroundPadding: [5, 3],
+          billboard: true,
+          pickable: false,
+        }),
+      );
+    }
+
     return deckLayers;
-  }, [gridCells, hotspotGrids, onGridPress, phase, selectedGrid, showPm25GridLayer, showWindLayer, tick, visiblePoints]);
+  }, [gridCells, hotspotGrids, onGridPress, phase, selectedGrid, showPm25GridLayer, showWindLayer, sourceHighlightPoints, tick, visiblePoints]);
 
   if (!MAPBOX_TOKEN) {
     return null;

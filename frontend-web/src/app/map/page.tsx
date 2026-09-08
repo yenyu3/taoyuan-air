@@ -1,12 +1,15 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { X } from 'lucide-react';
 import { getExamPoints, getGrid, getTEDSPoints, setScenario } from '@shared/api/index';
 import { DISTRICTS } from '@shared/constants/districts';
 import { palette } from '@shared/constants/theme';
 import { useStore } from '@shared/store';
 import type { ExamPoint, GridCell, TEDSPoint } from '@shared/types';
+import { DATASET_CATALOG, type DatasetSite } from '@/app/explorer/_data/datasetCatalog';
 import { generateDemoExamPoints, generateDemoTEDSPoints } from './_lib/demoData';
 import { computePm25GridStats } from './_lib/mapStats';
 import { FORECAST_STEPS, forecastGrid, type ForecastHour } from './_lib/forecast';
@@ -32,6 +35,17 @@ const PM25_UNIT = 'μg/m³';
 const MAPBOX_ENABLED = Boolean(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
 const FORECAST_PLAY_MS = 1800;
 
+export interface SourceHighlightPoint {
+  id: string;
+  name: string;
+  latLng: {
+    latitude: number;
+    longitude: number;
+  };
+  source: string;
+  color: string;
+}
+
 function compactCount(value: number) {
   return new Intl.NumberFormat('zh-TW', { notation: value >= 1000 ? 'compact' : 'standard' }).format(value);
 }
@@ -45,7 +59,9 @@ function detectLowPower(): boolean {
   return cores <= 4 || memory <= 4 || mobile;
 }
 
-export default function MapPage() {
+function MapPageContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const store = useStore();
   const { mode, setMode, setGridCells, setSelectedGridId, selectedScenario, isLoading, setIsLoading } = store;
   const gridCells: GridCell[] = store.gridCells;
@@ -67,6 +83,13 @@ export default function MapPage() {
   const [autoCruise, setAutoCruise] = useState(() => !detectLowPower());
   const [forecastHour, setForecastHour] = useState<ForecastHour>(0);
   const [forecastPlaying, setForecastPlaying] = useState(false);
+
+  const requestedSourceId = searchParams.get('source');
+  const requestedHighlight = searchParams.get('highlight');
+  const highlightedDataset = useMemo(
+    () => DATASET_CATALOG.find((dataset) => dataset.id === requestedSourceId) ?? null,
+    [requestedSourceId],
+  );
 
   useEffect(() => {
     // Guard against an earlier scenario's responses resolving after a newer one
@@ -229,6 +252,41 @@ export default function MapPage() {
   const renderSceneMap = effectiveMapViewMode === '3d' || effectiveMapViewMode === 'professional';
   const professionalMode = effectiveMapViewMode === 'professional';
 
+  const sourceHighlightPoints = useMemo<SourceHighlightPoint[]>(() => {
+    if (!highlightedDataset || !requestedHighlight) return [];
+
+    if (highlightedDataset.id === 'teds-point' && tedsPoints.length > 0) {
+      return tedsPoints.map((point) => ({
+        id: `highlight-${point.id}`,
+        name: point.name || point.id,
+        latLng: point.latLng,
+        source: highlightedDataset.name,
+        color: highlightedDataset.accent,
+      }));
+    }
+
+    if (highlightedDataset.id === 'exam' && examPoints.length > 0) {
+      return examPoints.map((point) => ({
+        id: `highlight-${point.id}`,
+        name: point.name || point.id,
+        latLng: point.latLng,
+        source: highlightedDataset.name,
+        color: highlightedDataset.accent,
+      }));
+    }
+
+    return highlightedDataset.sites.map((site: DatasetSite, index) => ({
+      id: `highlight-${highlightedDataset.id}-${index}`,
+      name: site.name,
+      latLng: {
+        latitude: site.lat,
+        longitude: site.lng,
+      },
+      source: highlightedDataset.name,
+      color: highlightedDataset.accent,
+    }));
+  }, [examPoints, highlightedDataset, requestedHighlight, tedsPoints]);
+
   // 鍵盤：Esc 關抽屜、2/3 切 2D/3D（即時）、空白鍵播放/暫停預報。
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -328,6 +386,7 @@ export default function MapPage() {
                 selectedGrid={resolvedSelectedGrid}
                 onGridPress={handleGridPress}
                 focusGrid={focusedGrid}
+                sourceHighlightPoints={sourceHighlightPoints}
               />
             ) : (
               <LeafletMap
@@ -336,6 +395,7 @@ export default function MapPage() {
                 mapMode="2D"
                 onGridPress={handleGridPress}
                 focusGrid={focusedGrid}
+                sourceHighlightPoints={sourceHighlightPoints}
               />
             )}
           </div>
@@ -356,10 +416,28 @@ export default function MapPage() {
               selectedGrid={resolvedSelectedGrid}
               onGridPress={handleGridPress}
               focusGrid={focusedGrid}
+              sourceHighlightPoints={sourceHighlightPoints}
             />
           </div>
         )}
       </div>
+
+      {highlightedDataset && sourceHighlightPoints.length > 0 && (
+        <div className={`${styles.sourceHighlightBanner} ${styles.glass}`} aria-live="polite">
+          <span>來源標註</span>
+          <strong>{highlightedDataset.name}</strong>
+          <span>{compactCount(sourceHighlightPoints.length)} 個點位</span>
+          <button
+            type="button"
+            className={styles.sourceHighlightClose}
+            onClick={() => router.replace('/map')}
+            aria-label="關閉來源標註"
+            title="關閉來源標註"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       <CommandPanel
         mode={mode as MapMode}
@@ -408,5 +486,13 @@ export default function MapPage() {
 
       <MapLoadingOverlay isLoading={isLoading} />
     </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<div className={styles.page} />}>
+      <MapPageContent />
+    </Suspense>
   );
 }

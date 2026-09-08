@@ -4,12 +4,24 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ExamPoint, GridCell, TEDSPoint } from '@shared/types';
 import { getPm25CssColor } from '@/app/map/_lib/mapColors';
 
+interface SourceHighlightPoint {
+  id: string;
+  name: string;
+  latLng: {
+    latitude: number;
+    longitude: number;
+  };
+  source: string;
+  color: string;
+}
+
 interface LeafletMapProps {
   gridCells: GridCell[];
   tedsPoints?: Array<TEDSPoint | ExamPoint>;
   mapMode: '2D' | 'Satellite';
   onGridPress?: (grid: GridCell) => void;
   focusGrid?: GridCell | null;
+  sourceHighlightPoints?: SourceHighlightPoint[];
 }
 
 type EmissionPoint = TEDSPoint | ExamPoint;
@@ -31,6 +43,7 @@ interface LeafletMapInstance {
   getZoom: () => number;
   invalidateSize: () => void;
   setView: (center: unknown, zoom: number, options?: { animate?: boolean }) => void;
+  fitBounds?: (bounds: LatLngTuple[], options?: Record<string, unknown>) => void;
   on: (event: 'zoomend', handler: () => void) => void;
 }
 
@@ -167,7 +180,7 @@ const createScriptLoadError = (src: string) => new Error(`Failed to load map scr
 
 const getGridColor = (value: number) => getPm25CssColor(value, 0.4);
 
-export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress, focusGrid }: LeafletMapProps) {
+export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress, focusGrid, sourceHighlightPoints = [] }: LeafletMapProps) {
   const [isDetailMode, setIsDetailMode] = useState(false);
   const mapRef = useRef<LeafletMapInstance | null>(null);
   const windyLeafletRef = useRef<LeafletApi | null>(null);
@@ -175,6 +188,8 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
   const detailMapRef = useRef<LeafletMapInstance | null>(null);
   const detailPolygonLayerGroupRef = useRef<LeafletLayerGroup | null>(null);
   const detailPointLayerGroupRef = useRef<LeafletLayerGroup | null>(null);
+  const sourceHighlightLayerGroupRef = useRef<LeafletLayerGroup | null>(null);
+  const sourceHighlightPointsRef = useRef<SourceHighlightPoint[]>(sourceHighlightPoints);
   const satMapRef = useRef<LeafletMapInstance | null>(null);
   const satLayerGroupRef = useRef<LeafletLayerGroup | null>(null);
   const initStartedRef = useRef(false);
@@ -248,6 +263,41 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
         // Silently skip markers that fail to render
       }
     });
+  }, []);
+
+  const renderSourceHighlights = useCallback((
+    points: SourceHighlightPoint[],
+    L: LeafletApi,
+    layerGroup: LeafletLayerGroup,
+    mapInstance?: LeafletMapInstance,
+  ) => {
+    if (!L || !layerGroup) return;
+    layerGroup.clearLayers();
+    if (points.length === 0) return;
+
+    points.forEach((point) => {
+      const pos: LatLngTuple = [point.latLng.latitude, point.latLng.longitude];
+      const marker = L.circleMarker?.(pos, {
+        radius: 7,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: point.color || '#be523a',
+        fillOpacity: 0.92,
+      });
+      if (!marker) return;
+      marker.addTo(layerGroup);
+      marker.bindPopup?.(`<strong>${point.source}</strong><br/>${point.name}`);
+    });
+
+    if (mapInstance?.fitBounds) {
+      const lats = points.map((point) => point.latLng.latitude);
+      const lngs = points.map((point) => point.latLng.longitude);
+      const bounds: LatLngTuple[] = [
+        [Math.min(...lats), Math.min(...lngs)],
+        [Math.max(...lats), Math.max(...lngs)],
+      ];
+      mapInstance.fitBounds(bounds, { padding: [60, 60], maxZoom: points.length === 1 ? 13 : 12 });
+    }
   }, []);
 
   useEffect(() => {
@@ -402,6 +452,7 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
 
           detailPolygonLayerGroupRef.current = L.layerGroup().addTo(detailMap);
           detailPointLayerGroupRef.current = L.layerGroup().addTo(detailMap);
+          sourceHighlightLayerGroupRef.current = L.layerGroup().addTo(detailMap);
 
           if (gridCellsRef.current.length > 0 && detailPolygonLayerGroupRef.current) {
             renderPolygons(gridCellsRef.current, L, detailPolygonLayerGroupRef.current);
@@ -409,6 +460,9 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
           const detailPointLayerGroup = detailPointLayerGroupRef.current;
           if (detailPointLayerGroup && tedsPointsRef.current.length > 0) {
             renderTEDSPoints(tedsPointsRef.current, L, detailPointLayerGroup, detailMap);
+          }
+          if (sourceHighlightLayerGroupRef.current && sourceHighlightPointsRef.current.length > 0) {
+            renderSourceHighlights(sourceHighlightPointsRef.current, L, sourceHighlightLayerGroupRef.current, detailMap);
           }
           detailMap.on('zoomend', () => {
             setZoomLevel(detailMap.getZoom());
@@ -485,7 +539,15 @@ export default function LeafletMap({ gridCells, tedsPoints, mapMode, onGridPress
       }
     };
     init();
-  }, [renderPolygons]);
+  }, [renderPolygons, renderSourceHighlights]);
+
+  useEffect(() => {
+    sourceHighlightPointsRef.current = sourceHighlightPoints;
+    const L = getWindowValue<LeafletApi>('L');
+    if (L && sourceHighlightLayerGroupRef.current && detailMapRef.current) {
+      renderSourceHighlights(sourceHighlightPoints, L, sourceHighlightLayerGroupRef.current, detailMapRef.current);
+    }
+  }, [sourceHighlightPoints, renderSourceHighlights]);
 
   useEffect(() => {
     const L = getWindowValue<LeafletApi>('L');

@@ -2,6 +2,7 @@
 
 import { Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useLoginButton } from '@/lib/login-button-context';
 import { useAIAssistantStore } from '@/store/aiAssistantStore';
 import { ChatMessageMarkdown } from './ChatMessageMarkdown';
 import styles from './ChatPanel.module.css';
@@ -10,14 +11,45 @@ export function ChatPanel() {
   const messages = useAIAssistantStore((state) => state.messages);
   const suggestedQuestions = useAIAssistantStore((state) => state.suggestedQuestions);
   const sendMessage = useAIAssistantStore((state) => state.sendMessage);
+  const setDemoRole = useAIAssistantStore((state) => state.setDemoRole);
   const district = useAIAssistantStore((state) => state.district);
   const isSending = useAIAssistantStore((state) => state.isSending);
+  const { role } = useLoginButton();
   const [input, setInput] = useState('');
   const messagesRef = useRef<HTMLDivElement | null>(null);
+  const previousMessagesRef = useRef(messages);
+
+  useEffect(() => {
+    setDemoRole(role);
+  }, [role, setDemoRole]);
 
   useEffect(() => {
     const element = messagesRef.current;
-    if (element) element.scrollTop = element.scrollHeight;
+    if (!element) {
+      previousMessagesRef.current = messages;
+      return;
+    }
+
+    const previousMessages = previousMessagesRef.current;
+    const resolvedMessage = messages.find((message) => {
+      const previous = previousMessages.find((item) => item.id === message.id);
+      return previous?.isPending && !message.isPending;
+    });
+
+    if (resolvedMessage) {
+      const bubble = element.querySelector<HTMLElement>(
+        `[data-message-id="${resolvedMessage.id}"]`,
+      );
+      if (bubble) {
+        const bubbleTop = bubble.getBoundingClientRect().top;
+        const messageListTop = element.getBoundingClientRect().top;
+        element.scrollTop += bubbleTop - messageListTop;
+      }
+    } else {
+      element.scrollTop = element.scrollHeight;
+    }
+
+    previousMessagesRef.current = messages;
   }, [messages]);
 
   const submit = (text: string) => {
@@ -29,7 +61,9 @@ export function ChatPanel() {
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.title}>Taoyuan Air AI · {district}</div>
+      <div className={styles.title}>
+        Taoyuan Air AI · {role === 'government' ? '政府模式' : '民眾模式'} · {district}
+      </div>
 
       <div className={styles.messages} ref={messagesRef}>
         {messages.length === 0 && (
@@ -53,6 +87,7 @@ export function ChatPanel() {
             className={`${styles.bubble} ${
               message.role === 'user' ? styles.user : styles.assistant
             } ${message.isPending ? styles.pending : ''}`}
+            data-message-id={message.id}
             key={message.id}
           >
             {message.isPending ? (

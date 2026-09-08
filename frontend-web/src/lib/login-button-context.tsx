@@ -23,14 +23,20 @@ export function LoginButtonProvider({ children }: { children: React.ReactNode })
   // Restore the demo role after mount so a refresh / deep link keeps the
   // government-only pages (/explorer, /events) reachable.
   useEffect(() => {
-    try {
-      if (window.localStorage.getItem(STORAGE_KEY) === '1') {
-        setIsLoginButtonActive(true);
+    const timeoutId = window.setTimeout(() => {
+      let active = false;
+
+      try {
+        active = window.localStorage.getItem(STORAGE_KEY) === '1';
+      } catch {
+        /* localStorage unavailable */
       }
-    } catch {
-      /* localStorage unavailable */
-    }
-    setHydrated(true);
+
+      setIsLoginButtonActive(active);
+      setHydrated(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const toggleLoginButton = useCallback(() => {

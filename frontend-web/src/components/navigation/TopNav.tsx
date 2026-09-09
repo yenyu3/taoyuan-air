@@ -12,7 +12,7 @@ type NavItem = { href: string; label: string; public: boolean; govLabel?: string
 const navItems: NavItem[] = [
   { href: '/dashboard', label: '空氣總覽', public: true },
   { href: '/map', label: '監測地圖', public: true },
-  { href: '/explorer', label: '資料整合', public: false },
+  { href: '/explorer', label: '資料整合', public: true },
   { href: '/events', label: '垂直觀測', public: false },
   { href: '/alerts', label: '健康守護', govLabel: '治理支援', public: true },
 ];

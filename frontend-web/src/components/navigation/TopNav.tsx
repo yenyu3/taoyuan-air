@@ -13,8 +13,8 @@ const navItems: NavItem[] = [
   { href: '/dashboard', label: '空氣總覽', visibility: ['public', 'citizen', 'government'] },
   { href: '/map', label: '監測地圖', visibility: ['public', 'citizen', 'government'] },
   { href: '/explorer', label: '資料整合', visibility: ['public', 'citizen', 'government'] },
-  { href: '/alerts', label: '健康守護', govLabel: '治理支援', visibility: ['citizen', 'government'] },
   { href: '/events', label: '垂直觀測', visibility: ['government'] },
+  { href: '/alerts', label: '健康守護', govLabel: '治理支援', visibility: ['citizen', 'government'] },
 ];
 
 // Pre-filled demo credentials shown in the login modal, kept per-role so the
@@ -242,11 +242,11 @@ export function TopNav() {
 
             <div className="login-modal-heading">
               <span className="login-modal-icon">
-                <LogIn size={18} />
+                <LogIn size={20} />
               </span>
               <div>
                 <h2 id="login-modal-title">登入 Taoyuan Air</h2>
-                <p>選擇使用身分後，即可開啟對應的空氣品質服務頁面。</p>
+                <p>選擇身分後，開啟對應服務頁面。</p>
               </div>
             </div>
 

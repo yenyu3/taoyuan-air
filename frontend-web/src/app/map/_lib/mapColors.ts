@@ -4,11 +4,11 @@ type PM25Stop = {
 };
 
 export const PM25_STOPS: PM25Stop[] = [
-  { value: 0, color: [42, 166, 90] },
-  { value: 15, color: [232, 190, 66] },
-  { value: 35, color: [230, 127, 48] },
-  { value: 54, color: [214, 68, 76] },
-  { value: 150, color: [132, 64, 144] },
+  { value: 0, color: [34, 156, 82] },
+  { value: 15, color: [238, 196, 54] },
+  { value: 35, color: [235, 116, 38] },
+  { value: 54, color: [202, 48, 62] },
+  { value: 150, color: [116, 52, 146] },
 ];
 
 const toFiniteValue = (value: number) => (Number.isFinite(value) ? value : 0);

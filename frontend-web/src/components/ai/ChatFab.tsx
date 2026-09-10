@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
 import { GripHorizontal, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAIAssistantStore } from '@/store/aiAssistantStore';
@@ -78,7 +77,6 @@ function openFabPosition(panel: PanelMetrics): Position {
 }
 
 export function ChatFab() {
-  const pathname = usePathname();
   const open = useAIAssistantStore((state) => state.open);
   const setOpen = useAIAssistantStore((state) => state.setOpen);
   const [fab, setFab] = useState<Position | null>(null);
@@ -154,7 +152,7 @@ export function ChatFab() {
         </div>
       )}
       <button
-        className={`${styles.fab} ${pathname === '/explorer' ? styles.fabExplorer : ''}`}
+        className={styles.fab}
         type="button"
         style={open || fab ? { left: button.x, top: button.y } : undefined}
         aria-label={open ? '關閉 AI 對話' : '開啟 AI 對話'}

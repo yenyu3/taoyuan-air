@@ -28,8 +28,9 @@ export default function RootLayout({
       <body style={{ minHeight: '100vh' }}>
         <LoginButtonProvider>
           <TopNav />
-          <RoleRouteGuard />
-          <main style={{ paddingTop: 80 }}>{children}</main>
+          <RoleRouteGuard>
+            <main style={{ paddingTop: 80 }}>{children}</main>
+          </RoleRouteGuard>
           <ChatFab />
         </LoginButtonProvider>
       </body>

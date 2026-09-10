@@ -2,62 +2,82 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-export type DemoRole = 'public' | 'government';
+export type DemoRole = 'public' | 'citizen' | 'government';
+export type LoginRole = Exclude<DemoRole, 'public'>;
 
-const STORAGE_KEY = 'taoyuan-air:demo-role-active';
+const STORAGE_KEY = 'taoyuan-air:demo-session';
 
 interface LoginButtonContextValue {
-  isLoginButtonActive: boolean;
   role: DemoRole;
+  isAuthenticated: boolean;
   /** false until the persisted role has been read from storage after mount */
   hydrated: boolean;
-  toggleLoginButton: () => void;
+  login: (role: LoginRole) => void;
+  logout: () => void;
 }
 
 const LoginButtonContext = createContext<LoginButtonContextValue | null>(null);
 
+const isLoginRole = (value: unknown): value is LoginRole =>
+  value === 'citizen' || value === 'government';
+
 export function LoginButtonProvider({ children }: { children: React.ReactNode }) {
-  const [isLoginButtonActive, setIsLoginButtonActive] = useState(false);
+  const [role, setRole] = useState<DemoRole>('public');
   const [hydrated, setHydrated] = useState(false);
 
-  // Restore the demo role after mount so a refresh / deep link keeps the
-  // government-only pages (/explorer, /events) reachable.
+  // Restore the demo session after mount so a refresh / deep link keeps
+  // role-specific pages reachable without causing hydration drift.
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      let active = false;
+      let nextRole: DemoRole = 'public';
 
       try {
-        active = window.localStorage.getItem(STORAGE_KEY) === '1';
+        const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? 'null') as {
+          role?: unknown;
+        } | null;
+        if (isLoginRole(stored?.role)) nextRole = stored.role;
       } catch {
         /* localStorage unavailable */
       }
 
-      setIsLoginButtonActive(active);
+      setRole(nextRole);
       setHydrated(true);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
   }, []);
 
-  const toggleLoginButton = useCallback(() => {
-    setIsLoginButtonActive((current) => {
-      const next = !current;
-      try {
-        window.localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
-      } catch {
-        /* localStorage unavailable */
-      }
-      return next;
-    });
+  const login = useCallback((nextRole: LoginRole) => {
+    setRole(nextRole);
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ role: nextRole, loggedInAt: new Date().toISOString() }),
+      );
+    } catch {
+      /* localStorage unavailable */
+    }
   }, []);
+
+  const logout = useCallback(() => {
+    setRole('public');
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* localStorage unavailable */
+    }
+  }, []);
+
+  const isAuthenticated = role !== 'public';
 
   return (
     <LoginButtonContext.Provider
       value={{
-        isLoginButtonActive,
-        role: isLoginButtonActive ? 'government' : 'public',
+        role,
+        isAuthenticated,
         hydrated,
-        toggleLoginButton,
+        login,
+        logout,
       }}
     >
       {children}

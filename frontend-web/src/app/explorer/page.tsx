@@ -54,7 +54,6 @@ const CATEGORY_ORDER: ActiveCategory[] = [
   'weather',
   'emission',
   'vertical',
-  'model-feature',
 ];
 
 const CABINET_INDEX_ITEMS = CATEGORY_ORDER.filter(

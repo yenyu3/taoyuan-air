@@ -2,8 +2,7 @@ export type DatasetCategory =
   | 'air-quality'
   | 'weather'
   | 'emission'
-  | 'vertical'
-  | 'model-feature';
+  | 'vertical';
 
 export type DatasetStatus = 'live' | 'historical' | 'imported' | 'pending' | 'mock';
 export type ProcessingState = 'done' | 'partial' | 'pending' | 'na';
@@ -74,7 +73,6 @@ export const CATEGORY_LABELS: Record<DatasetCategory | 'all', string> = {
   weather: '氣象驅動',
   emission: '排放源',
   vertical: '垂直觀測',
-  'model-feature': '模型特徵',
 };
 
 export const STATUS_LABELS: Record<DatasetStatus, string> = {
@@ -649,51 +647,6 @@ export const DATASET_CATALOG: DatasetCatalogItem[] = [
       missingValueHandled: 'partial',
       unitNormalized: 'done',
       timestampAligned: 'done',
-      coordinateNormalized: 'done',
-    },
-  },
-  {
-    id: 'feature-grid',
-    shortName: 'Feature',
-    name: '時空模型特徵表',
-    category: 'model-feature',
-    sourceAgency: 'Taoyuan Air 整合資料庫',
-    sourceType: 'Geo-AI 模型輸入特徵',
-    tableNames: ['spatiotemporal_features'],
-    statuses: ['pending'],
-    parameters: ['時間戳', '經緯度', '行政區', 'PM2.5', '溫度', '風速', '排放量', '網格'],
-    regions: ['桃園全域'],
-    spatialType: 'grid',
-    temporalResolution: '3 km x 3 km / 小時',
-    updateFrequency: '模型管線產生',
-    timeRange: '規劃中',
-    latestAt: '待建立',
-    recordCountLabel: '模型特徵 · 規劃中',
-    coverageLabel: '3 km x 3 km 高解析網格',
-    completeness: 64,
-    accent: '#587f62',
-    dataAvailability: 'planned',
-    databaseAssets: {
-      coreTables: ['spatiotemporal_features（規劃中）'],
-      views: [],
-      qualityChecks: [],
-      importScripts: [],
-    },
-    accessNote: '此資料集用來呈現整合成果如何進入 Geo-AI 模型，第一版先標示為待建立。',
-    sites: TAOYUAN_DISTRICT_CENTROIDS,
-    sitesNote: '3 km × 3 km 模型網格（規劃中），以行政區中心示意涵蓋範圍。',
-    quality: {
-      completeness: 64,
-      freshness: 46,
-      schemaStandardized: 72,
-      spatialCoverage: 88,
-      traceability: 70,
-    },
-    processing: {
-      fieldStandardized: 'partial',
-      missingValueHandled: 'partial',
-      unitNormalized: 'partial',
-      timestampAligned: 'partial',
       coordinateNormalized: 'done',
     },
   },
